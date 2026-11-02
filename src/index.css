@@ -1,0 +1,30 @@
+/*
+ * 전역 스타일 — 담당: 나현 (디자인 시스템)
+ * Tailwind 설정(@import "tailwindcss")과 디자인 값은 나현이 ui 세팅 때 추가한다.
+ * 아래는 디자인 시스템이 들어오기 전까지 쓰는 최소 기본값이다.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    'Pretendard',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

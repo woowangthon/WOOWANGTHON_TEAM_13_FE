@@ -1,0 +1,23 @@
+# 폴더 주인 — 남의 폴더를 고친 PR은 그 주인의 승인이 필요하다 (docs/04_화면_파일_주소.md)
+
+# 기본: FE 두 명
+*                         @ryu-min-ji @nahyun2
+
+# 🟠 민지 — 공통 뼈대 · 공용 부품 · 알바 화면 · 설정
+/src/app/                 @ryu-min-ji
+/src/lib/                 @ryu-min-ji
+/src/shared/              @ryu-min-ji
+/src/pages/auth/          @ryu-min-ji
+/src/pages/staff/         @ryu-min-ji
+/src/api/mocks/staff/     @ryu-min-ji
+/src/main.tsx             @ryu-min-ji
+/package.json             @ryu-min-ji
+/vite.config.ts           @ryu-min-ji
+/orval.config.ts          @ryu-min-ji
+
+# 🟣 나현 — 디자인 시스템 · 사장 화면
+/src/ui/                  @nahyun2
+/src/index.css            @nahyun2
+/public/                  @nahyun2
+/src/pages/owner/         @nahyun2
+/src/api/mocks/owner/     @nahyun2

@@ -1,0 +1,5 @@
+# 줄바꿈을 LF로 통일한다 (Windows · Mac 팀원 간 불필요한 변경 표시 방지)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.svg text eol=lf
