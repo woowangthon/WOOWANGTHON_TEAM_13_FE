@@ -26,6 +26,7 @@
   - `src/ui/`에 새 부품 필요 → 나현에게 요청 / `src/shared/`에 필요 → 민지에게 요청
   - 급하면 **내 폴더 안에 임시 부품**을 만들고, 나중에 주인 폴더로 옮긴다
 - **새 라이브러리 설치 금지.** 꼭 필요하면 멈추고 물어본다 (`package.json` 충돌 방지)
+- **파일 · 화면 · 주소를 추가 · 삭제 · 이름 변경하면 `docs/04_화면_파일_주소.md`도 같은 PR에서 고친다.** 규칙 · 탭 구성처럼 문서에 적힌 내용이 바뀌면 그 문서(`CLAUDE.md`, `docs/`)도 같이 고친다
 - 화면 주소는 **각자 `routes.tsx`에만** 추가한다. `src/app/router.tsx`는 수정하지 않는다
   - 알바 `/staff/...` → `src/pages/staff/routes.tsx` / 사장 `/owner/...` → `src/pages/owner/routes.tsx` / 공통 `/login` `/auth/callback` `/role` → `src/pages/auth/routes.tsx`
 
@@ -44,7 +45,7 @@ React 19 · Vite · TypeScript · React Router(`react-router`) · TanStack Query
 - 비밀 값(.env)은 커밋하지 않는다. `.env.example`에는 이름만
 
 ## 화면 · UX 규칙 (`docs/06_디자인_UX_규칙.md`)
-- 알바 화면: 모바일 기준(폭 360~430px), 하단 탭 4개(홈 · 레시피 · 채팅 · 근무) / 사장 화면: 모바일 우선 + PC 최대 폭 768px
+- 알바 화면: 모바일 기준(폭 360~430px), 하단 탭 5칸(홈 · 레시피 · ＋ 인수인계 · AI 사수 · 근무, 아이콘 아래 글자) / 사장 화면: 모바일 우선 + PC 최대 폭 768px
 - 화면 상태 4가지: 로딩 `Spinner` · 데이터 없음 `EmptyState` · 에러 `Toast`(빨강 + 다시 시도) · 성공 `Toast`
 - 문구는 "~해요" 존댓말 ("저장했어요", "다시 확인해 주세요"), 버튼은 짧게 (저장 / 취소 / 삭제 / 다음)
 - AI 답변에는 항상 **출처**를 보여 주고, 근거가 없으면 "찾지 못했어요" + 사장님께 물어보기
@@ -61,3 +62,4 @@ React 19 · Vite · TypeScript · React Router(`react-router`) · TanStack Query
 2. `docs/02_기능_우선순위.md`의 P0부터 하고 있나?
 3. `docs/04_화면_파일_주소.md`의 파일 이름 · 주소와 같은가?
 4. 끝나면 `npm run lint` · `npm run build`가 통과하나?
+5. 파일 · 주소를 바꿨다면 `docs/04`도 고쳤나?
