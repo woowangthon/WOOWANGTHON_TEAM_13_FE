@@ -18,10 +18,13 @@ export type InviteErrorReason = 'invalid' | 'joined' | 'locked'
 
 export class InviteError extends Error {
   reason: InviteErrorReason
+  /** joined 일 때 이미 들어간 매장 (바로 그 매장으로 갈 수 있게) */
+  store?: StaffStore
 
-  constructor(reason: InviteErrorReason) {
+  constructor(reason: InviteErrorReason, store?: StaffStore) {
     super(`초대코드 확인 실패 (${reason})`)
     this.reason = reason
+    this.store = store
   }
 }
 
@@ -51,7 +54,9 @@ export async function verifyInviteCode(code: string): Promise<InviteInfo> {
   if (code === LOCKED_TEST_CODE) throw new InviteError('locked')
   const invite = INVITES.find((item) => item.code === code)
   if (!invite) throw new InviteError('invalid')
-  if (getJoinedStoreIds().includes(invite.storeId)) throw new InviteError('joined')
+  if (getJoinedStoreIds().includes(invite.storeId)) {
+    throw new InviteError('joined', findStaffStore(invite.storeId))
+  }
   return { code, store: findStaffStore(invite.storeId), staffName: invite.staffName }
 }
 

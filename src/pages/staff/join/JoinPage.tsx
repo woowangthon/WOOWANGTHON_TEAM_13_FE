@@ -9,6 +9,7 @@ import {
   type InviteErrorReason,
   type InviteInfo,
 } from '@/api/mocks/staff/join'
+import type { StaffStore } from '@/api/mocks/staff/stores'
 import { refreshMe } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
 import { env } from '@/lib/env'
@@ -41,11 +42,23 @@ export default function JoinPage() {
   const [invite, setInvite] = useState<InviteInfo | null>(null)
   const [error, setError] = useState<InviteErrorReason | null>(null)
   const [joined, setJoined] = useState<InviteInfo | null>(null)
+  /** 이미 들어간 매장 코드를 넣었을 때 그 매장 ([○○로 가기]) */
+  const [memberStore, setMemberStore] = useState<StaffStore | null>(null)
 
   const handleError = (err: unknown, retry: () => void) => {
     setInvite(null)
-    if (err instanceof InviteError) setError(err.reason)
-    else toast.error('코드를 확인하지 못했어요. 다시 시도해 주세요', { onRetry: retry })
+    if (err instanceof InviteError) {
+      setError(err.reason)
+      setMemberStore(err.store ?? null)
+    } else {
+      toast.error('코드를 확인하지 못했어요. 다시 시도해 주세요', { onRetry: retry })
+    }
+  }
+
+  const goToStore = (store: StaffStore) => {
+    setPendingRole(null)
+    setCurrentStoreId(store.id)
+    navigate('/staff', { replace: true })
   }
 
   const verify = useMutation({
@@ -83,6 +96,7 @@ export default function JoinPage() {
     setCode(value)
     setInvite(null)
     setError(null)
+    setMemberStore(null)
   }
 
   const full = code.length === CODE_LENGTH
@@ -119,6 +133,17 @@ export default function JoinPage() {
             <p role="alert" className="m-0 px-1.5 text-[13px] text-destructive-foreground">
               {ERROR_TEXT[error]}
             </p>
+          )}
+          {error === 'joined' && memberStore && (
+            <Button
+              variant="ink"
+              size="md"
+              className="self-start"
+              onClick={() => goToStore(memberStore)}
+            >
+              {withRo(memberStore.name)} 가기
+              <ArrowRight />
+            </Button>
           )}
           <p className="m-0 px-1.5 text-xs text-subtle">사장님께 받은 6자리 · 예) K7P2QX</p>
         </div>
@@ -216,4 +241,11 @@ function JoinDone({ invite, onStart }: { invite: InviteInfo; onStart: () => void
       </Button>
     </AuthFrame>
   )
+}
+
+/** 받침에 맞춰 "로/으로"를 붙인다 (받침 없거나 ㄹ 받침이면 "로": 달빛 카페로 · 오후의 커피로) */
+function withRo(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00
+  const jong = code >= 0 && code <= 11171 ? code % 28 : 0
+  return `${word}${jong === 0 || jong === 8 ? '로' : '으로'}`
 }
