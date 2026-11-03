@@ -1,6 +1,6 @@
 import { StickyNote } from 'lucide-react'
 import type { Manual } from '@/api/mocks/staff/manuals'
-import { MANUAL_ICON } from '@/pages/staff/components/icons'
+import { MANUAL_ICON } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 
 // 매뉴얼 상세 시트

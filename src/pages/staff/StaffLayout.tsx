@@ -1,11 +1,12 @@
 import { CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
-import { STORE_ICON } from '@/pages/staff/components/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
-import { StoreAvatar, StoreSheet } from '@/pages/staff/components/StoreSheet'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { STORE_ICON } from '@/shared/icons'
+import { StoreAvatar } from '@/shared/store/StoreAvatar'
+import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
 import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
@@ -64,7 +65,7 @@ export default function StaffLayout() {
       />
       <Toaster />
 
-      <StoreSheet
+      <StoreSwitcher
         open={storeSheetOpen}
         onClose={() => setStoreSheetOpen(false)}
         stores={stores}
