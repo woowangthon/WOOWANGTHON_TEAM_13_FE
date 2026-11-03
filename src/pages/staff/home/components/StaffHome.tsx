@@ -4,10 +4,10 @@ import { Link } from 'react-router'
 import { handoverDays } from '@/api/mocks/staff/handovers'
 import { sameDay, type StaffStore } from '@/api/mocks/staff/stores'
 import { formatDate } from '@/lib/format'
-import { HANDOVER_TAG_COLOR } from '@/shared/icons'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
-import { Card } from '@/ui/Card'
+import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
+import { HandoverList } from '@/shared/handover/HandoverList'
 import { EmptyState } from '@/ui/EmptyState'
 import { cn } from '@/ui/utils'
 
@@ -120,7 +120,6 @@ function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDa
   const day = handoverDays[store.id]?.[selectedDay]
   const items = day?.items ?? []
   const doneCount = live ? items.filter((item) => checked[item.id]).length : items.length
-  const percent = items.length ? Math.round((doneCount / items.length) * 100) : 0
   const selectedDate = store.week.find((w) => w.date.getDate() === selectedDay)?.date
 
   const title = live
@@ -143,70 +142,18 @@ function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDa
 
       {items.length > 0 && day ? (
         <div className="flex flex-col gap-2.5">
-          <Card variant="dark" className="gap-2.5 px-[22px] py-5">
-            <div className="flex items-center justify-between gap-2.5">
-              <span className="text-lg font-extrabold">AI 요약</span>
-              <span className="text-[13px] font-semibold whitespace-nowrap opacity-80">
-                {day.from}
-              </span>
-            </div>
-            <p className="m-0 text-sm leading-[1.65] break-keep opacity-90">{day.summary}</p>
-            <div className="mt-1.5 flex items-center gap-3">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
-                <div
-                  className="h-full rounded-full bg-white transition-[width] duration-300"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-              <span className="text-xs font-bold whitespace-nowrap">
-                {doneCount} / {items.length} 처리
-              </span>
-            </div>
-          </Card>
-
-          {items.map((item) => {
-            const done = live ? !!checked[item.id] : true
-            const faded = live && done
-            return (
-              <button
-                key={item.id}
-                type="button"
-                disabled={!live}
-                onClick={() => toggle(item.id)}
-                aria-pressed={done}
-                className={cn(
-                  'flex items-center gap-3.5 rounded-[20px] bg-card p-4 text-left shadow-soft disabled:cursor-default',
-                  faded && 'opacity-50',
-                )}
-              >
-                <span
-                  className={cn(
-                    'flex size-6 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-white',
-                    done ? 'border-brand bg-brand' : 'border-line bg-transparent',
-                  )}
-                >
-                  {done && <Check className="size-4" strokeWidth={3} />}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                  <span
-                    className={cn(
-                      'text-[15px] leading-[1.4] font-semibold break-keep',
-                      faded && 'line-through',
-                    )}
-                  >
-                    {item.text}
-                  </span>
-                  <span className="text-xs text-subtle">
-                    {live ? item.tag : `${item.tag} · 처리됨`}
-                  </span>
-                </span>
-                <span
-                  className="size-[7px] shrink-0 rounded-full"
-                  style={{ background: faded ? '#CFC8BA' : HANDOVER_TAG_COLOR[item.tag] }}
-                />
-              </button>
-            )
-          })}
+          <AiSummaryCard
+            from={day.from}
+            summary={day.summary}
+            done={doneCount}
+            total={items.length}
+          />
+          <HandoverList
+            items={items}
+            live={live}
+            isChecked={(id) => !!checked[id]}
+            onToggle={toggle}
+          />
         </div>
       ) : (
         <EmptyState
