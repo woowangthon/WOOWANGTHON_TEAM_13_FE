@@ -1,5 +1,5 @@
-import { ChevronRight, Search, StickyNote } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Search } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router'
 import { storeManuals } from '@/api/mocks/staff/manuals'
 import {
   defaultRecipeCategory,
@@ -9,10 +9,9 @@ import {
 } from '@/api/mocks/staff/recipes'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
-import { MANUAL_ICON } from '@/shared/icons'
+import { ManualGrid } from '@/shared/manual/ManualGrid'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
-import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Tabs } from '@/ui/Tabs'
@@ -134,34 +133,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
 
 function ManualCards({ storeId }: { storeId: string }) {
   const umbrellaAdded = useStaffStore((state) => state.umbrellaAdded)
-  const list = storeManuals(storeId, umbrellaAdded)
-
-  if (list.length === 0) return <EmptyState message="아직 등록된 매뉴얼이 없어요" />
-
   return (
-    <div className="grid grid-cols-2 gap-2.5">
-      {list.map((m) => {
-        const Icon = MANUAL_ICON[m.icon] ?? StickyNote
-        return (
-          <Link
-            key={m.id}
-            to={`/staff/manuals/${m.id}`}
-            className="flex min-h-[170px] flex-col gap-[9px] rounded-[26px] bg-card p-4 text-foreground shadow-soft"
-          >
-            <span className="flex w-full items-start justify-between">
-              <span className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <Icon className="size-5" />
-              </span>
-              {m.isNew && <Badge>NEW</Badge>}
-            </span>
-            <span className="text-[17px] font-bold">{m.title}</span>
-            <span className="line-clamp-2 text-[13px] leading-normal text-[#6B7068]">{m.body}</span>
-            <span className="mt-auto flex size-8 items-center justify-center self-end rounded-full bg-foreground text-white">
-              <ChevronRight className="size-5" />
-            </span>
-          </Link>
-        )
-      })}
-    </div>
+    <ManualGrid
+      manuals={storeManuals(storeId, umbrellaAdded)}
+      getHref={(m) => `/staff/manuals/${m.id}`}
+    />
   )
 }
