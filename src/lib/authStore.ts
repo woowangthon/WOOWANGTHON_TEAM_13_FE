@@ -27,9 +27,12 @@ interface AuthState {
   isReady: boolean
   isLoggedIn: boolean
   me: Me | null
+  /** 로그인한 방식 (Supabase app_metadata.provider: 'google' · 'kakao') */
+  provider: string | null
   pendingRole: StoreRole | null
   setReady: (value: boolean) => void
   setLoggedIn: (value: boolean) => void
+  setProvider: (provider: string | null) => void
   /** me 에 pendingRole 매장이 생기면(입장 · 생성 완료) pendingRole 을 지운다 */
   setMe: (me: Me | null) => void
   setPendingRole: (role: StoreRole | null) => void
@@ -43,9 +46,11 @@ export const useAuthStore = create<AuthState>()(
       isReady: false,
       isLoggedIn: false,
       me: null,
+      provider: null,
       pendingRole: null,
       setReady: (value) => set({ isReady: value }),
       setLoggedIn: (value) => set({ isLoggedIn: value }),
+      setProvider: (provider) => set({ provider }),
       setMe: (me) =>
         set((state) => ({
           me,
@@ -54,7 +59,7 @@ export const useAuthStore = create<AuthState>()(
             : state.pendingRole,
         })),
       setPendingRole: (role) => set({ pendingRole: role }),
-      reset: () => set({ isLoggedIn: false, me: null, pendingRole: null }),
+      reset: () => set({ isLoggedIn: false, me: null, provider: null, pendingRole: null }),
     }),
     {
       name: 'pending-role',

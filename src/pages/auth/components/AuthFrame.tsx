@@ -8,7 +8,7 @@ export function AuthFrame({ children, className }: { children: ReactNode; classN
     <div className="min-h-dvh bg-canvas">
       <main
         className={cn(
-          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col bg-background px-5 pt-6 pb-8',
+          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-5 bg-background px-4 pt-3.5 pb-7',
           className,
         )}
       >

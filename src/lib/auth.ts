@@ -85,8 +85,9 @@ export async function fetchMe(): Promise<Me> {
 
 /** 세션을 확인하고 me 를 불러와 useAuthStore 에 넣는다. me 를 못 불러오면 에러를 던진다 */
 export async function restoreSession() {
-  const { setLoggedIn, setMe } = useAuthStore.getState()
+  const { setLoggedIn, setProvider, setMe } = useAuthStore.getState()
   const session = await getSession()
   setLoggedIn(Boolean(session))
+  setProvider(session?.user.app_metadata.provider ?? null)
   setMe(session ? await fetchMe() : null)
 }
