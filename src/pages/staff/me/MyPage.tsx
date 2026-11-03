@@ -1,27 +1,33 @@
 import { LogOut, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { signOut } from '@/lib/auth'
+import { signOut, type OAuthProvider } from '@/lib/auth'
+import { useAuthStore } from '@/lib/authStore'
+import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
 import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { useProfileName } from '@/pages/staff/useProfileName'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { Header } from '@/ui/Header'
 import { Input } from '@/ui/Input'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
+import { cn } from '@/ui/utils'
 
 // 마이페이지: 이름 · 연결된 계정 · 소속 매장(삭제 · 코드로 추가) · 로그아웃 · 탈퇴
 export default function MyPage() {
   const navigate = useNavigate()
   const close = useCloseTo('/staff')
   const { store, stores, setCurrentStoreId } = useCurrentStore()
-  const profileName = useStaffStore((state) => state.profileName)
-  const setProfileName = useStaffStore((state) => state.setProfileName)
+  const [profileName, setProfileName] = useProfileName()
+  // 로그인 방식. SKIP_AUTH 로 로그인 없이 볼 때는 가짜(카카오)
+  const loginProvider = useAuthStore((state) => state.provider)
+  const provider: OAuthProvider = loginProvider === 'google' ? 'google' : 'kakao'
   const removeStore = useStaffStore((state) => state.removeStore)
   const restoreStoreByCode = useStaffStore((state) => state.restoreStoreByCode)
 
@@ -64,16 +70,18 @@ export default function MyPage() {
       <section className="flex flex-col gap-2.5">
         <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">연결된 계정</h2>
         <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#FEE500]">
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="#000"
-                d="M12 3C6.48 3 2 6.5 2 10.82c0 2.8 1.87 5.25 4.68 6.63-.2.73-.74 2.67-.85 3.08-.13.51.19.5.39.37.16-.11 2.55-1.73 3.58-2.43.72.1 1.45.16 2.2.16 5.52 0 10-3.5 10-7.81C22 6.5 17.52 3 12 3z"
-              />
-            </svg>
+          <span
+            className={cn(
+              'flex size-11 shrink-0 items-center justify-center rounded-full',
+              provider === 'kakao' ? 'bg-[#FEE500]' : 'border border-line bg-white',
+            )}
+          >
+            <ProviderLogo provider={provider} size={provider === 'kakao' ? 22 : 20} />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-            <span className="text-base font-extrabold">카카오</span>
+            <span className="text-base font-extrabold">
+              {provider === 'kakao' ? '카카오' : 'Google'}
+            </span>
             <span className="truncate text-[13px] text-muted-foreground">{profileName}</span>
           </span>
           <Badge variant="soft" size="md">
@@ -151,7 +159,7 @@ export default function MyPage() {
             }}
             placeholder="초대코드"
             aria-label="초대코드"
-            className="flex-1 font-mono tracking-[0.12em] uppercase"
+            className="flex-1 font-mono tracking-[0.12em] uppercase placeholder:font-sans placeholder:tracking-normal"
           />
           <Button type="submit" variant="ink" className="text-sm">
             근무지 추가

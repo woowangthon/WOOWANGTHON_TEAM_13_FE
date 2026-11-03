@@ -2,8 +2,8 @@ import { CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from '
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
-import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { useProfileName } from '@/pages/staff/useProfileName'
 import { STORE_ICON } from '@/shared/icons'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
@@ -27,7 +27,7 @@ const NAV_ITEMS: BottomNavItem[] = [
 
 export default function StaffLayout() {
   const { store, stores, setCurrentStoreId } = useCurrentStore()
-  const profileName = useStaffStore((state) => state.profileName)
+  const [profileName] = useProfileName()
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
