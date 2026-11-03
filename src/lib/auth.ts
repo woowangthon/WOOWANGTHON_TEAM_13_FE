@@ -83,6 +83,11 @@ export async function fetchMe(): Promise<Me> {
   return mockMe(user.id, nickname)
 }
 
+/** me 를 다시 불러온다 (매장 입장 · 생성 뒤) */
+export async function refreshMe() {
+  useAuthStore.getState().setMe(await fetchMe())
+}
+
 /** 세션을 확인하고 me 를 불러와 useAuthStore 에 넣는다. me 를 못 불러오면 에러를 던진다 */
 export async function restoreSession() {
   const { setLoggedIn, setProvider, setMe } = useAuthStore.getState()

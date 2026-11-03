@@ -1,10 +1,10 @@
-import { ArrowLeft, ChevronRight, IdCard, Store, type LucideIcon } from 'lucide-react'
+import { ChevronRight, IdCard, Store, type LucideIcon } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router'
 import { signOut } from '@/lib/auth'
 import { useAuthStore, type StoreRole } from '@/lib/authStore'
 import { env } from '@/lib/env'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
-import { IconButton } from '@/ui/IconButton'
+import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
@@ -36,18 +36,11 @@ const CHOICES: {
   },
 ]
 
-/** 상단 로그인 방식 표시 [글자, 바탕, 글자색] (카카오 · 구글 브랜드 색) */
-const PROVIDER_MARK: Record<string, { label: string; mark: string; bg: string; fg: string }> = {
-  kakao: { label: '카카오', mark: 'K', bg: '#FEE500', fg: '#000000' },
-  google: { label: 'Google', mark: 'G', bg: '#E8EEF9', fg: '#4285F4' },
-}
-
 export default function RoleSelectPage() {
   const navigate = useNavigate()
   const isReady = useAuthStore((state) => state.isReady)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const me = useAuthStore((state) => state.me)
-  const provider = useAuthStore((state) => state.provider)
   const setPendingRole = useAuthStore((state) => state.setPendingRole)
 
   if (!env.skipAuth) {
@@ -66,33 +59,9 @@ export default function RoleSelectPage() {
     navigate('/login', { replace: true })
   }
 
-  const mark = provider ? PROVIDER_MARK[provider] : undefined
-
   return (
     <AuthFrame>
-      <header className="flex items-center justify-between gap-2.5 px-0.5 py-1">
-        <IconButton aria-label="뒤로" onClick={back}>
-          <ArrowLeft />
-        </IconButton>
-        {/* 진행 점: 역할 선택 → 매장 등록 · 초대코드 입력 */}
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          <span className="h-1.5 w-[22px] rounded-full bg-brand" />
-          <span className="size-1.5 rounded-full bg-line" />
-        </div>
-        {mark ? (
-          <span className="flex items-center gap-1.5 rounded-full bg-card py-[7px] pr-[11px] pl-2 text-xs font-semibold text-muted-foreground">
-            <span
-              className="flex size-4 items-center justify-center rounded-full text-[9px] font-black"
-              style={{ background: mark.bg, color: mark.fg }}
-            >
-              {mark.mark}
-            </span>
-            {mark.label}
-          </span>
-        ) : (
-          <span className="w-[42px]" />
-        )}
-      </header>
+      <OnboardingHeader step={0} onBack={back} />
 
       <div className="flex flex-col gap-[22px]">
         <div className="flex flex-col gap-2 px-1 pt-1.5">
