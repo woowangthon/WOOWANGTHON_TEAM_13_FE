@@ -1,4 +1,58 @@
+import { Link, type To } from 'react-router'
+import type { Recipe } from '@/api/mocks/staff/recipes'
+import { CATEGORY_ICON, CATEGORY_TINT } from '@/shared/icons'
+import { Badge } from '@/ui/Badge'
+
 // 공용 보기 부품: 포스기식 메뉴 버튼 격자 · 사장/알바 화면이 함께 사용 — 담당: 민지
-export function RecipeGrid() {
-  return null
+// 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
+interface RecipeGridProps {
+  recipes: Recipe[]
+  getHref: (recipe: Recipe) => To
+}
+
+export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
+  return (
+    <div className="grid grid-cols-2 gap-2.5">
+      {recipes.map((r) => {
+        const Icon = CATEGORY_ICON[r.category]
+        const [tint, ink] = CATEGORY_TINT[r.category]
+        return (
+          <Link
+            key={r.id}
+            to={getHref(r)}
+            className="flex flex-col gap-2.5 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3.5 text-foreground shadow-soft"
+          >
+            <span
+              className="relative flex aspect-[1.3] w-full items-center justify-center rounded-[18px]"
+              style={{ background: tint }}
+            >
+              <span
+                className="flex size-[54px] items-center justify-center rounded-full bg-white/60"
+                style={{ color: ink }}
+              >
+                <Icon className="size-7" />
+              </span>
+              <span
+                className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
+                style={{ color: ink }}
+              >
+                {r.temp}
+              </span>
+              {r.isNew && (
+                <Badge className="absolute top-2 right-2" aria-label="새 레시피">
+                  NEW
+                </Badge>
+              )}
+            </span>
+            <span className="flex flex-col gap-[3px] px-1">
+              <span className="text-[15px] leading-[1.3] font-bold break-keep">{r.name}</span>
+              <span className="text-xs text-subtle">
+                {r.size} · 재료 {r.ingredients.length}가지
+              </span>
+            </span>
+          </Link>
+        )
+      })}
+    </div>
+  )
 }

@@ -7,14 +7,15 @@ import {
   storeRecipes,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
-import { CATEGORY_ICON, CATEGORY_TINT, MANUAL_ICON } from '@/shared/icons'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { MANUAL_ICON } from '@/shared/icons'
+import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
+import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Tabs } from '@/ui/Tabs'
-import { cn } from '@/ui/utils'
 
 export type BoardSegment = 'recipe' | 'manual'
 
@@ -42,7 +43,7 @@ export function RecipeBoard({ segment }: { segment: BoardSegment }) {
         />
       </div>
       {segment === 'recipe' ? (
-        <RecipeGrid storeId={store.id} />
+        <RecipeSection storeId={store.id} />
       ) : (
         <ManualCards storeId={store.id} />
       )}
@@ -50,7 +51,8 @@ export function RecipeBoard({ segment }: { segment: BoardSegment }) {
   )
 }
 
-function RecipeGrid({ storeId }: { storeId: string }) {
+// 검색 · 카테고리는 주소(?q= · ?cat=)에 둔다. 탭 · 격자는 shared/recipe 부품
+function RecipeSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const categories = recipeCategories[storeId] ?? []
@@ -62,6 +64,10 @@ function RecipeGrid({ storeId }: { storeId: string }) {
     catParam && categories.includes(catParam)
       ? catParam
       : (defaultRecipeCategory[storeId] ?? categories[0])
+
+  const counts = Object.fromEntries(
+    categories.map((c) => [c, all.filter((r) => r.category === c).length]),
+  )
 
   const shown = q
     ? all.filter((r) => r.name.includes(q) || r.ingredients.some(([name]) => name.includes(q)))
@@ -92,86 +98,22 @@ function RecipeGrid({ storeId }: { storeId: string }) {
         />
       </label>
 
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-0.5">
-        {categories.map((c) => {
-          const on = !q && c === category
-          const Icon = CATEGORY_ICON[c]
-          return (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={on}
-              onClick={() => update({ cat: c, q: '' })}
-              className={cn(
-                'flex w-[76px] shrink-0 flex-col items-center gap-2 rounded-[24px] px-0.5 pt-3 pb-[11px]',
-                on
-                  ? 'bg-brand text-white shadow-[0_8px_20px_rgba(30,40,32,0.18)]'
-                  : 'bg-card text-foreground shadow-[0_6px_18px_rgba(40,46,36,0.05)]',
-              )}
-            >
-              <span
-                className={cn(
-                  'flex size-10 items-center justify-center rounded-full text-brand',
-                  on ? 'bg-white' : 'bg-brand-soft',
-                )}
-              >
-                <Icon className="size-5" />
-              </span>
-              <span className="text-xs font-bold whitespace-nowrap">
-                {c} <span className="opacity-55">{all.filter((r) => r.category === c).length}</span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      <CategoryTabs
+        categories={categories}
+        counts={counts}
+        value={q ? null : category}
+        onChange={(c) => update({ cat: c, q: '' })}
+      />
 
       <h2 className="m-0 px-1 text-lg font-extrabold tracking-[-0.02em]">
         {q ? `"${q}" 검색 결과 ${shown.length}개` : `${category} ${shown.length}개`}
       </h2>
 
       {shown.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2.5">
-          {shown.map((r) => {
-            const Icon = CATEGORY_ICON[r.category]
-            const [tint, ink] = CATEGORY_TINT[r.category]
-            return (
-              <Link
-                key={r.id}
-                to={{ pathname: `/staff/recipes/${r.id}`, search: params.toString() }}
-                className="flex flex-col gap-2.5 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3.5 text-foreground shadow-soft"
-              >
-                <span
-                  className="relative flex aspect-[1.3] w-full items-center justify-center rounded-[18px]"
-                  style={{ background: tint }}
-                >
-                  <span
-                    className="flex size-[54px] items-center justify-center rounded-full bg-white/60"
-                    style={{ color: ink }}
-                  >
-                    <Icon className="size-7" />
-                  </span>
-                  <span
-                    className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
-                    style={{ color: ink }}
-                  >
-                    {r.temp}
-                  </span>
-                  {r.isNew && (
-                    <Badge className="absolute top-2 right-2" aria-label="새 레시피">
-                      NEW
-                    </Badge>
-                  )}
-                </span>
-                <span className="flex flex-col gap-[3px] px-1">
-                  <span className="text-[15px] leading-[1.3] font-bold break-keep">{r.name}</span>
-                  <span className="text-xs text-subtle">
-                    {r.size} · 재료 {r.ingredients.length}가지
-                  </span>
-                </span>
-              </Link>
-            )
-          })}
-        </div>
+        <RecipeGrid
+          recipes={shown}
+          getHref={(r) => ({ pathname: `/staff/recipes/${r.id}`, search: params.toString() })}
+        />
       ) : (
         <EmptyState
           message="검색 결과가 없어요"
