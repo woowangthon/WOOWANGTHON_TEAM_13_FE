@@ -1,7 +1,7 @@
 import { CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
-import { STORE_ICON } from '@/pages/staff/components/icons'
+import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { StoreAvatar, StoreSheet } from '@/pages/staff/components/StoreSheet'
 import { useStaffStore } from '@/pages/staff/staffStore'

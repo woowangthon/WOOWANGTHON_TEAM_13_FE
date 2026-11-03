@@ -1,6 +1,6 @@
 import { Sparkles, StickyNote } from 'lucide-react'
 import type { Recipe } from '@/api/mocks/staff/recipes'
-import { CATEGORY_ICON, CATEGORY_TINT } from '@/pages/staff/components/icons'
+import { CATEGORY_ICON, CATEGORY_TINT } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 

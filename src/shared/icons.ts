@@ -19,7 +19,7 @@ import type { ManualIcon } from '@/api/mocks/staff/manuals'
 import type { RecipeCategory } from '@/api/mocks/staff/recipes'
 import type { StoreIcon } from '@/api/mocks/staff/stores'
 
-// 알바생 화면 아이콘 · 카테고리 색 모음
+// 아이콘 · 카테고리 색 모음 — 사장 · 알바 화면이 함께 사용 (담당: 민지)
 
 export const STORE_ICON: Record<StoreIcon, LucideIcon> = { moon: Moon, sunset: Sunset }
 

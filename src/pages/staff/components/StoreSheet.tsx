@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { StaffStore } from '@/api/mocks/staff/stores'
-import { STORE_ICON } from '@/pages/staff/components/icons'
+import { STORE_ICON } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 
 // 매장 전환 시트 (n잡)

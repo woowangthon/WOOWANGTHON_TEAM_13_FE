@@ -7,7 +7,7 @@ import {
   storeRecipes,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
-import { CATEGORY_ICON, CATEGORY_TINT, MANUAL_ICON } from '@/pages/staff/components/icons'
+import { CATEGORY_ICON, CATEGORY_TINT, MANUAL_ICON } from '@/shared/icons'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { Badge } from '@/ui/Badge'

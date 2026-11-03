@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { mockSummarize, type HandoverItem } from '@/api/mocks/staff/handovers'
-import { HANDOVER_TAG_PILL } from '@/pages/staff/components/icons'
+import { HANDOVER_TAG_PILL } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
