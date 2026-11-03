@@ -60,7 +60,9 @@ WOOWANGTHON_TEAM_13_FE/
 ## 브랜치 전략
 
 - `main`: 배포용 · `dev`: 합치는 곳 · `feat/staff-chat`, `feat/owner-recipe`: 기능 브랜치
-- 작업 전 `git pull origin dev` → 기능 브랜치에서 작업 → `dev`로 PR → 서로 리뷰 후 merge
+- 작업 전 `git pull origin dev` → 기능 브랜치에서 작업 → `dev`로 PR → merge
+  - 내 폴더만 바꾼 PR은 바로 merge, **상대 폴더를 바꾼 PR은 상대 승인 후** merge
+  - `main`(배포)은 승인 1명이 있어야 merge
 
 ## 커밋 규칙
 

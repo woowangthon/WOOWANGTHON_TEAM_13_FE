@@ -22,7 +22,8 @@
 
 - **남의 폴더는 수정 금지. 가져다 쓰기(import)는 OK.**
   - 예: 사장 화면(나현)은 `src/shared/recipe/RecipeGrid`(민지)를 import해서 쓴다
-- 남의 폴더에 무언가 필요하면 **코드를 고치지 말고 멈춘 뒤**, "○○ 폴더 주인에게 요청이 필요하다"고 알린다
+- 남의 폴더 · 파일을 고쳐야 하면 **코드를 고치지 말고 멈춘 뒤**, 사용자에게 **"○○(폴더 주인)에게 먼저 물어봐 주세요"**라고 말한다. 무엇을 · 왜 고쳐야 하는지 한두 줄로 같이 알려 준다
+  - 주인이 OK했다고 사용자가 말해 주기 전에는 고치지 않는다. OK를 받아 고친 PR은 **주인의 승인을 받은 뒤** merge한다
   - `src/ui/`에 새 부품 필요 → 나현에게 요청 / `src/shared/`에 필요 → 민지에게 요청
   - 급하면 **내 폴더 안에 임시 부품**을 만들고, 나중에 주인 폴더로 옮긴다
 - **새 라이브러리 설치 금지.** 꼭 필요하면 멈추고 물어본다 (`package.json` 충돌 방지)
@@ -52,7 +53,8 @@ React 19 · Vite · TypeScript · React Router(`react-router`) · TanStack Query
 
 ## Git 규칙
 - 브랜치: `main`(배포) ← `dev`(합치는 곳) ← `feat/staff-chat`, `feat/owner-recipe` 같은 기능 브랜치
-- 작업 전 `git pull origin dev`, PR은 **`dev`로**, 상대가 당일 리뷰 후 merge, 화면 PR엔 스크린샷 1장
+- 작업 전 `git pull origin dev`, PR은 **`dev`로**, 화면 PR엔 스크린샷 1장
+- `dev`는 승인 없이 PR 올린 사람이 바로 merge할 수 있다 (내 폴더만 바꾼 PR). **남의 폴더를 바꾼 PR은 주인 승인 후** merge. `main`은 승인 1명 필요
 - 커밋: `<type>: <변경 내용>` — `feat` `fix` `docs` `style` `refactor` `test` `chore` `perf` `build`
   - 예: `feat: 채팅 출처 카드 추가` / 하나의 커밋에는 하나의 논리적인 변경만, **작게 자주** 커밋
 - `main` · `dev`에 직접 push하지 않는다
