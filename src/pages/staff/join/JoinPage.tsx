@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { ArrowRight, Check, LoaderCircle } from 'lucide-react'
+import { ArrowRight, Check, ClipboardList, Coffee, LoaderCircle, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import {
   InviteError,
   joinStore,
@@ -77,12 +77,7 @@ export default function JoinPage() {
   }, [linkCode, verify])
 
   if (joined)
-    return (
-      <JoinDone
-        storeName={joined.store.name}
-        onStart={() => navigate('/staff', { replace: true })}
-      />
-    )
+    return <JoinDone invite={joined} onStart={() => navigate('/staff', { replace: true })} />
 
   const changeCode = (value: string) => {
     setCode(value)
@@ -162,18 +157,57 @@ export default function JoinPage() {
   )
 }
 
-function JoinDone({ storeName, onStart }: { storeName: string; onStart: () => void }) {
+/** 입장 완료 카드 아래 바로가기 (인수인계 확인은 홈 맨 위 "오늘의 인수인계") */
+const NEXT_LINKS = [
+  { to: '/staff/recipes', icon: Coffee, label: '레시피 보기' },
+  { to: '/staff/chat', icon: Sparkles, label: 'AI 사수에게 묻기' },
+  { to: '/staff', icon: ClipboardList, label: '인수인계 확인' },
+]
+
+// 디자인 시안은 초록 카드 — 비어 보여서 매장 사진 + 환영 문구 + 바로가기 칩으로 바꿈
+function JoinDone({ invite, onStart }: { invite: InviteInfo; onStart: () => void }) {
+  const { store, staffName } = invite
   return (
     <AuthFrame className="gap-[22px]">
-      <section className="texture flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-brand p-6 text-white">
-        <span className="flex size-14 items-center justify-center rounded-full bg-white text-brand">
+      <section
+        className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-[32px] p-6 text-white"
+        style={{ background: store.color }}
+      >
+        {store.photo && (
+          <img src={store.photo} alt="" className="absolute inset-0 -z-10 size-full object-cover" />
+        )}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{ background: store.scrim }}
+        />
+        <span
+          className="flex size-14 items-center justify-center rounded-full bg-white"
+          style={{ color: store.color }}
+        >
           <Check className="size-[30px]" />
         </span>
-        <div className="flex flex-col gap-2.5">
-          <p className="m-0 text-sm opacity-75">{storeName}</p>
-          <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em]">
-            입장 완료
-          </h1>
+        <div className="flex flex-col gap-[18px]">
+          <div className="flex flex-col gap-2.5">
+            <p className="m-0 text-sm opacity-80">{store.name}</p>
+            <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em]">
+              입장 완료
+            </h1>
+            <p className="m-0 text-[15px] opacity-90">{staffName} 님, 오늘부터 함께해요</p>
+          </div>
+          <nav aria-label="바로가기" className="flex flex-wrap gap-2">
+            {NEXT_LINKS.map(({ to, icon: Icon, label }) => (
+              <Link
+                key={label}
+                to={to}
+                replace
+                className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px]"
+              >
+                <Icon className="size-4" />
+                {label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </section>
       <Button variant="ink" className="h-14 text-base" onClick={onStart}>
