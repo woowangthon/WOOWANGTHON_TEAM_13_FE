@@ -1,15 +1,14 @@
 import { Coffee, LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router'
-import { READY_PROVIDERS, rememberRedirect, signIn, type OAuthProvider } from '@/lib/auth'
+import { rememberRedirect, signIn, type OAuthProvider } from '@/lib/auth'
 import { getHomePath, useAuthStore } from '@/lib/authStore'
 import loginPhoto from '@/pages/auth/assets/login-photo.webp'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
-import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 로그인 (디자인: docs/design/login-onboarding.html): 매장 사진 카드 + 카카오(설정 전이라 준비 중) · 구글
+// 로그인 (디자인: docs/design/login-onboarding.html): 매장 사진 카드 + 카카오 · 구글
 export default function LoginPage() {
   const isReady = useAuthStore((state) => state.isReady)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
@@ -30,8 +29,6 @@ export default function LoginPage() {
       toast.error('로그인하지 못했어요. 다시 시도해 주세요', { onRetry: () => start(provider) })
     }
   }
-
-  const kakaoReady = READY_PROVIDERS.includes('kakao')
 
   return (
     <AuthFrame className="gap-[22px]">
@@ -58,20 +55,15 @@ export default function LoginPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        {/* 카카오 노란색(#FEE500)은 나현에게 Button kakao 종류를 요청해 둠. 설정 전이라 회색 + 준비 중 */}
+        {/* 카카오 노란색(#FEE500)은 나현에게 Button kakao 종류를 요청해 둠. 생기기 전까지 연한 회색 */}
         <Button
           variant="soft"
-          className="h-14 gap-2.5 rounded-[18px] text-base font-bold text-faint"
-          disabled={!kakaoReady || pending !== null}
+          className="h-14 gap-2.5 rounded-[18px] text-base font-bold"
+          disabled={pending !== null}
           onClick={() => start('kakao')}
         >
           {pending === 'kakao' ? <LoaderCircle className="size-5 animate-spin" /> : <KakaoLogo />}
           카카오로 시작하기
-          {!kakaoReady && (
-            <Badge variant="muted" size="sm">
-              준비 중
-            </Badge>
-          )}
         </Button>
         <Button
           variant="white"
