@@ -8,7 +8,9 @@ import { env } from '@/lib/env'
  */
 
 export const supabase =
-  env.supabaseUrl && env.supabaseAnonKey ? createClient(env.supabaseUrl, env.supabaseAnonKey) : null
+  env.supabaseUrl && env.supabasePublishableKey
+    ? createClient(env.supabaseUrl, env.supabasePublishableKey)
+    : null
 
 export type OAuthProvider = 'kakao' | 'google'
 
