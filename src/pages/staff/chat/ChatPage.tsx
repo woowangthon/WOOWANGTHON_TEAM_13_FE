@@ -22,6 +22,7 @@ export default function ChatPage() {
     () => (location.state as { draft?: string } | null)?.draft ?? '',
   )
 
+  // 메시지가 바뀔 때마다 맨 아래로. 개수만 보면 '입력 중(···)'이 답변으로 바뀔 때(개수 그대로) 놓친다
   const first = useRef(true)
   useEffect(() => {
     window.scrollTo({
@@ -29,7 +30,7 @@ export default function ChatPage() {
       behavior: first.current ? 'auto' : 'smooth',
     })
     first.current = false
-  }, [messages.length])
+  }, [messages])
 
   const send = (text: string) => {
     if (!text.trim()) return
