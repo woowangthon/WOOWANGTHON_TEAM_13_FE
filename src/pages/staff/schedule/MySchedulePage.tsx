@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { ShiftView } from '@/pages/staff/schedule/components/ShiftView'
 
 export default function MySchedulePage() {
-  return <PagePlaceholder title="내 근무표 (P1)" owner="민지" />
+  return <ShiftView />
 }

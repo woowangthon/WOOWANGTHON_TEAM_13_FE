@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { StaffHome } from '@/pages/staff/home/components/StaffHome'
 
 export default function StaffHomePage() {
-  return <PagePlaceholder title="알바 홈" owner="민지" />
+  return <StaffHome />
 }

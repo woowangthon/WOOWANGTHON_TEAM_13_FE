@@ -1,5 +1,6 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
 
+// 매뉴얼 목록: 레시피 탭의 '매뉴얼' 칸
 export default function ManualListPage() {
-  return <PagePlaceholder title="매뉴얼 목록" owner="민지" />
+  return <RecipeBoard segment="manual" />
 }
