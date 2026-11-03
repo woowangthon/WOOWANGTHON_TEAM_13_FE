@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
 
 export default function RecipeBoardPage() {
-  return <PagePlaceholder title="레시피 (카테고리 보기)" owner="민지" />
+  return <RecipeBoard segment="recipe" />
 }

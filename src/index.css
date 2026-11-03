@@ -1,62 +1,121 @@
 /*
  * 전역 스타일 — 담당: 나현 (디자인 시스템)
- * 색은 아래 :root 토큰으로만 바꾼다. 화면에서는 bg-primary, text-muted-foreground 처럼 토큰 이름으로 쓴다.
- * 지금 값은 shadcn 기본(neutral)이고, 브랜드 색이 정해지면 여기만 고친다.
+ * 색은 아래 :root 토큰으로만 바꾼다. 화면에서는 bg-card, text-muted-foreground, bg-brand 처럼 토큰 이름으로 쓴다.
+ * --brand 는 매장마다 다르다 (달빛 카페 #2A4536 · 오후의 커피 #6E3B26). 화면 틀에서 style 로 덮어쓴다.
  */
 
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --radius: 1.5rem;
+
+  /* 매장 색 — 화면 틀에서 매장에 맞게 바꾼다 */
+  --brand: #2a4536;
+  --brand-soft: #e3e8dc;
+
+  --canvas: #e6e0d5; /* 앱 바깥 배경 */
+  --background: #f1ece3; /* 앱 배경 */
+  --foreground: #1f2a24;
+  --card: #fbf8f3;
+  --card-foreground: #1f2a24;
+  --popover: #fbf8f3;
+  --popover-foreground: #1f2a24;
+  --primary: #2a4536;
+  --primary-foreground: #ffffff;
+  --secondary: #ede7dc; /* 연한 버튼 */
+  --secondary-foreground: #1f2a24;
+  --muted: #e7e1d6; /* 세그먼트 바탕 · 시스템 말풍선 */
+  --muted-foreground: #7b8078;
+  --subtle: #8a8e86; /* 보조 설명 */
+  --faint: #a3a69e; /* 비활성 */
+  --line: #cfc8ba; /* 선 · 빈 체크박스 */
+  --accent: #e3e8dc;
+  --accent-foreground: #2e4438;
+  --ink: #18241d; /* 진한 버튼 · 토스트 */
+  --warm: #f5e6d6; /* 사장님 답변 · 메모 */
+  --warm-foreground: #8a5630;
+  --new: #b4733f; /* NEW 배지 */
+  --destructive: #b9574b;
+  --destructive-soft: #f6e4df;
+  --destructive-foreground: #9b4237;
+  --border: #eceae3;
+  --input: #eceae3;
+  --ring: #2a4536;
+
+  /* 다크 카드의 옅은 원형 라인 텍스처 */
+  --texture: repeating-radial-gradient(
+    circle at 105% -5%,
+    rgba(255, 255, 255, 0.07) 0 1px,
+    transparent 1px 15px
+  );
 }
 
 @theme inline {
-  --font-sans:
-    'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic',
-    sans-serif;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, system-ui, sans-serif;
+  --radius-sm: 0.75rem;
+  --radius-md: 1.125rem;
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: 1.75rem;
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-canvas: var(--canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
+  --color-primary: var(--brand);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-ink: var(--ink);
+  --color-warm: var(--warm);
+  --color-warm-foreground: var(--warm-foreground);
+  --color-new: var(--new);
   --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --shadow-soft: 0 8px 24px rgba(40, 46, 36, 0.06);
+  --shadow-float: 0 8px 30px rgba(40, 46, 36, 0.12);
+  --shadow-lift: 0 10px 22px rgba(30, 40, 32, 0.22);
+}
+
+/* 다크 카드 텍스처: <div className="bg-brand texture"> */
+@utility texture {
+  background-image: var(--texture);
+}
+
+/* 가로 스크롤 줄에서 스크롤바 숨기기 */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @layer base {
@@ -67,10 +126,27 @@
   html,
   body,
   #root {
-    height: 100%;
+    min-height: 100%;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-canvas text-foreground font-sans antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  input,
+  textarea,
+  button {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: none;
   }
 }
