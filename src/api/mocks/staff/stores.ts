@@ -63,7 +63,7 @@ export const staffStores: StaffStore[] = [
   },
   {
     id: 'afternoon',
-    code: 'A1B2C3',
+    code: 'M3XR9D',
     name: '오후의 커피',
     kind: '브런치 카페',
     address: '서울 성동구 서울숲2길 32',
