@@ -16,12 +16,8 @@ export const supabase =
 
 export type OAuthProvider = 'kakao' | 'google'
 
-/** Supabase 에 설정이 끝난 로그인 방식. 카카오는 설정 전이라 아직 뺀다 */
-export const READY_PROVIDERS: OAuthProvider[] = ['google']
-
 export async function signIn(provider: OAuthProvider) {
   if (!supabase) throw new Error('Supabase 설정(.env)이 비어 있어요')
-  if (!READY_PROVIDERS.includes(provider)) throw new Error(`${provider} 로그인은 준비 중이에요`)
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
