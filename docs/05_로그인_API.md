@@ -17,10 +17,10 @@
 ### 주의
 - 카카오는 **닉네임만** → Supabase 카카오 설정에서 "이메일 없는 사용자 허용" 켜기
 - 카카오 · 구글 콘솔에는 Supabase 콜백 주소, Supabase에는 FE 주소(`http://localhost:5173`, Vercel 주소) 등록
-- FE에는 **Project URL · anon key만**. service_role 키는 절대 넣지 않는다. 키는 디스코드 DM으로만 공유
+- FE에는 **Project URL · publishable key(sb_publishable_…)만**. service_role · secret 키는 절대 넣지 않는다. 키는 디스코드 DM으로만 공유
 
 ### 남은 일
-- [ ] Supabase Project URL · anon key 공유 (은교 → 민지) → `.env`에 넣기
+- [x] Supabase Project URL · publishable key 공유 (은교 → 민지, 11/3) → `.env`에 넣기
 - [ ] `GET /me` 응답 형태 확정 (닉네임 · 소속 매장 · 매장별 역할) → `src/lib/authStore.ts`의 `Me` 타입 맞추기
 
 ## API 사용
@@ -34,7 +34,7 @@
 | 이름 | 뜻 |
 | --- | --- |
 | `VITE_API_URL` | BE 서버 주소 |
-| `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` | Supabase 로그인 |
+| `VITE_SUPABASE_URL` · `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase 로그인 |
 | `VITE_KAKAO_JS_KEY` | 카카오 JavaScript 키 (카톡 공유) |
 | `VITE_SKIP_AUTH` | `true`면 로그인 없이 모든 화면 확인 (로컬 개발용) |
 

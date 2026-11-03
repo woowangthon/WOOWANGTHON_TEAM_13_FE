@@ -2,7 +2,7 @@
 export const env = {
   apiUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL ?? '',
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
+  supabasePublishableKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
   kakaoJsKey: import.meta.env.VITE_KAKAO_JS_KEY ?? '',
   skipAuth: import.meta.env.VITE_SKIP_AUTH === 'true',
 }
