@@ -1,4 +1,6 @@
 import { createClient, type Session } from '@supabase/supabase-js'
+import { mockMe } from '@/api/mocks/staff/me'
+import { useAuthStore, type Me } from '@/lib/authStore'
 import { env } from '@/lib/env'
 
 /*
@@ -14,8 +16,12 @@ export const supabase =
 
 export type OAuthProvider = 'kakao' | 'google'
 
+/** Supabase 에 설정이 끝난 로그인 방식. 카카오는 설정 전이라 아직 뺀다 */
+export const READY_PROVIDERS: OAuthProvider[] = ['google']
+
 export async function signIn(provider: OAuthProvider) {
   if (!supabase) throw new Error('Supabase 설정(.env)이 비어 있어요')
+  if (!READY_PROVIDERS.includes(provider)) throw new Error(`${provider} 로그인은 준비 중이에요`)
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
@@ -29,6 +35,8 @@ export async function signIn(provider: OAuthProvider) {
 
 export async function signOut() {
   await supabase?.auth.signOut()
+  useAuthStore.getState().reset()
+  rememberRedirect(null)
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -46,4 +54,39 @@ export function onAuthChange(callback: (session: Session | null) => void) {
   if (!supabase) return () => {}
   const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session))
   return () => data.subscription.unsubscribe()
+}
+
+/*
+ * 로그인 뒤 돌아갈 주소 (예: 초대 링크 /staff/join?code=…)
+ * 구글 · 카카오 로그인 화면에 다녀오면 앱 상태가 사라지므로 sessionStorage 에 둔다.
+ */
+const REDIRECT_KEY = 'after-login'
+
+export function rememberRedirect(path: string | null) {
+  if (path) sessionStorage.setItem(REDIRECT_KEY, path)
+  else sessionStorage.removeItem(REDIRECT_KEY)
+}
+
+export function takeRedirect(): string | null {
+  const path = sessionStorage.getItem(REDIRECT_KEY)
+  sessionStorage.removeItem(REDIRECT_KEY)
+  return path
+}
+
+/** GET /me — 응답 모양이 정해지기 전까지는 가짜 데이터 */
+export async function fetchMe(): Promise<Me> {
+  const session = await getSession()
+  if (!session) throw new Error('로그인이 필요해요')
+  // TODO: BE 응답 모양이 정해지면 apiFetch<Me>('/me') 로 바꾼다
+  const { user } = session
+  const nickname: string = user.user_metadata.full_name ?? user.user_metadata.name ?? '사용자'
+  return mockMe(user.id, nickname)
+}
+
+/** 세션을 확인하고 me 를 불러와 useAuthStore 에 넣는다. me 를 못 불러오면 에러를 던진다 */
+export async function restoreSession() {
+  const { setLoggedIn, setMe } = useAuthStore.getState()
+  const session = await getSession()
+  setLoggedIn(Boolean(session))
+  setMe(session ? await fetchMe() : null)
 }
