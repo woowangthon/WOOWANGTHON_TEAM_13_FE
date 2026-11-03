@@ -1,6 +1,6 @@
 import type { OAuthProvider } from '@/lib/auth'
 
-// 로그인 방식 로고 (카카오 말풍선 · 구글 G, 각 브랜드 가이드 색). 마이페이지 연결된 계정에서 사용
+// 로그인 방식 로고 (카카오 말풍선 · 구글 G, 각 브랜드 가이드 색). 로그인 버튼 · 마이페이지 연결된 계정에서 사용
 export function ProviderLogo({ provider, size = 20 }: { provider: OAuthProvider; size?: number }) {
   if (provider === 'kakao') {
     return (
