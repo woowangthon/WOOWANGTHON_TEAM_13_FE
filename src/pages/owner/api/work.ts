@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   addShift,
   confirmScheduleDraft,
@@ -102,5 +102,15 @@ export function useStorePayroll(storeId: string) {
     queryKey: ownerKeys.payroll(storeId),
     queryFn: () => getStorePayroll(storeId),
     enabled: !!storeId,
+  })
+}
+
+/** 여러 매장 급여를 한 번에 (급여 탭 '전체') */
+export function useStorePayrolls(storeIds: string[]) {
+  return useQueries({
+    queries: storeIds.map((storeId) => ({
+      queryKey: ownerKeys.payroll(storeId),
+      queryFn: () => getStorePayroll(storeId),
+    })),
   })
 }
