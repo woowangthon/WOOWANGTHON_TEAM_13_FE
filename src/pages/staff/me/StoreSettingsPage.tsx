@@ -11,6 +11,7 @@ import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { Header } from '@/ui/Header'
@@ -43,15 +44,33 @@ const ROW = 44
 
 export default function StoreSettingsPage() {
   const { storeId } = useParams()
-  const { stores } = useCurrentStore()
-  const store = stores.find((s) => s.id === storeId)
+  const current = useCurrentStore()
+  const store = current.stores.find((s) => s.id === storeId)
   const estimateQuery = useMyPayrollEstimate(storeId ?? '')
 
+  // 내 매장 목록을 받기 전에는 "없는 매장"으로 판단하지 않는다 (주소로 바로 들어오거나 새로고침한 경우)
+  if (current.isPending || current.error) {
+    return (
+      <StaffFrame store={current.store}>
+        {current.error ? (
+          <LoadError error={current.error} onRetry={() => current.retry()} />
+        ) : (
+          <Spinner />
+        )}
+        <Toaster bottom={96} />
+      </StaffFrame>
+    )
+  }
   if (!store) return <Navigate to="/staff/me" replace />
   if (!estimateQuery.data) {
     return (
       <StaffFrame store={store}>
-        <Spinner />
+        {estimateQuery.isError ? (
+          <LoadError error={estimateQuery.error} onRetry={() => estimateQuery.refetch()} />
+        ) : (
+          <Spinner />
+        )}
+        <Toaster bottom={96} />
       </StaffFrame>
     )
   }

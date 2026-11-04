@@ -102,6 +102,13 @@ export function useAssistantChat(storeId: string) {
 
   const isError = listQuery.isError || create.isError || messagesQuery.isError
   return {
+    error: listQuery.error ?? create.error ?? messagesQuery.error,
+    /** 실패한 단계만 다시 (방 목록 → 방 만들기 → 메시지) */
+    retry: () => {
+      if (listQuery.isError) return void listQuery.refetch()
+      if (create.isError) return create.mutate()
+      return void messagesQuery.refetch()
+    },
     chatId,
     suggestions: listQuery.data?.suggestions ?? [],
     messages: messagesQuery.data?.messages,

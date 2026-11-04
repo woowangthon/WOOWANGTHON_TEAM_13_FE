@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
+import { LoadError } from '@/shared/LoadError'
 import { STORE_ICON } from '@/shared/icons'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
@@ -27,7 +28,7 @@ const NAV_ITEMS: BottomNavItem[] = [
 ]
 
 export default function StaffLayout() {
-  const { store, stores, setCurrentStoreId, isPending } = useCurrentStore()
+  const { store, stores, setCurrentStoreId, isPending, error, retry } = useCurrentStore()
   const [profileName] = useProfileName()
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
@@ -58,7 +59,7 @@ export default function StaffLayout() {
       </header>
 
       {/* 매장 정보를 받기 전에는 화면 대신 Spinner (매장 색 · 데이터가 섞여 보이지 않게) */}
-      {isPending ? <Spinner /> : <Outlet />}
+      {isPending ? <Spinner /> : error ? <LoadError error={error} onRetry={retry} /> : <Outlet />}
 
       <BottomNav
         items={NAV_ITEMS}

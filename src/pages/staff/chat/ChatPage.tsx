@@ -5,6 +5,7 @@ import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assista
 import { ChatBubble, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { Card } from '@/ui/Card'
 import { Spinner } from '@/ui/Spinner'
 
@@ -54,6 +55,8 @@ export default function ChatPage() {
 
       {chat.isPending ? (
         <Spinner />
+      ) : chat.isError ? (
+        <LoadError error={chat.error} onRetry={chat.retry} />
       ) : (
         <div className="flex flex-col gap-3.5" aria-live="polite">
           {chat.messages?.map((message) => (

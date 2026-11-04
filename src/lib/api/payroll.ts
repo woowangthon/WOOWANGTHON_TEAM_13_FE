@@ -29,15 +29,20 @@ export function useMyPayrollEstimate(storeId: string) {
   })
 }
 
-/** 여러 매장의 예상 급여 ("전체" 보기). 모두 받으면 data, 아니면 undefined */
+/** 여러 매장의 예상 급여 ("전체" 보기). 모두 받으면 data, 하나라도 실패하면 error · retry */
 export function useMyPayrollEstimates(storeIds: string[]) {
   return useQueries({
     queries: storeIds.map((storeId) => ({
       queryKey: payrollKeys.estimate(storeId),
       queryFn: () => fetchEstimate(storeId),
     })),
-    combine: (results) =>
-      results.every((result) => result.data) ? results.map((result) => result.data!) : undefined,
+    combine: (results) => ({
+      data: results.every((result) => result.data)
+        ? results.map((result) => result.data!)
+        : undefined,
+      error: results.find((result) => result.error)?.error ?? null,
+      retry: () => results.forEach((result) => result.isError && result.refetch()),
+    }),
   })
 }
 

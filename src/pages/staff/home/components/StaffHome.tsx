@@ -7,6 +7,7 @@ import type { Shift } from '@/lib/api/types'
 import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { EmptyState } from '@/ui/EmptyState'
@@ -23,6 +24,9 @@ export function StaffHome() {
   const { store } = useCurrentStore()
   const scheduleQuery = useMySchedule(store.id)
   const schedule = scheduleQuery.data
+  if (scheduleQuery.isError) {
+    return <LoadError error={scheduleQuery.error} onRetry={() => scheduleQuery.refetch()} />
+  }
   if (!schedule) return <Spinner />
 
   const today = fromDateKey(schedule.today)
@@ -182,6 +186,8 @@ function HandoverSection({
 
       {notesQuery.isPending ? (
         <Spinner />
+      ) : notesQuery.isError ? (
+        <LoadError error={notesQuery.error} onRetry={() => notesQuery.refetch()} />
       ) : withItems.length > 0 ? (
         withItems.map((note) => (
           <div key={note.noteId} className="flex flex-col gap-2.5">
