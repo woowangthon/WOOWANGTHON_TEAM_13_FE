@@ -31,6 +31,8 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
   const [items, setItems] = useState<HandoverDraftItem[]>([])
   const [edited, setEdited] = useState(false)
   const [editing, setEditing] = useState<{ index: number; text: string } | null>(null)
+  // Enter · Esc 로 끝낸 뒤 입력칸이 사라지며 blur 가 또 와도 한 번만 처리한다
+  const editDone = useRef(false)
   // 정리 중에 시트를 닫으면 결과를 버린다
   const alive = useRef(true)
   useEffect(() => {
@@ -68,9 +70,20 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
     changeItem(index, { tag: next })
   }
 
+  const startEdit = (index: number, text: string) => {
+    editDone.current = false
+    setEditing({ index, text })
+  }
+
+  const cancelEdit = () => {
+    editDone.current = true
+    setEditing(null)
+  }
+
   // 글자 고치기 끝: 비웠으면 원래대로, 바뀌었으면 반영
   const finishEdit = () => {
-    if (!editing) return
+    if (!editing || editDone.current) return
+    editDone.current = true
     const text = editing.text.trim()
     if (text && text !== items[editing.index].text) changeItem(editing.index, { text })
     setEditing(null)
@@ -150,7 +163,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
                     onBlur={finishEdit}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter') finishEdit()
-                      if (event.key === 'Escape') setEditing(null)
+                      if (event.key === 'Escape') cancelEdit()
                     }}
                     aria-label="인수인계 항목 고치기"
                     className="min-w-0 flex-1 border-none bg-transparent p-0 text-sm leading-[1.45]"
@@ -158,7 +171,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setEditing({ index: i, text: item.text })}
+                    onClick={() => startEdit(i, item.text)}
                     className="min-w-0 flex-1 text-left text-sm leading-[1.45]"
                   >
                     {item.text}
