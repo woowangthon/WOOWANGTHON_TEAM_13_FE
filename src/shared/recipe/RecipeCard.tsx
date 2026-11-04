@@ -18,14 +18,14 @@ export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
   return (
     <div className="flex flex-col gap-[18px]">
       <div
-        className="relative flex h-[150px] items-center justify-center rounded-[24px]"
+        className="relative flex h-24 items-center justify-center rounded-[24px]"
         style={{ background: tint }}
       >
         <span
-          className="flex size-[84px] items-center justify-center rounded-full bg-white/60"
+          className="flex size-14 items-center justify-center rounded-full bg-white/60"
           style={{ color: ink }}
         >
-          <Icon className="size-10" />
+          <Icon className="size-7" />
         </span>
         <span
           className="absolute top-3.5 left-3.5 rounded-full bg-white/70 px-[9px] py-1 text-[11px] font-extrabold"

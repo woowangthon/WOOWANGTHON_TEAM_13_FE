@@ -20,7 +20,7 @@ export function ManualCard({ manual, href }: { manual: Manual; href: To }) {
       </span>
       <span className="text-[17px] font-bold">{manual.title}</span>
       <span className="line-clamp-2 text-[13px] leading-normal text-[#6B7068]">{manual.body}</span>
-      <span className="mt-auto flex size-8 items-center justify-center self-end rounded-full bg-foreground text-white">
+      <span className="mt-auto flex size-8 items-center justify-center self-end rounded-full bg-brand-soft text-brand">
         <ChevronRight className="size-5" />
       </span>
     </Link>
