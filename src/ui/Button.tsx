@@ -14,6 +14,8 @@ const buttonVariants = cva(
         white: 'bg-white text-foreground',
         danger: 'bg-destructive text-white',
         ghost: 'bg-transparent text-[#4F554D] font-semibold',
+        /** 카카오 로그인 · 카톡 보내기 (카카오 브랜드 노랑) */
+        kakao: 'bg-[#FEE500] text-black/85 disabled:opacity-60',
       },
       size: {
         sm: 'h-9 px-3.5 text-[13px]',
