@@ -11,14 +11,12 @@ import type {
   MySchedule,
   NewAvailability,
 } from '@/lib/api/types'
+import { http, isRealApi } from '@/lib/api/source'
 import { fromDateKey } from '@/lib/date'
 
 /*
  * 근무 훅 (P1) — 담당: 민지
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만 apiFetch 로 바꾸면 된다.
- *   GET /stores/{storeId}/schedules/me · GET /stores/{storeId}/availabilities/me
- *   POST /stores/{storeId}/availabilities · PATCH /stores/{storeId}/availabilities/{availabilityId}
- * 응답 모양: docs/07 7
+ * .env VITE_REAL_API 에 'schedule'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
  */
 
 export const scheduleKeys = {
@@ -26,12 +24,23 @@ export const scheduleKeys = {
   availability: (storeId: string) => ['stores', storeId, 'availabilities', 'me'] as const,
 }
 
-const fetchSchedule = (storeId: string) => getMySchedule(storeId)
-const fetchAvailability = (storeId: string) => getMyAvailability(storeId)
+const real = () => isRealApi('schedule')
+const availabilitiesPath = (storeId: string) => `/stores/${storeId}/availabilities`
+
+const fetchSchedule = (storeId: string) =>
+  real() ? http.get<MySchedule>(`/stores/${storeId}/schedules/me`) : getMySchedule(storeId)
+const fetchAvailability = (storeId: string) =>
+  real()
+    ? http.get<MyAvailability>(`${availabilitiesPath(storeId)}/me`)
+    : getMyAvailability(storeId)
 const postAvailability = (storeId: string, body: NewAvailability) =>
-  createAvailability(storeId, body)
+  real()
+    ? http.post<MyAvailability>(availabilitiesPath(storeId), body)
+    : createAvailability(storeId, body)
 const patchAvailability = (storeId: string, availabilityId: string, body: AvailabilityInput) =>
-  updateAvailability(storeId, availabilityId, body)
+  real()
+    ? http.patch<MyAvailability>(`${availabilitiesPath(storeId)}/${availabilityId}`, body)
+    : updateAvailability(storeId, availabilityId, body)
 
 /** 내 근무: 오늘 · 이번 주 · 확정된 근무 */
 export function useMySchedule(storeId: string) {

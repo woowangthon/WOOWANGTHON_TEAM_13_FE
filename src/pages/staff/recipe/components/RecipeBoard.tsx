@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
@@ -92,6 +93,8 @@ function RecipeSection({ storeId }: { storeId: string }) {
 
       {recipesQuery.isPending ? (
         <Spinner />
+      ) : recipesQuery.isError ? (
+        <LoadError error={recipesQuery.error} onRetry={() => recipesQuery.refetch()} />
       ) : (
         <>
           <CategoryTabs
@@ -136,6 +139,9 @@ function ManualCards({ storeId }: { storeId: string }) {
   const manualsQuery = useManuals(storeId)
 
   if (manualsQuery.isPending) return <Spinner />
+  if (manualsQuery.isError) {
+    return <LoadError error={manualsQuery.error} onRetry={() => manualsQuery.refetch()} />
+  }
   return (
     <ManualGrid
       manuals={manualsQuery.data?.manuals ?? []}

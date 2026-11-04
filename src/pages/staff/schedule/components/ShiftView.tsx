@@ -5,6 +5,7 @@ import { fromDateKey, isSameDay } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { Badge } from '@/ui/Badge'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
@@ -19,10 +20,15 @@ export function ShiftView() {
   const availability = availabilityQuery.data
 
   if (!schedule || !availability) {
+    const failed = scheduleQuery.isError
+      ? scheduleQuery
+      : availabilityQuery.isError
+        ? availabilityQuery
+        : null
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="shift" />
-        <Spinner />
+        {failed ? <LoadError error={failed.error} onRetry={() => failed.refetch()} /> : <Spinner />}
       </div>
     )
   }

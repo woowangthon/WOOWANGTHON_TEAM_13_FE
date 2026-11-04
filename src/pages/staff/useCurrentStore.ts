@@ -95,5 +95,13 @@ export function useCurrentStore() {
   )
   const store = stores.find((s) => s.id === currentStoreId) ?? stores[0] ?? EMPTY_STORE
 
-  return { store, stores, setCurrentStoreId, isPending: storesQuery.isPending }
+  return {
+    store,
+    stores,
+    setCurrentStoreId,
+    isPending: storesQuery.isPending,
+    /** 내 매장을 못 불러왔을 때 (알바 화면 틀이 LoadError 를 보여 준다) */
+    error: storesQuery.error,
+    retry: storesQuery.refetch,
+  }
 }

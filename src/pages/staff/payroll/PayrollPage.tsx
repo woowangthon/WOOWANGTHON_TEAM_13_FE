@@ -8,6 +8,7 @@ import { fromDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
@@ -33,14 +34,21 @@ export default function PayrollPage() {
   const [pickedDay, setPickedDay] = useState<number | null>(null)
 
   const targetStores = showAll ? stores : [store]
-  const estimates = useMyPayrollEstimates(targetStores.map((s) => s.id))
-  const schedule = useMySchedule(store.id).data
+  const estimatesResult = useMyPayrollEstimates(targetStores.map((s) => s.id))
+  const estimates = estimatesResult.data
+  const scheduleQuery = useMySchedule(store.id)
+  const schedule = scheduleQuery.data
 
   if (!estimates || !schedule) {
+    const error = estimatesResult.error ?? scheduleQuery.error
+    const retry = () => {
+      estimatesResult.retry()
+      if (scheduleQuery.isError) scheduleQuery.refetch()
+    }
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="pay" />
-        <Spinner />
+        {error ? <LoadError error={error} onRetry={retry} /> : <Spinner />}
       </div>
     )
   }

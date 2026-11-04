@@ -7,6 +7,7 @@ import {
   type AvailabilityMark,
 } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { LoadError } from '@/shared/LoadError'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Calendar } from '@/ui/Calendar'
@@ -55,7 +56,11 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
   if (!saved) {
     return (
       <BottomSheet open onClose={onClose} label="근무 가능 시간">
-        <Spinner />
+        {availabilityQuery.isError ? (
+          <LoadError error={availabilityQuery.error} onRetry={() => availabilityQuery.refetch()} />
+        ) : (
+          <Spinner />
+        )}
       </BottomSheet>
     )
   }
