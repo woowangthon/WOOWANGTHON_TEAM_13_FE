@@ -1,7 +1,10 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { toDateParam, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
+import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
+import { useMySchedule } from '@/lib/api/schedule'
+import type { Shift } from '@/lib/api/types'
+import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
@@ -12,33 +15,54 @@ import { cn } from '@/ui/utils'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-const sameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
+/** 이번 주 7일 + 근무 있는 날 */
+type WeekDay = { date: Date; work: boolean }
 
-// 알바 홈: 이번 주 · 오늘 근무 · 오늘의 인수인계
+// 알바 홈: 이번 주 · 오늘 근무 · 오늘의 인수인계 (근무: useMySchedule)
 export function StaffHome() {
   const { store } = useCurrentStore()
+  const scheduleQuery = useMySchedule(store.id)
+  const schedule = scheduleQuery.data
+  if (!schedule) return <Spinner />
+
+  const today = fromDateKey(schedule.today)
+  const weekStart = fromDateKey(schedule.weekStart)
+  const workDays = new Set(schedule.shifts.map((shift) => shift.date))
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i)
+    return { date, work: workDays.has(toDateKey(date)) }
+  })
+  const todayShift = schedule.shifts.find((shift) => shift.date === schedule.today)
+
   // 매장을 바꾸면 선택한 날짜를 그 매장의 오늘로 되돌린다
-  return <HomeBody key={store.id} store={store} />
+  return <HomeBody key={store.id} store={store} today={today} week={week} todayShift={todayShift} />
 }
 
-function HomeBody({ store }: { store: StaffStoreView }) {
-  const todayDate = store.today.getDate()
+function HomeBody({
+  store,
+  today: todayOfStore,
+  week,
+  todayShift,
+}: {
+  store: StaffStoreView
+  today: Date
+  week: WeekDay[]
+  todayShift?: Shift
+}) {
+  const todayDate = todayOfStore.getDate()
   const [selected, setSelected] = useState(todayDate)
 
   return (
     <div className="flex flex-col gap-[18px]">
       <span className="px-1 text-[13px] font-medium text-muted-foreground">
-        {formatDate(store.today)}
+        {formatDate(todayOfStore)}
       </span>
 
       <div className="grid grid-cols-7 items-center gap-1">
-        {store.week.map(({ date, work }) => {
+        {week.map(({ date, work }) => {
           const day = date.getDate()
           const on = day === selected
-          const today = sameDay(date, store.today)
+          const today = isSameDay(date, todayOfStore)
           return (
             <button
               key={day}
@@ -64,14 +88,15 @@ function HomeBody({ store }: { store: StaffStoreView }) {
         })}
       </div>
 
-      <TodayShiftCard store={store} />
+      {/* 오늘 근무가 없으면 카드를 숨긴다 */}
+      {todayShift && <TodayShiftCard store={store} shift={todayShift} />}
 
-      <HandoverSection store={store} selectedDay={selected} />
+      <HandoverSection store={store} today={todayOfStore} week={week} selectedDay={selected} />
     </div>
   )
 }
 
-function TodayShiftCard({ store }: { store: StaffStoreView }) {
+function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift }) {
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = store.photo && !photoFailed
 
@@ -93,14 +118,14 @@ function TodayShiftCard({ store }: { store: StaffStoreView }) {
           <span className="flex size-7 items-center justify-center rounded-full bg-white text-brand">
             <Clock className="size-4" strokeWidth={2.4} />
           </span>
-          오늘 근무 · {store.shift.role}
+          오늘 근무 · {shift.role}
         </span>
         <div className="flex items-end justify-between gap-3.5">
           <div className="flex min-w-0 flex-col gap-1.5">
             <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em]">
-              {store.shift.start} – {store.shift.end}
+              {shift.start} – {shift.end}
             </span>
-            <span className="text-[13px] break-keep opacity-85">{store.crew}</span>
+            <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>
           </div>
           <Link
             to="/staff/schedule"
@@ -116,13 +141,23 @@ function TodayShiftCard({ store }: { store: StaffStoreView }) {
 }
 
 // 노트마다 AI 요약 카드 + 항목 (최신 순). 오늘만 체크할 수 있다
-function HandoverSection({ store, selectedDay }: { store: StaffStoreView; selectedDay: number }) {
-  const todayDate = store.today.getDate()
+function HandoverSection({
+  store,
+  today,
+  week,
+  selectedDay,
+}: {
+  store: StaffStoreView
+  today: Date
+  week: WeekDay[]
+  selectedDay: number
+}) {
+  const todayDate = today.getDate()
   const live = selectedDay === todayDate
   const selectedDate =
-    store.week.find((w) => w.date.getDate() === selectedDay)?.date ??
-    new Date(store.today.getFullYear(), store.today.getMonth(), selectedDay)
-  const date = toDateParam(selectedDate)
+    week.find((w) => w.date.getDate() === selectedDay)?.date ??
+    new Date(today.getFullYear(), today.getMonth(), selectedDay)
+  const date = toDateKey(selectedDate)
   const notesQuery = useHandoverNotes(store.id, date)
   const confirm = useConfirmHandoverItem(store.id, date)
 

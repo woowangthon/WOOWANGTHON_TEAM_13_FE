@@ -1,33 +1,35 @@
 import { create } from 'zustand'
 import { initialPaySettings, type PaySettings } from '@/api/mocks/staff/payroll'
-import {
-  initialAvailability,
-  initialAvailabilityMemo,
-  type AvailabilityMark,
-} from '@/api/mocks/staff/schedule'
 import { staffStores } from '@/api/mocks/staff/stores'
 
 /*
- * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 제출 내용이 유지된다.
- * 채팅 · 인수인계는 src/lib/api 훅(assistantChat · handover)으로 옮겼다.
+ * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 제출 전 내용이 유지된다.
+ * 채팅 · 인수인계 · 근무는 src/lib/api 훅(assistantChat · handover · schedule)으로 옮겼다.
  * BE 가 준비되면 이 상태들은 TanStack Query(서버 데이터)로 바꾼다.
  */
+
+/** 근무 가능 시간 칸: 0 비움 · 1 가능 · 2 불가 */
+export type AvailabilityMark = 0 | 1 | 2
+
+/** 근무 가능 시간 달력: 날짜(일) → 칸, 메모 */
+export interface AvailabilityDraft {
+  marks: Record<number, AvailabilityMark>
+  memo: string
+}
 
 interface StaffState {
   profileName: string
   /** 마이페이지에서 삭제한 매장 */
   removedStoreIds: string[]
-  availability: Record<number, AvailabilityMark>
-  availabilityMemo: string
-  availabilitySubmitted: boolean
+  /** 근무 가능 시간: 제출 전에 칠한 내용 (매장별). 제출하면 지운다 */
+  availabilityDrafts: Record<string, AvailabilityDraft>
   paySettings: Record<string, PaySettings>
 
   setProfileName: (name: string) => void
   removeStore: (storeId: string) => void
   restoreStoreByCode: (code: string) => string | null
-  cycleAvailability: (day: number) => void
-  setAvailabilityMemo: (memo: string) => void
-  submitAvailability: () => void
+  setAvailabilityDraft: (storeId: string, draft: AvailabilityDraft) => void
+  clearAvailabilityDraft: (storeId: string) => void
   savePaySettings: (storeId: string, settings: PaySettings) => void
 }
 
@@ -35,9 +37,7 @@ export const useStaffStore = create<StaffState>((set, get) => {
   return {
     profileName: '지은',
     removedStoreIds: [],
-    availability: initialAvailability,
-    availabilityMemo: initialAvailabilityMemo,
-    availabilitySubmitted: false,
+    availabilityDrafts: {},
     paySettings: initialPaySettings,
 
     setProfileName: (profileName) => set({ profileName }),
@@ -52,17 +52,15 @@ export const useStaffStore = create<StaffState>((set, get) => {
       return store.id
     },
 
-    cycleAvailability: (day) =>
-      set((state) => ({
-        availability: {
-          ...state.availability,
-          [day]: (((state.availability[day] ?? 0) + 1) % 3) as AvailabilityMark,
-        },
-      })),
+    setAvailabilityDraft: (storeId, draft) =>
+      set((state) => ({ availabilityDrafts: { ...state.availabilityDrafts, [storeId]: draft } })),
 
-    setAvailabilityMemo: (availabilityMemo) => set({ availabilityMemo }),
-
-    submitAvailability: () => set({ availabilitySubmitted: true }),
+    clearAvailabilityDraft: (storeId) =>
+      set((state) => {
+        const rest = { ...state.availabilityDrafts }
+        delete rest[storeId]
+        return { availabilityDrafts: rest }
+      }),
 
     savePaySettings: (storeId, settings) =>
       set((state) => ({ paySettings: { ...state.paySettings, [storeId]: settings } })),

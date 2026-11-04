@@ -3,7 +3,8 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useJoinStore, useVerifyInvite } from '@/lib/api/invitations'
-import type { AlreadyJoinedDetail, InviteVerification } from '@/lib/api/types'
+import type { AlreadyJoinedDetail, InviteVerification, StoreTheme } from '@/lib/api/types'
+import { useMyStores } from '@/lib/api/users'
 import { ApiError } from '@/lib/apiClient'
 import { refreshMe } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
@@ -13,7 +14,7 @@ import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { CodeCells } from '@/pages/staff/join/components/CodeCells'
 import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
-import { DEFAULT_STORE_THEME, STORE_THEME } from '@/shared/storeTheme'
+import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 
 // 초대코드 입장 (디자인: docs/design/login-onboarding.html): 6칸 입력 → 확인 · 매장 카드 → 입장 → 완료
@@ -44,12 +45,16 @@ export default function JoinPage() {
   const setCurrentStoreId = useStoreStore((state) => state.setCurrentStoreId)
   const verify = useVerifyInvite()
   const join = useJoinStore()
+  // 테마가 없는 매장은 내 매장 순서대로 색을 정한다 → 새로 들어가는 매장은 다음 순서
+  const myStoreCount = useMyStores().data?.stores.length ?? 0
 
   const linkCode = normalizeCode(searchParams.get('code') ?? '')
   const [code, setCode] = useState(linkCode)
   const [invite, setInvite] = useState<InviteVerification | null>(null)
   const [error, setError] = useState<InviteErrorReason | null>(null)
-  const [joined, setJoined] = useState<InviteVerification | null>(null)
+  const [joined, setJoined] = useState<{ invite: InviteVerification; theme: StoreTheme } | null>(
+    null,
+  )
   /** 이미 들어간 매장 코드를 넣었을 때 그 매장 ([○○로 가기]) */
   const [memberStore, setMemberStore] = useState<AlreadyJoinedDetail | null>(null)
 
@@ -83,12 +88,14 @@ export default function JoinPage() {
   }
 
   const runJoin = async (value: string, verified: InviteVerification) => {
+    // 입장하면 내 매장 목록이 늘어나니, 색은 입장 전에 정해 둔다
+    const theme = themeOf(verified.store.theme, myStoreCount)
     try {
       const membership = await join.mutateAsync(value)
       if (!env.skipAuth) await refreshMe() // me 에 매장이 생겨야 알바 화면에 들어갈 수 있다
       setPendingRole(null)
       setCurrentStoreId(membership.storeId)
-      setJoined(verified)
+      setJoined({ invite: verified, theme })
     } catch (err) {
       handleError(err, () => runJoin(value, verified))
     }
@@ -104,7 +111,13 @@ export default function JoinPage() {
   }, [linkCode])
 
   if (joined)
-    return <JoinDone invite={joined} onStart={() => navigate('/staff', { replace: true })} />
+    return (
+      <JoinDone
+        invite={joined.invite}
+        theme={joined.theme}
+        onStart={() => navigate('/staff', { replace: true })}
+      />
+    )
 
   const changeCode = (value: string) => {
     setCode(value)
@@ -166,7 +179,7 @@ export default function JoinPage() {
           <div className="flex items-center gap-3.5 rounded-[24px] bg-card p-4 shadow-soft animate-in fade-in-0 slide-in-from-bottom-2">
             <span
               className="size-[52px] shrink-0 overflow-hidden rounded-[18px]"
-              style={{ background: STORE_THEME[invite.store.theme ?? DEFAULT_STORE_THEME].color }}
+              style={{ background: STORE_THEME[themeOf(invite.store.theme, myStoreCount)].color }}
             >
               {invite.store.photoUrl && (
                 <img src={invite.store.photoUrl} alt="" className="size-full object-cover" />
@@ -204,9 +217,17 @@ const NEXT_LINKS = [
 ]
 
 // 디자인 시안은 초록 카드 — 비어 보여서 매장 사진 + 환영 문구 + 바로가기 칩으로 바꿈
-function JoinDone({ invite, onStart }: { invite: InviteVerification; onStart: () => void }) {
+function JoinDone({
+  invite,
+  theme: themeKey,
+  onStart,
+}: {
+  invite: InviteVerification
+  theme: StoreTheme
+  onStart: () => void
+}) {
   const { store, staffName } = invite
-  const theme = STORE_THEME[store.theme ?? DEFAULT_STORE_THEME]
+  const theme = STORE_THEME[themeKey]
   return (
     <AuthFrame className="gap-[22px]">
       <section

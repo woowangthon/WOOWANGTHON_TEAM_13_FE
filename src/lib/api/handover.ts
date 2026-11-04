@@ -26,12 +26,6 @@ const postNote = (storeId: string, body: NewHandoverNote) => createHandoverNote(
 const postConfirmation = (storeId: string, noteId: string, body: HandoverConfirmation) =>
   confirmHandoverItem(storeId, noteId, body)
 
-const pad = (n: number) => String(n).padStart(2, '0')
-/** Date → "2026-11-20" (목록 조회 날짜) */
-export function toDateParam(date: Date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
 /** 그날 인수인계 노트 (최신 순) */
 export function useHandoverNotes(storeId: string, date: string) {
   return useQuery({

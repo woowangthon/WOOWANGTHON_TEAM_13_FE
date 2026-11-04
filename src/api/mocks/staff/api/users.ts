@@ -28,6 +28,7 @@ function toDetail(store: StaffStore): MyStoreDetail {
     staffName: staffNameOf(store.id),
     photoUrl: store.photo ?? null,
     theme: store.icon,
+    workSummary: store.meta.split(' · ')[0] ?? null,
     joinedAt: '2026-11-03T22:40:00+09:00',
   }
 }
