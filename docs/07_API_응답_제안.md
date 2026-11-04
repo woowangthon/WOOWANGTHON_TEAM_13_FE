@@ -159,9 +159,10 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 ```
 | 필드 | 뜻 |
 | --- | --- |
-| `memberId` | 이 매장에서의 내 구성원 ID (시급 설정 등 사장님 기능에서 쓰는 ID) |
-| `staffName` | 사장님이 알바생 추가 때 적은 이름 (사장님 매장이면 `null`) |
-| `photoUrl` | 매장 사진. 없으면 `null` → FE가 매장 색으로 채워요 |
+| `ownerName` | 사장님 이름 (화면: "박 사장님 · 지은 님 자리") · 🙏 요청 중 (11/4) |
+| `memberId` | 이 매장에서의 내 구성원 ID (시급 설정 등 사장님 기능에서 쓰는 ID) · 🙏 요청 중 (11/4) |
+| `staffName` | 사장님이 알바생 추가 때 적은 이름 (사장님 매장이면 `null`) · 🙏 요청 중 (11/4) |
+| `photoUrl` | 매장 사진. 없으면 `null` → FE가 매장 색으로 채워요 · 🙏 요청 중 (11/4) |
 | `theme` | 매장 색 · 아이콘 묶음 키: `"moon"`(초록) · `"sunset"`(갈색). 색 값(#2A4536 등)은 FE 디자인 토큰에서 정해요. 저장할 곳이 없으면 `null`이어도 돼요 (FE가 순서대로 배정) |
 
 > 가짜 데이터의 `shift` · `week` · `weekHours`(근무)는 P1 스케줄 API, `chips`(자주 묻는 질문)는 [5-1 채팅방](#5-1-ai-채팅방-생성--목록)의 `suggestions`로 옮겼어요.
@@ -188,7 +189,8 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
     "storeId": "str_dalbit",
     "name": "달빛 카페",
     "ownerName": "박 사장님",
-    "photoUrl": "https://…/stores/dalbit.jpg"
+    "photoUrl": "https://…/stores/dalbit.jpg",
+    "theme": "moon"
   }
 }
 ```
@@ -200,6 +202,8 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | 409 | `INVITE_ALREADY_JOINED` | 이미 들어간 매장이에요 | `{ "storeId": "str_dalbit", "storeName": "달빛 카페" }` ← **필수** ([○○로 가기] 버튼) |
 | 410 | `INVITE_REVOKED` | 사장님이 삭제한 코드예요 | `null` |
 | 429 | `INVITE_LOCKED` | 5번 틀려서 10분 동안 입력할 수 없어요 | `{ "lockedUntil": "2026-11-20T15:00:00+09:00" }` |
+
+> `store.theme`은 FE 추가 요청이에요 (11/4): 입장 완료 화면을 매장 색으로 칠해요. 없으면 `null` → 기본 색.
 
 > 틀린 횟수 세기 · 10분 잠금은 BE에서 해 주세요 (docs/03 A1). FE는 `INVITE_LOCKED`를 받으면 입력을 막는 자리만 있어요.
 
