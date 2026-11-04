@@ -4,6 +4,7 @@ import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/
 import { Badge } from '@/ui/Badge'
 
 // 공용 보기 부품: 포스기식 메뉴 버튼 격자 · 사장/알바 화면이 함께 사용 — 담당: 민지
+// 사진이 없어 아이콘 자리를 납작하게 둬서 한 화면에 더 많이 보이게 한다
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
 interface RecipeGridProps {
   recipes: RecipeSummary[]
@@ -20,17 +21,17 @@ export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
           <Link
             key={r.recipeId}
             to={getHref(r)}
-            className="flex flex-col gap-2.5 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3.5 text-foreground shadow-soft"
+            className="flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft"
           >
             <span
-              className="relative flex aspect-[1.3] w-full items-center justify-center rounded-[18px]"
+              className="relative flex aspect-[2.4] w-full items-center justify-center rounded-[18px]"
               style={{ background: tint }}
             >
               <span
-                className="flex size-[54px] items-center justify-center rounded-full bg-white/60"
+                className="flex size-10 items-center justify-center rounded-full bg-white/60"
                 style={{ color: ink }}
               >
-                <Icon className="size-7" />
+                <Icon className="size-5" />
               </span>
               <span
                 className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
