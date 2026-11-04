@@ -1,6 +1,6 @@
 import { createClient, type Session } from '@supabase/supabase-js'
-import { mockMe } from '@/api/mocks/staff/me'
 import { useAuthStore, type LoginProvider, type Me } from '@/lib/authStore'
+import { fetchMe as getMe } from '@/lib/api/users'
 import { env } from '@/lib/env'
 
 /*
@@ -69,14 +69,13 @@ export function takeRedirect(): string | null {
   return path
 }
 
-/** GET /users/me (응답 모양 확정 11/4, docs/07 1-1) — BE 연결 전까지는 가짜 데이터 */
+/** 로그인 정보로 GET /users/me 를 불러온다 (응답 모양 확정 11/4, docs/07 1-1 · src/lib/api/users) */
 export async function fetchMe(): Promise<Me> {
   const session = await getSession()
   if (!session) throw new Error('로그인이 필요해요')
-  // TODO: BE 연결 시 apiFetch<Me>('/users/me') 로 바꾼다
   const { user } = session
   const nickname: string = user.user_metadata.full_name ?? user.user_metadata.name ?? '사용자'
-  return mockMe({
+  return getMe({
     userId: user.id,
     nickname,
     email: user.email ?? null,

@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { MIN_WAGE, type PaySettings, type TaxType } from '@/api/mocks/staff/payroll'
-import type { StaffStore } from '@/api/mocks/staff/stores'
 import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
-import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { Header } from '@/ui/Header'
@@ -30,7 +29,7 @@ export default function StoreSettingsPage() {
   return <SettingsForm key={store.id} store={store} saved={saved} />
 }
 
-function SettingsForm({ store, saved }: { store: StaffStore; saved: PaySettings }) {
+function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySettings }) {
   const close = useCloseTo('/staff/me')
   const savePaySettings = useStaffStore((state) => state.savePaySettings)
   const [draft, setDraft] = useState(saved)

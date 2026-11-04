@@ -1,40 +1,15 @@
-import { findStaffStore, type StaffStore } from '@/api/mocks/staff/stores'
-
 /*
- * 가짜 데이터: 초대코드 확인 · 매장 입장 — BE 연결 전까지 사용.
- * 들어간 매장은 서버 대신 localStorage 에 기억한다 (새로고침해도 GET /me 에 남도록).
- * 틀린 횟수 세기 · 잠금은 BE 가 한다. 여기서는 잠김 응답만 흉내 낸다 (LOCKED_TEST_CODE).
+ * 가짜 데이터: 초대코드 · 들어간 매장 — BE 연결 전까지 사용 (확인 · 입장 API 는 api/invitations.ts).
+ * 들어간 매장은 서버 대신 localStorage 에 기억한다 (새로고침해도 GET /users/me 에 남도록).
  */
 
-export interface InviteInfo {
-  code: string
-  store: StaffStore
-  /** 사장님이 알바생 추가할 때 적은 이름 (본인 확인) */
-  staffName: string
-}
-
-/** invalid 없는 코드 · joined 이미 들어간 매장 · locked 5번 틀려 잠김 */
-export type InviteErrorReason = 'invalid' | 'joined' | 'locked'
-
-export class InviteError extends Error {
-  reason: InviteErrorReason
-  /** joined 일 때 이미 들어간 매장 (바로 그 매장으로 갈 수 있게) */
-  store?: StaffStore
-
-  constructor(reason: InviteErrorReason, store?: StaffStore) {
-    super(`초대코드 확인 실패 (${reason})`)
-    this.reason = reason
-    this.store = store
-  }
-}
-
 /** 알바생 전용 초대코드 (헷갈리는 0 · O · 1 · I 는 쓰지 않는다) */
-const INVITES = [
+export const INVITES = [
   { code: 'K7P2QX', storeId: 'dalbit', staffName: '지은' },
   { code: 'M3XR9D', storeId: 'afternoon', staffName: '지은' },
 ]
 
-/** 이 코드를 넣으면 서버가 "잠김"을 준 것처럼 동작한다 (화면 확인용) */
+/** 이 코드를 넣으면 서버가 "잠김"을 준 것처럼 동작한다 (화면 확인용, BE 연결 시 삭제) */
 export const LOCKED_TEST_CODE = 'LLLLLL'
 
 const JOINED_KEY = 'mock-joined-stores'
@@ -47,21 +22,11 @@ export function getJoinedStoreIds(): string[] {
   }
 }
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-export async function verifyInviteCode(code: string): Promise<InviteInfo> {
-  await wait(500)
-  if (code === LOCKED_TEST_CODE) throw new InviteError('locked')
-  const invite = INVITES.find((item) => item.code === code)
-  if (!invite) throw new InviteError('invalid')
-  if (getJoinedStoreIds().includes(invite.storeId)) {
-    throw new InviteError('joined', findStaffStore(invite.storeId))
-  }
-  return { code, store: findStaffStore(invite.storeId), staffName: invite.staffName }
+export function addJoinedStore(storeId: string) {
+  localStorage.setItem(JOINED_KEY, JSON.stringify([...getJoinedStoreIds(), storeId]))
 }
 
-export async function joinStore(code: string): Promise<InviteInfo> {
-  const info = await verifyInviteCode(code)
-  localStorage.setItem(JOINED_KEY, JSON.stringify([...getJoinedStoreIds(), info.store.id]))
-  return info
+/** 매장에서의 내 이름 (초대코드에 적힌 이름) */
+export function staffNameOf(storeId: string) {
+  return INVITES.find((invite) => invite.storeId === storeId)?.staffName ?? null
 }

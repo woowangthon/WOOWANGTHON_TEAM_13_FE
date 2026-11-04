@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { StaffStore } from '@/api/mocks/staff/stores'
 import { cn } from '@/ui/utils'
 
 // 알바생 화면 바탕: 가운데 460px 기둥 + 매장 색(--brand) 적용
@@ -8,7 +7,8 @@ export function StaffFrame({
   children,
   className,
 }: {
-  store: StaffStore
+  /** 매장 색 (useCurrentStore 의 store) */
+  store: { color: string; soft: string }
   children: ReactNode
   className?: string
 }) {

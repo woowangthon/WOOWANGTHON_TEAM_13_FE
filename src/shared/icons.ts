@@ -17,12 +17,12 @@ import {
   Wifi,
   type LucideIcon,
 } from 'lucide-react'
-import type { StoreIcon } from '@/api/mocks/staff/stores'
-import type { HandoverTag, ManualIcon } from '@/lib/api/types'
+import type { HandoverTag, ManualIcon, StoreTheme } from '@/lib/api/types'
 
 // 아이콘 · 카테고리 색 모음 — 사장 · 알바 화면이 함께 사용 (담당: 민지)
 
-export const STORE_ICON: Record<StoreIcon, LucideIcon> = { moon: Moon, sunset: Sunset }
+/** 매장 테마별 아이콘 (색은 shared/storeTheme) */
+export const STORE_ICON: Record<StoreTheme, LucideIcon> = { moon: Moon, sunset: Sunset }
 
 /** 레시피 카테고리 아이콘 (카테고리 이름은 사장님이 정해서, 없는 이름은 getCategoryIcon 기본값) */
 export const CATEGORY_ICON: Record<string, LucideIcon> = {

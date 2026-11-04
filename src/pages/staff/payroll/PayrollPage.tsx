@@ -2,11 +2,11 @@ import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { calcPay, payMonth, storePayrolls, sumPay, TAX_LABEL } from '@/api/mocks/staff/payroll'
-import { shiftHours, type StaffStore } from '@/api/mocks/staff/stores'
+import { shiftHours } from '@/api/mocks/staff/stores'
 import { formatDate, formatWon } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useStaffStore } from '@/pages/staff/staffStore'
-import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
@@ -128,7 +128,7 @@ function PayTile({ label, value }: { label: string; value: string }) {
 }
 
 interface PayCalendarProps {
-  stores: StaffStore[]
+  stores: StaffStoreView[]
   showAll: boolean
   today: Date
   selectedDay: number
