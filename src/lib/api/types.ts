@@ -318,3 +318,56 @@ export interface NewAvailability extends AvailabilityInput {
   /** 받는 달 "2026-12" */
   month: string
 }
+
+// ── 급여 (docs/07 8, P1) ──
+
+/** none 공제 없음 · 3.3 3.3% · ins 4대보험 */
+export type TaxType = 'none' | '3.3' | 'ins'
+
+/** 급여 달력의 하루 (근무한 날 · 근무 예정) */
+export interface PayWorkDay {
+  date: string
+  start: string
+  end: string
+  hours: number
+  status: 'worked' | 'planned'
+}
+
+/** 주별 근거 (주휴수당은 주 15시간 이상인 주만) */
+export interface PayWeek {
+  weekStart: string
+  hours: number
+  weeklyAllowanceEligible: boolean
+  weeklyAllowance: number
+}
+
+/** GET /stores/{storeId}/payroll/estimates/me */
+export interface PayrollEstimate {
+  storeId: string
+  /** "2026-11" */
+  month: string
+  hourlyWage: number
+  /** 급여일 1~28, 말일은 31 */
+  payday: number
+  taxType: TaxType
+  weeklyAllowanceEnabled: boolean
+  workDays: PayWorkDay[]
+  hours: number
+  basePay: number
+  weeklyAllowance: number
+  grossPay: number
+  deduction: number
+  netPay: number
+  weeks: PayWeek[]
+  /** AI 쉬운 설명 (계산에는 안 씀) */
+  aiNote: string
+  isEstimate: boolean
+}
+
+/** 임시: 알바 화면 급여 설정 저장 (BE 답 전까지 가짜 서버만, docs/07 질문 4) */
+export interface PaySettingsInput {
+  hourlyWage: number
+  payday: number
+  taxType: TaxType
+  weeklyAllowanceEnabled: boolean
+}

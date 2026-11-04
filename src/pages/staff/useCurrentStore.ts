@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { findStaffStore } from '@/api/mocks/staff/stores'
 import { useWorkSummaries } from '@/lib/api/schedule'
 import { useMyStores } from '@/lib/api/users'
 import type { MyStoreDetail, StoreTheme } from '@/lib/api/types'
@@ -10,7 +9,7 @@ import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 /**
  * 알바 화면에서 쓰는 매장 모양.
  * 매장 정보는 GET /users/me/stores(useMyStores), 색은 테마(shared/storeTheme, 없으면 매장 순서대로).
- * 근무는 useMySchedule(lib/api/schedule). today · shift 는 급여 화면만 쓰는 가짜 데이터 — 챕터 8 에서 바꾼다.
+ * 근무는 useMySchedule(lib/api/schedule), 급여는 useMyPayrollEstimate(lib/api/payroll).
  */
 export interface StaffStoreView {
   id: string
@@ -28,15 +27,10 @@ export interface StaffStoreView {
   photo?: string
   /** 매장 목록 한 줄 (예: 주 3회 마감 · 박 사장님) */
   meta: string
-  /** TODO(챕터 8): 급여 화면 전용 — 급여 API 로 바꾼다 */
-  today: Date
-  shift: { start: string; end: string; role: string }
 }
 
 function toView(store: MyStoreDetail, index: number, workSummary: string | null): StaffStoreView {
   const icon = themeOf(store.theme, index)
-  // TODO(챕터 8): 급여 화면 전용 값 — 급여 API 로 교체
-  const { today, shift } = findStaffStore(store.storeId)
   return {
     id: store.storeId,
     name: store.name,
@@ -50,8 +44,6 @@ function toView(store: MyStoreDetail, index: number, workSummary: string | null)
     photo: store.photoUrl ?? undefined,
     // 매장 목록 한 줄: 이번 주 근무(FE 계산) · 사장님 이름
     meta: [workSummary, store.ownerName].filter(Boolean).join(' · '),
-    today,
-    shift,
   }
 }
 

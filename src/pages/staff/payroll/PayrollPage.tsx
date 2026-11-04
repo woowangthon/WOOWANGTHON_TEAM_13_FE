@@ -1,32 +1,70 @@
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { calcPay, payMonth, storePayrolls, sumPay, TAX_LABEL } from '@/api/mocks/staff/payroll'
-import { shiftHours } from '@/api/mocks/staff/stores'
+import { useMyPayrollEstimates } from '@/lib/api/payroll'
+import { useMySchedule } from '@/lib/api/schedule'
+import type { PayrollEstimate, TaxType } from '@/lib/api/types'
+import { fromDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
-import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
+import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-// 예상 급여 (참고용): 확정 근무 × 시급 + 주휴수당 − 공제. 계산은 코드, 설명만 AI
+const TAX_LABEL: Record<TaxType, string> = {
+  none: '공제 없음',
+  '3.3': '3.3% 공제',
+  ins: '4대보험 공제',
+}
+
+/** 매장 + 그 매장 예상 급여 */
+type Target = { store: StaffStoreView; estimate: PayrollEstimate }
+
+// 예상 급여 (참고용): 확정 근무 × 시급 + 주휴수당 − 공제. 계산은 서버 규칙(useMyPayrollEstimate), 설명만 AI
+// "전체"는 매장별 금액을 더하기만 한다
 export default function PayrollPage() {
   const { store, stores, setCurrentStoreId } = useCurrentStore()
-  const paySettings = useStaffStore((state) => state.paySettings)
   const [showAll, setShowAll] = useState(false)
-  const [selectedDay, setSelectedDay] = useState(store.today.getDate())
+  const [pickedDay, setPickedDay] = useState<number | null>(null)
 
-  const targets = showAll ? stores : [store]
-  const results = targets.map((s) => calcPay(storePayrolls[s.id], paySettings[s.id]))
-  const total = sumPay(results)
-  const settings = paySettings[store.id]
-  const taxTypes = new Set(targets.map((s) => paySettings[s.id].tax))
+  const targetStores = showAll ? stores : [store]
+  const estimates = useMyPayrollEstimates(targetStores.map((s) => s.id))
+  const schedule = useMySchedule(store.id).data
+
+  if (!estimates || !schedule) {
+    return (
+      <div className="flex flex-col gap-4">
+        <WorkHeader segment="pay" />
+        <Spinner />
+      </div>
+    )
+  }
+
+  const targets: Target[] = targetStores.map((s, i) => ({ store: s, estimate: estimates[i] }))
+  const sum = (pick: (e: PayrollEstimate) => number) =>
+    estimates.reduce((acc, e) => acc + pick(e), 0)
+  const total = {
+    hours: sum((e) => e.hours),
+    base: sum((e) => e.basePay),
+    weeklyAllowance: sum((e) => e.weeklyAllowance),
+    gross: sum((e) => e.grossPay),
+    deduction: sum((e) => e.deduction),
+    net: sum((e) => e.netPay),
+  }
+  const current = targets.find((t) => t.store.id === store.id)?.estimate ?? estimates[0]
+  const settings = { payday: current.payday, tax: current.taxType }
+  const taxTypes = new Set(estimates.map((e) => e.taxType))
   const hourly = total.hours ? Math.round(total.base / total.hours) : 0
+  const [year, month] = current.month.split('-').map(Number)
+  const payMonth = { year, month }
+  const today = fromDateKey(schedule.today)
+  const selectedDay = pickedDay ?? today.getDate()
+  const setSelectedDay = setPickedDay
 
   // 급여일: 다음 달 n일 (31 = 말일)
   const payDate = new Date(
@@ -36,7 +74,7 @@ export default function PayrollPage() {
       ? new Date(payMonth.year, payMonth.month + 1, 0).getDate()
       : settings.payday,
   )
-  const dDay = Math.round((payDate.getTime() - store.today.getTime()) / DAY_MS)
+  const dDay = Math.round((payDate.getTime() - today.getTime()) / DAY_MS)
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,9 +136,10 @@ export default function PayrollPage() {
         </Card>
 
         <PayCalendar
-          stores={targets}
+          targets={targets}
+          payMonth={payMonth}
           showAll={showAll}
-          today={store.today}
+          today={today}
           selectedDay={selectedDay}
           onSelect={setSelectedDay}
         />
@@ -110,7 +149,7 @@ export default function PayrollPage() {
             <Sparkles className="size-[18px]" fill="currentColor" />
           </span>
           <p className="m-0 text-[15px] leading-[1.65] break-keep text-[#2E3A33]">
-            {storePayrolls[store.id].aiNote}
+            {current.aiNote}
           </p>
         </div>
       </div>
@@ -128,25 +167,43 @@ function PayTile({ label, value }: { label: string; value: string }) {
 }
 
 interface PayCalendarProps {
-  stores: StaffStoreView[]
+  targets: Target[]
+  payMonth: { year: number; month: number }
   showAll: boolean
   today: Date
   selectedDay: number
   onSelect: (day: number) => void
 }
 
-function PayCalendar({ stores, showAll, today, selectedDay, onSelect }: PayCalendarProps) {
+function PayCalendar({
+  targets,
+  payMonth,
+  showAll,
+  today,
+  selectedDay,
+  onSelect,
+}: PayCalendarProps) {
   const lastDay = new Date(payMonth.year, payMonth.month, 0).getDate()
   const todayDate = today.getDate()
+  const stores = targets.map((t) => t.store)
+  const keyOf = (day: number) =>
+    `${payMonth.year}-${String(payMonth.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
+  // 그날 매장별 근무 (근무한 날 · 예정)
   const infoOf = (day: number) =>
-    stores
-      .map((s) => ({
-        store: s,
-        worked: storePayrolls[s.id].worked.includes(day),
-        planned: storePayrolls[s.id].planned.includes(day),
-      }))
-      .filter((i) => i.worked || i.planned)
+    targets.flatMap(({ store, estimate }) => {
+      const workDay = estimate.workDays.find((d) => d.date === keyOf(day))
+      return workDay
+        ? [
+            {
+              store,
+              workDay,
+              worked: workDay.status === 'worked',
+              planned: workDay.status === 'planned',
+            },
+          ]
+        : []
+    })
 
   let workedCount = 0
   let plannedCount = 0
@@ -158,7 +215,7 @@ function PayCalendar({ stores, showAll, today, selectedDay, onSelect }: PayCalen
 
   const selected = infoOf(selectedDay)
   const selectedWorked = selected.some((i) => i.worked)
-  const selectedHours = selected.reduce((sum, i) => sum + shiftHours(i.store), 0)
+  const selectedHours = selected.reduce((sum, i) => sum + i.workDay.hours, 0)
 
   return (
     <section className="flex flex-col gap-3.5 rounded-[28px] bg-card px-[18px] pt-5 pb-[18px] shadow-soft">
@@ -216,7 +273,7 @@ function PayCalendar({ stores, showAll, today, selectedDay, onSelect }: PayCalen
               ? selected
                   .map(
                     (i) =>
-                      `${showAll ? `${i.store.name} ` : ''}${i.store.shift.start} – ${i.store.shift.end}${i.worked ? '' : ' · 예정'}`,
+                      `${showAll ? `${i.store.name} ` : ''}${i.workDay.start} – ${i.workDay.end}${i.worked ? '' : ' · 예정'}`,
                   )
                   .join(' · ')
               : '근무 없음'}
