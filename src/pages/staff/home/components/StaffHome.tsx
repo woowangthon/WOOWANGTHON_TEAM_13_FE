@@ -1,10 +1,9 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { sameDay, type StaffStore } from '@/api/mocks/staff/stores'
 import { toDateParam, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
 import { formatDate, formatTime } from '@/lib/format'
-import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { EmptyState } from '@/ui/EmptyState'
@@ -13,6 +12,11 @@ import { cn } from '@/ui/utils'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
+const sameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
+
 // 알바 홈: 이번 주 · 오늘 근무 · 오늘의 인수인계
 export function StaffHome() {
   const { store } = useCurrentStore()
@@ -20,7 +24,7 @@ export function StaffHome() {
   return <HomeBody key={store.id} store={store} />
 }
 
-function HomeBody({ store }: { store: StaffStore }) {
+function HomeBody({ store }: { store: StaffStoreView }) {
   const todayDate = store.today.getDate()
   const [selected, setSelected] = useState(todayDate)
 
@@ -67,7 +71,7 @@ function HomeBody({ store }: { store: StaffStore }) {
   )
 }
 
-function TodayShiftCard({ store }: { store: StaffStore }) {
+function TodayShiftCard({ store }: { store: StaffStoreView }) {
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = store.photo && !photoFailed
 
@@ -112,7 +116,7 @@ function TodayShiftCard({ store }: { store: StaffStore }) {
 }
 
 // 노트마다 AI 요약 카드 + 항목 (최신 순). 오늘만 체크할 수 있다
-function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDay: number }) {
+function HandoverSection({ store, selectedDay }: { store: StaffStoreView; selectedDay: number }) {
   const todayDate = store.today.getDate()
   const live = selectedDay === todayDate
   const selectedDate =

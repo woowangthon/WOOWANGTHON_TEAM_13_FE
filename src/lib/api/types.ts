@@ -199,3 +199,61 @@ export interface HandoverConfirmation {
   itemId: string
   checked: boolean
 }
+
+// ── 내 매장 · 초대코드 (docs/07 1-3 · 2) ──
+
+/** 매장 색 · 아이콘 묶음 키 (색 값은 FE: shared/storeTheme). 저장 안 하면 null */
+export type StoreTheme = 'moon' | 'sunset'
+
+/** GET /users/me/stores 항목. ownerName · staffName · memberId · photoUrl 은 은교님께 요청 중 */
+export interface MyStoreDetail {
+  storeId: string
+  name: string
+  kind: string
+  address: string
+  ownerName: string
+  role: 'owner' | 'staff'
+  memberId: string
+  /** 사장님이 알바생 추가 때 적은 이름 (사장님 매장이면 null) */
+  staffName: string | null
+  photoUrl: string | null
+  theme: StoreTheme | null
+  joinedAt: string
+}
+
+export interface MyStoreList {
+  stores: MyStoreDetail[]
+}
+
+/** 초대코드 확인에서 보여 줄 매장 (매장 카드 · 입장 완료 화면) */
+export interface InviteStore {
+  storeId: string
+  name: string
+  ownerName: string
+  photoUrl: string | null
+  /** FE 추가 요청: 입장 완료 화면 색 */
+  theme: StoreTheme | null
+}
+
+/** POST /invitations/verify */
+export interface InviteVerification {
+  code: string
+  staffName: string
+  store: InviteStore
+}
+
+/** POST /memberships/join */
+export interface Membership {
+  storeId: string
+  storeName: string
+  memberId: string
+  role: 'staff'
+  staffName: string
+  joinedAt: string
+}
+
+/** INVITE_ALREADY_JOINED 에러의 detail ([○○로 가기] 버튼) */
+export interface AlreadyJoinedDetail {
+  storeId: string
+  storeName: string
+}

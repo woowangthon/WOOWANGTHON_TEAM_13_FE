@@ -91,7 +91,7 @@ export function findStaffStore(storeId: string | null | undefined): StaffStore {
 }
 
 /** "18:00" – "23:00" → 5 */
-export function shiftHours(store: StaffStore): number {
+export function shiftHours(store: Pick<StaffStore, 'shift'>): number {
   const [start, end] = [store.shift.start, store.shift.end].map((t) => parseInt(t, 10))
   return end - start
 }
