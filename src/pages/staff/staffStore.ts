@@ -1,10 +1,9 @@
 import { create } from 'zustand'
-import { initialPaySettings, type PaySettings } from '@/api/mocks/staff/payroll'
 import { staffStores } from '@/api/mocks/staff/stores'
 
 /*
  * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 제출 전 내용이 유지된다.
- * 채팅 · 인수인계 · 근무는 src/lib/api 훅(assistantChat · handover · schedule)으로 옮겼다.
+ * 채팅 · 인수인계 · 근무 · 급여는 src/lib/api 훅(assistantChat · handover · schedule · payroll)으로 옮겼다.
  * BE 가 준비되면 이 상태들은 TanStack Query(서버 데이터)로 바꾼다.
  */
 
@@ -23,14 +22,12 @@ interface StaffState {
   removedStoreIds: string[]
   /** 근무 가능 시간: 제출 전에 칠한 내용 (매장별). 제출하면 지운다 */
   availabilityDrafts: Record<string, AvailabilityDraft>
-  paySettings: Record<string, PaySettings>
 
   setProfileName: (name: string) => void
   removeStore: (storeId: string) => void
   restoreStoreByCode: (code: string) => string | null
   setAvailabilityDraft: (storeId: string, draft: AvailabilityDraft) => void
   clearAvailabilityDraft: (storeId: string) => void
-  savePaySettings: (storeId: string, settings: PaySettings) => void
 }
 
 export const useStaffStore = create<StaffState>((set, get) => {
@@ -38,7 +35,6 @@ export const useStaffStore = create<StaffState>((set, get) => {
     profileName: '지은',
     removedStoreIds: [],
     availabilityDrafts: {},
-    paySettings: initialPaySettings,
 
     setProfileName: (profileName) => set({ profileName }),
 
@@ -61,8 +57,5 @@ export const useStaffStore = create<StaffState>((set, get) => {
         delete rest[storeId]
         return { availabilityDrafts: rest }
       }),
-
-    savePaySettings: (storeId, settings) =>
-      set((state) => ({ paySettings: { ...state.paySettings, [storeId]: settings } })),
   }
 })

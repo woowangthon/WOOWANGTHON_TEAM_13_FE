@@ -1,20 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router'
-import { MIN_WAGE, type PaySettings, type TaxType } from '@/api/mocks/staff/payroll'
+import { toastApiError } from '@/lib/api/errors'
+import {
+  MIN_HOURLY_WAGE as MIN_WAGE,
+  useMyPayrollEstimate,
+  useSaveMyPaySettings,
+} from '@/lib/api/payroll'
+import type { PayrollEstimate, TaxType } from '@/lib/api/types'
 import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
-import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { Header } from '@/ui/Header'
+import { Spinner } from '@/ui/Spinner'
 import { Switch } from '@/ui/Switch'
 import { Tabs } from '@/ui/Tabs'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 
 // 소속 매장 정보 + 내 급여 설정 (시급 · 급여일 · 세금 방식 · 주휴수당)
+// 값은 예상 급여 응답에서 받고, 저장은 임시 훅(useSaveMyPaySettings · 가짜 서버만) — BE 답(docs/07 질문 4) 전까지
+
+/** 폼에서 쓰는 급여 설정 */
+interface PaySettings {
+  wage: number
+  payday: number
+  tax: TaxType
+  weeklyAllowance: boolean
+}
+
+const toSettings = (estimate: PayrollEstimate): PaySettings => ({
+  wage: estimate.hourlyWage,
+  payday: estimate.payday,
+  tax: estimate.taxType,
+  weeklyAllowance: estimate.weeklyAllowanceEnabled,
+})
 
 const PAYDAYS = [...Array.from({ length: 28 }, (_, i) => i + 1), 31]
 const ROW = 44
@@ -23,15 +45,22 @@ export default function StoreSettingsPage() {
   const { storeId } = useParams()
   const { stores } = useCurrentStore()
   const store = stores.find((s) => s.id === storeId)
-  const saved = useStaffStore((state) => (storeId ? state.paySettings[storeId] : undefined))
+  const estimateQuery = useMyPayrollEstimate(storeId ?? '')
 
-  if (!store || !saved) return <Navigate to="/staff/me" replace />
-  return <SettingsForm key={store.id} store={store} saved={saved} />
+  if (!store) return <Navigate to="/staff/me" replace />
+  if (!estimateQuery.data) {
+    return (
+      <StaffFrame store={store}>
+        <Spinner />
+      </StaffFrame>
+    )
+  }
+  return <SettingsForm key={store.id} store={store} saved={toSettings(estimateQuery.data)} />
 }
 
 function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySettings }) {
   const close = useCloseTo('/staff/me')
-  const savePaySettings = useStaffStore((state) => state.savePaySettings)
+  const savePaySettings = useSaveMyPaySettings(store.id)
   const [draft, setDraft] = useState(saved)
   const [wageText, setWageText] = useState(String(saved.wage))
   const wheel = useRef<HTMLDivElement>(null)
@@ -57,9 +86,21 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
       toast.error(`최저시급 ${MIN_WAGE.toLocaleString('ko-KR')}원보다 낮아요. 다시 확인해 주세요`)
       return
     }
-    savePaySettings(store.id, { ...draft, wage })
-    toast('저장했어요')
-    close()
+    savePaySettings.mutate(
+      {
+        hourlyWage: wage,
+        payday: draft.payday,
+        taxType: draft.tax,
+        weeklyAllowanceEnabled: draft.weeklyAllowance,
+      },
+      {
+        onSuccess: () => {
+          toast('저장했어요')
+          close()
+        },
+        onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', save),
+      },
+    )
   }
 
   return (
