@@ -9,6 +9,7 @@ import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { Card } from '@/ui/Card'
 import { Spinner } from '@/ui/Spinner'
+import { cn } from '@/ui/utils'
 
 // ⭐ AI 사수 채팅: 지금 매장의 매뉴얼 · 레시피만 근거로 답하고 출처를 보여 준다
 // 매장마다 채팅방 1개 (없으면 자동으로 만든다). 근거가 없으면 사장님께 물어보기
@@ -24,6 +25,15 @@ export default function ChatPage() {
   )
 
   // 메시지가 바뀌거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로
+  // 조금이라도 스크롤하면 헤더를 작게
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setCompact(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const first = useRef(true)
   useEffect(() => {
     window.scrollTo({
@@ -42,16 +52,33 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col gap-3.5 pb-[90px]">
-      <Card variant="dark" className="flex-row items-center gap-3.5 p-5">
-        <span className="flex size-[50px] shrink-0 items-center justify-center rounded-full bg-white/15">
-          <Sparkles className="size-6" fill="currentColor" />
+      {/* 위에 붙어 있고, 스크롤하면 작아져서 대화 공간을 넓힌다 */}
+      <Card
+        variant="dark"
+        className={cn(
+          'sticky top-2 z-10 flex-row items-center transition-[padding,gap] duration-200',
+          compact ? 'gap-2.5 px-4 py-2.5' : 'gap-3.5 p-5',
+        )}
+      >
+        <span
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-full bg-white/15 transition-[width,height] duration-200',
+            compact ? 'size-[34px]' : 'size-[50px]',
+          )}
+        >
+          <Sparkles className={compact ? 'size-[18px]' : 'size-6'} fill="currentColor" />
         </span>
-        <div className="flex flex-col gap-1">
-          <h1 className="m-0 text-[21px] font-bold">AI 사수</h1>
-          <span className="text-xs leading-normal opacity-80">
-            {store.name} 매뉴얼 기준으로 답해요
-          </span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className={cn('m-0 font-bold', compact ? 'text-[17px]' : 'text-[21px]')}>AI 사수</h1>
+          {!compact && (
+            <span className="text-xs leading-normal opacity-80">
+              {store.name} 매뉴얼 기준으로 답해요
+            </span>
+          )}
         </div>
+        {compact && (
+          <span className="ml-auto truncate text-xs opacity-80">{store.name} 매뉴얼 기준</span>
+        )}
       </Card>
 
       {chat.isPending ? (
