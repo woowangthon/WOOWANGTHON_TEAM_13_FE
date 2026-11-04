@@ -1,16 +1,16 @@
 import { useMemo } from 'react'
 import { findStaffStore } from '@/api/mocks/staff/stores'
+import { useWorkSummaries } from '@/lib/api/schedule'
 import { useMyStores } from '@/lib/api/users'
 import type { MyStoreDetail, StoreTheme } from '@/lib/api/types'
 import { useStoreStore } from '@/lib/storeStore'
 import { useStaffStore } from '@/pages/staff/staffStore'
-import { DEFAULT_STORE_THEME, STORE_THEME } from '@/shared/storeTheme'
+import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 
 /**
  * 알바 화면에서 쓰는 매장 모양.
- * 매장 정보는 GET /users/me/stores(useMyStores), 색은 테마(shared/storeTheme).
- * 근무 정보(today · shift · crew · week · weekHours · weekNote · meta)는 아직 가짜 데이터 —
- * 챕터 7(근무 API)에서 훅으로 바꾼다.
+ * 매장 정보는 GET /users/me/stores(useMyStores), 색은 테마(shared/storeTheme, 없으면 매장 순서대로).
+ * 근무는 useMySchedule(lib/api/schedule). today · shift 는 급여 화면만 쓰는 가짜 데이터 — 챕터 8 에서 바꾼다.
  */
 export interface StaffStoreView {
   id: string
@@ -28,18 +28,15 @@ export interface StaffStoreView {
   photo?: string
   /** 매장 목록 한 줄 (예: 주 3회 마감 · 박 사장님) */
   meta: string
+  /** TODO(챕터 8): 급여 화면 전용 — 급여 API 로 바꾼다 */
   today: Date
   shift: { start: string; end: string; role: string }
-  crew: string
-  week: { date: Date; work: boolean }[]
-  weekHours: number
-  weekNote: string
 }
 
-function toView(store: MyStoreDetail): StaffStoreView {
-  const icon = store.theme ?? DEFAULT_STORE_THEME
-  // TODO(챕터 7): 근무 API 훅으로 교체
-  const { meta, today, shift, crew, week, weekHours, weekNote } = findStaffStore(store.storeId)
+function toView(store: MyStoreDetail, index: number, workSummary: string | null): StaffStoreView {
+  const icon = themeOf(store.theme, index)
+  // TODO(챕터 8): 급여 화면 전용 값 — 급여 API 로 교체
+  const { today, shift } = findStaffStore(store.storeId)
   return {
     id: store.storeId,
     name: store.name,
@@ -51,32 +48,32 @@ function toView(store: MyStoreDetail): StaffStoreView {
     icon,
     ...STORE_THEME[icon],
     photo: store.photoUrl ?? undefined,
-    meta,
+    // 매장 목록 한 줄: 이번 주 근무(FE 계산) · 사장님 이름
+    meta: [workSummary, store.ownerName].filter(Boolean).join(' · '),
     today,
     shift,
-    crew,
-    week,
-    weekHours,
-    weekNote,
   }
 }
 
 /** 매장 정보를 받기 전 · 소속 매장이 없을 때 화면이 깨지지 않게 쓰는 빈 매장 */
 const EMPTY_STORE: StaffStoreView = {
-  ...toView({
-    storeId: '',
-    name: '',
-    kind: '',
-    address: '',
-    ownerName: '',
-    role: 'staff',
-    memberId: '',
-    staffName: null,
-    photoUrl: null,
-    theme: null,
-    joinedAt: '',
-  }),
-  meta: '',
+  ...toView(
+    {
+      storeId: '',
+      name: '',
+      kind: '',
+      address: '',
+      ownerName: '',
+      role: 'staff',
+      memberId: '',
+      staffName: null,
+      photoUrl: null,
+      theme: null,
+      joinedAt: '',
+    },
+    0,
+    null,
+  ),
 }
 
 /**
@@ -90,12 +87,19 @@ export function useCurrentStore() {
   const storesQuery = useMyStores()
 
   const data = storesQuery.data
+  const storeIds = useMemo(() => (data?.stores ?? []).map((store) => store.storeId), [data])
+  const summaries = useWorkSummaries(storeIds)
   const stores = useMemo(
     () =>
       (data?.stores ?? [])
-        .filter((store) => store.role === 'staff' && !removedStoreIds.includes(store.storeId))
-        .map(toView),
-    [data, removedStoreIds],
+        // 테마 순서는 삭제 · 사장님 매장을 빼기 전 내 매장 목록 순서로 (매장 색이 바뀌지 않게)
+        .map((store, index) => ({
+          store,
+          view: toView(store, index, summaries[store.storeId] ?? null),
+        }))
+        .filter(({ store }) => store.role === 'staff' && !removedStoreIds.includes(store.storeId))
+        .map(({ view }) => view),
+    [data, removedStoreIds, summaries],
   )
   const store = stores.find((s) => s.id === currentStoreId) ?? stores[0] ?? EMPTY_STORE
 

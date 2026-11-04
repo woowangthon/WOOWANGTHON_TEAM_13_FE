@@ -1,23 +1,25 @@
-// 가짜 데이터: 근무표 · 근무 가능 시간 — BE 연결 전까지 사용
+// 가짜 데이터: 근무표 · 근무 가능 시간 — BE 연결 전까지 사용 (API 모양은 api/schedule.ts)
 
-export interface MyShift {
+export interface MockShift {
   date: Date
-  time: string
-  /** 역할 · 함께 일하는 사람 */
+  start: string
+  end: string
   role: string
+  /** 함께 일하는 사람 (나 빼고) */
+  crew: string[]
 }
 
 const d = (month: number, day: number) => new Date(2026, month - 1, day)
 
-export const myShifts: Record<string, MyShift[]> = {
+export const myShifts: Record<string, MockShift[]> = {
   dalbit: [
-    { date: d(11, 16), time: '18:00 – 23:00', role: '마감 · 지은 · 도윤' },
-    { date: d(11, 18), time: '18:00 – 23:00', role: '마감 · 지은 · 도윤' },
-    { date: d(11, 20), time: '18:00 – 23:00', role: '마감 · 지은 · 민수' },
+    { date: d(11, 16), start: '18:00', end: '23:00', role: '마감', crew: ['도윤'] },
+    { date: d(11, 18), start: '18:00', end: '23:00', role: '마감', crew: ['도윤'] },
+    { date: d(11, 20), start: '18:00', end: '23:00', role: '마감', crew: ['도윤', '민수'] },
   ],
   afternoon: [
-    { date: d(11, 21), time: '12:00 – 18:00', role: '오후 · 지은' },
-    { date: d(11, 22), time: '12:00 – 18:00', role: '오후 · 지은' },
+    { date: d(11, 21), start: '12:00', end: '18:00', role: '오후', crew: ['최 사장님'] },
+    { date: d(11, 22), start: '12:00', end: '18:00', role: '오후', crew: [] },
   ],
 }
 

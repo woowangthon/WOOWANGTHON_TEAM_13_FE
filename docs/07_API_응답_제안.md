@@ -10,13 +10,14 @@ FE가 지금 쓰는 **가짜 데이터(`src/api/mocks/staff/`) 모양을 기준�
 ## 목차
 | # | API | 우선 | 담당 | 가짜 데이터 |
 | --- | --- | --- | --- | --- |
-| 1 | `GET /users/me` · `PATCH /users/me` · `GET /users/me/stores` | P0 | 은교 | `mocks/staff/me.ts` · `stores.ts` |
+| 1 | `GET /users/me` · `PATCH /users/me` · `GET /users/me/stores` | P0 | 은교 | `mocks/staff/api/users.ts` · `stores.ts` |
 | 2 | `POST /invitations/verify` · `POST /memberships/join` | P0 | 은교 | `mocks/staff/join.ts` |
 | 3 | 레시피 목록 · 상세 | P0 | 연서 | `mocks/staff/recipes.ts` |
 | 4 | 매뉴얼 목록 · 상세 | P0 | 연서 | `mocks/staff/manuals.ts` |
 | 5 | AI 채팅방 생성 · 목록, 메시지 전송 · 내역, 사장님께 물어보기 | P0 (사장님 답변 → 매뉴얼 추가는 P1) | 연서 | `mocks/staff/chat.ts` |
-| 6 | 인수인계 AI 초안 · 목록 · 등록 · 상세 · 수정 · 삭제 · 확인 | P0 (확인은 [질문 3](#8-be에-확인하고-싶은-것)) | 연서 | `mocks/staff/handovers.ts` |
-| 7 | 예상 급여 · 시급 설정 | P1 | 연서 · 은교 | `mocks/staff/payroll.ts` |
+| 6 | 인수인계 AI 초안 · 목록 · 등록 · 상세 · 수정 · 삭제 · 확인 | P0 (확인은 [질문 3](#9-be에-확인하고-싶은-것)) | 연서 | `mocks/staff/handovers.ts` |
+| 7 | 내 스케줄 · 근무 가능 시간 조회 · 등록 · 수정 · 삭제 | P1 | 은교 | `mocks/staff/schedule.ts` |
+| 8 | 예상 급여 · 시급 설정 | P1 | 연서 · 은교 | `mocks/staff/payroll.ts` |
 
 ---
 
@@ -87,7 +88,7 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 
 ## 1. 사용자
 
-> 처음 로그인한 사용자를 어디서 만드는지는 [질문 1](#8-be에-확인하고-싶은-것)에 적었어요. `GET /users/me`에서 없으면 자동으로 만들어 줘도 FE는 괜찮아요.
+> 처음 로그인한 사용자를 어디서 만드는지는 [질문 1](#9-be에-확인하고-싶은-것)에 적었어요. `GET /users/me`에서 없으면 자동으로 만들어 줘도 FE는 괜찮아요.
 
 ### 1-1. `GET /users/me` ✅ 확정 (11/4, 은교)
 로그인 사용자 + 소속 매장 · 역할. FE는 `stores`가 비어 있으면 `/role`, 있으면 역할 홈(`/staff`, `/owner`)으로 보내요.
@@ -163,9 +164,9 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | `memberId` | 이 매장에서의 내 구성원 ID (시급 설정 등 사장님 기능에서 쓰는 ID) · 🙏 요청 중 (11/4) |
 | `staffName` | 사장님이 알바생 추가 때 적은 이름 (사장님 매장이면 `null`) · 🙏 요청 중 (11/4) |
 | `photoUrl` | 매장 사진. 없으면 `null` → FE가 매장 색으로 채워요 · 🙏 요청 중 (11/4) |
-| `theme` | 매장 색 · 아이콘 묶음 키: `"moon"`(초록) · `"sunset"`(갈색). 색 값(#2A4536 등)은 FE 디자인 토큰에서 정해요. 저장할 곳이 없으면 `null`이어도 돼요 (FE가 순서대로 배정) |
+| `theme` | 매장 색 · 아이콘 묶음 키: `"moon"`(초록) · `"sunset"`(갈색). 색 값(#2A4536 등)은 FE 디자인 토큰에서 정해요. 저장할 곳이 없으면 `null`이어도 돼요 (FE가 내 매장 순서대로 초록 → 갈색 … 정해요). 매장 목록 한 줄 "주 3회 마감 · 박 사장님"의 "주 3회 마감"은 FE가 [7-1](#7-1-get-storesstoreidschedulesme-내-스케줄) 근무 목록에서 계산해요 |
 
-> 가짜 데이터의 `shift` · `week` · `weekHours`(근무)는 P1 스케줄 API, `chips`(자주 묻는 질문)는 [5-1 채팅방](#5-1-ai-채팅방-생성--목록)의 `suggestions`로 옮겼어요.
+> 가짜 데이터의 `shift` · `week` · `weekHours`(근무)는 [7. 근무](#7-근무-p1), `chips`(자주 묻는 질문)는 [5-1 채팅방](#5-1-ai-채팅방-생성--목록)의 `suggestions`로 옮겼어요.
 
 ---
 
@@ -203,7 +204,7 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | 410 | `INVITE_REVOKED` | 사장님이 삭제한 코드예요 | `null` |
 | 429 | `INVITE_LOCKED` | 5번 틀려서 10분 동안 입력할 수 없어요 | `{ "lockedUntil": "2026-11-20T15:00:00+09:00" }` |
 
-> `store.theme`은 FE 추가 요청이에요 (11/4): 입장 완료 화면을 매장 색으로 칠해요. 없으면 `null` → 기본 색.
+> `store.theme`이 있으면 입장 완료 화면을 그 매장 색으로 칠해요. 없으면(`null`) FE가 내 매장 순서대로 정해요.
 
 > 틀린 횟수 세기 · 10분 잠금은 BE에서 해 주세요 (docs/03 A1). FE는 `INVITE_LOCKED`를 받으면 입력을 막는 자리만 있어요.
 
@@ -547,7 +548,7 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 
 ### 5-3. 사장님께 물어보기
 #### 질문 보내기 — P0 (제안: `POST /stores/{storeId}/assistant-chats/{chatId}/messages/{messageId}/owner-questions`)
-> **BE 표에 없는 API예요.** [질문 6](#8-be에-확인하고-싶은-것)에 적었어요. 경로는 BE가 정해 주세요.
+> **BE 표에 없는 API예요.** [질문 6](#9-be에-확인하고-싶은-것)에 적었어요. 경로는 BE가 정해 주세요.
 
 `not_found` 답변의 [사장님께 물어보기]를 누르면 불러요. `messageId`는 그 AI 답변 ID예요. 원래 질문은 BE가 그 답변 바로 앞 `staff` 메시지에서 찾아요.
 
@@ -733,7 +734,7 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 응답 `204`. 에러: `403 FORBIDDEN`, `404 NOT_FOUND`
 
 ### 6-7. `POST /stores/{storeId}/handover-notes/{noteId}/confirmations` (확인)
-> BE 표에는 **"확인 완료" · P2**로 되어 있는데, FE 홈은 **항목별 체크가 P0**예요 (docs/03 A4 "처리하면 ☑"). [질문 3](#8-be에-확인하고-싶은-것)에 적었어요.
+> BE 표에는 **"확인 완료" · P2**로 되어 있는데, FE 홈은 **항목별 체크가 P0**예요 (docs/03 A4 "처리하면 ☑"). [질문 3](#9-be에-확인하고-싶은-것)에 적었어요.
 
 FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 주세요.
 
@@ -769,10 +770,100 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 ---
 
-## 7. 급여 (P1)
+## 7. 근무 (P1)
+근무 가능 시간 입력 · 내 근무표 (docs/03 A5). 담당: 은교
+
+### 7-1. `GET /stores/{storeId}/schedules/me` (내 스케줄)
+홈 주간 달력 · 오늘 근무 카드 · 근무표에 써요. 주간 달력의 "근무 있는 날", 오늘 근무 카드, 매장 목록 한 줄("주 3회 마감" · "주말 오후")은 FE가 `shifts`에서 만들어요.
+
+응답 `200`
+```json
+{
+  "today": "2026-11-20",
+  "weekStart": "2026-11-16",
+  "weekHours": 10,
+  "weeklyAllowanceHours": 15,
+  "weekNote": "오늘 마감 후 15시간 · 주휴수당 대상",
+  "shifts": [
+    {
+      "shiftId": "shf_1116",
+      "date": "2026-11-16",
+      "start": "18:00",
+      "end": "23:00",
+      "role": "마감",
+      "crew": ["도윤"]
+    },
+    {
+      "shiftId": "shf_1120",
+      "date": "2026-11-20",
+      "start": "18:00",
+      "end": "23:00",
+      "role": "마감",
+      "crew": ["도윤", "민수"]
+    }
+  ]
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `today` | 서버 기준 오늘 (기기 시간대가 달라도 같은 날로 보이게) |
+| `weekStart` | 이번 주 월요일 |
+| `weekHours` · `weeklyAllowanceHours` | 이번 주 근무 시간 / 주휴수당 기준(15시간) → 근무표 동그라미 그래프 |
+| `weekNote` | 이번 주 한 줄 설명 (규칙으로 만들어 주세요) |
+| `shifts` | 확정된 내 근무, 날짜 순. `crew`는 함께 일하는 사람(나 빼고). FE가 근무표에 "마감 · 지은 · 도윤"으로 보여 줘요 |
+
+### 7-2. `GET /stores/{storeId}/availabilities/me` (내 근무 가능 시간)
+응답 `200`
+```json
+{
+  "availabilityId": "avl_31",
+  "month": "2026-12",
+  "deadline": "2026-11-25",
+  "days": [
+    { "date": "2026-12-15", "status": "unavailable" },
+    { "date": "2026-12-16", "status": "unavailable" }
+  ],
+  "memo": "15~19일 기말고사 · 주 3회 마감 희망",
+  "submittedAt": "2026-11-20T21:10:00+09:00"
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `availabilityId` | 낸 근무 가능 시간 ID (수정 · 삭제할 때). **아직 안 냈으면 `null`** |
+| `month` · `deadline` | 가능 시간을 받는 달 · 마감일 (근무표의 "12월 가능 시간 제출 · 11/25(수) 마감"). 안 냈어도 주세요 |
+| `days` | `"available"` 가능 · `"unavailable"` 불가. 안 칠한 날은 빼요. 안 냈으면 `[]` |
+| `submittedAt` | 낸 시각, 안 냈으면 `null` (근무표: "제출 완료 · 확정 대기") |
+
+### 7-3. `POST /stores/{storeId}/availabilities` (등록)
+처음 낼 때 (`availabilityId`가 `null`일 때). 요청
+```json
+{
+  "month": "2026-12",
+  "days": [{ "date": "2026-12-15", "status": "unavailable" }],
+  "memo": "15~19일 기말고사 · 주 3회 마감 희망"
+}
+```
+응답 `201` — [7-2](#7-2-get-storesstoreidavailabilitiesme-내-근무-가능-시간) 모양. 에러: `409 AVAILABILITY_EXISTS` (이미 냄 → 수정으로), `409 AVAILABILITY_CLOSED` (마감 지남), `422 VALIDATION_ERROR`
+
+### 7-4. `PATCH /stores/{storeId}/availabilities/{availabilityId}` (수정)
+다시 낼 때. 요청
+```json
+{
+  "days": [{ "date": "2026-12-15", "status": "available" }],
+  "memo": "15일은 가능해요"
+}
+```
+응답 `200` — [7-2](#7-2-get-storesstoreidavailabilitiesme-내-근무-가능-시간) 모양. 에러: `404 NOT_FOUND`, `409 AVAILABILITY_CLOSED`
+
+### 7-5. `DELETE /stores/{storeId}/availabilities/{availabilityId}` (삭제)
+응답 `204`. 에러: `404 NOT_FOUND`. 지금 FE 화면에는 삭제 버튼이 없어요
+
+---
+
+## 8. 급여 (P1)
 계산은 **규칙(코드)으로**, AI는 쉬운 설명만 해요 (`docs/01`). 금액은 화면에 항상 "참고용"으로 보여 줘요.
 
-### 7-1. `GET /stores/{storeId}/payroll/estimates/me` (내 예상 급여)
+### 8-1. `GET /stores/{storeId}/payroll/estimates/me` (내 예상 급여)
 쿼리 (제안): `?month=2026-11` — 없으면 이번 달
 
 응답 `200`
@@ -812,8 +903,8 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 > 숫자는 FE 가짜 데이터(`calcPay`)와 같은 규칙이에요: 기본급 = 시간 × 시급, 공제 = (기본급 + 주휴수당) × 공제율 (10원 단위 반올림). 공휴일 가산은 없어요 (docs/03 S7).
 
-### 7-2. `PUT /stores/{storeId}/members/{memberId}/hourly-wage` (시급 설정 — 사장님 기능)
-사장님 화면(나현)에서 써요. 알바 화면은 보기만 해요 ([질문 4](#8-be에-확인하고-싶은-것)).
+### 8-2. `PUT /stores/{storeId}/members/{memberId}/hourly-wage` (시급 설정 — 사장님 기능)
+사장님 화면(나현)에서 써요. 알바 화면은 보기만 해요 ([질문 4](#9-be에-확인하고-싶은-것)).
 
 요청
 ```json
@@ -828,7 +919,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 ---
 
-## 8. BE에 확인하고 싶은 것
+## 9. BE에 확인하고 싶은 것
 
 **API 표를 보고 생긴 질문**
 1. **`POST /auth/bootstrap`이 표에 없어요.** 처음 로그인 시 사용자 생성은 어디서 하나요? (`GET /users/me`에서 없으면 자동 생성도 OK)
@@ -842,9 +933,9 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 7. 필드 이름 **camelCase**로 줄 수 있나요? (snake_case면 FE가 변환 계층을 추가해야 해요)
 8. 에러 모양 `{ code, message, detail }` 괜찮나요?
 9. `INVITE_ALREADY_JOINED`에 매장 ID · 이름(`detail`)을 넣어 줄 수 있나요? ([○○로 가기] 버튼에 필요)
-10. 매장 색 · 아이콘(`theme`)을 매장에 저장할 수 있나요? 어려우면 FE가 정해요
-11. 레시피 목록에 재료까지 넣어도 괜찮나요? (재료 검색을 FE에서 하려고)
-12. 인수인계는 하루에 여러 개 남길 수 있나요? (FE는 여러 개를 받을 수 있게 `notes` 배열로 제안)
-13. 인수인계 체크는 매장 공용이 맞나요? (한 명이 체크하면 모두에게 체크)
-14. AI 답변이 몇 초 걸리나요? 길면 스트리밍 여부 논의
-15. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
+10. 레시피 목록에 재료까지 넣어도 괜찮나요? (재료 검색을 FE에서 하려고)
+11. 인수인계는 하루에 여러 개 남길 수 있나요? (FE는 여러 개를 받을 수 있게 `notes` 배열로 제안)
+12. 인수인계 체크는 매장 공용이 맞나요? (한 명이 체크하면 모두에게 체크)
+13. AI 답변이 몇 초 걸리나요? 길면 스트리밍 여부 논의
+14. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
+

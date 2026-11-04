@@ -257,3 +257,64 @@ export interface AlreadyJoinedDetail {
   storeId: string
   storeName: string
 }
+
+// ── 근무 (docs/07 7, P1) ──
+
+export interface Shift {
+  shiftId: string
+  date: string
+  start: string
+  end: string
+  /** 근무 이름 (마감 · 오후 …) */
+  role: string
+  /** 함께 일하는 사람 (나 빼고) */
+  crew: string[]
+}
+
+/** GET /stores/{storeId}/schedules/me */
+export interface MySchedule {
+  /** 서버 기준 오늘 */
+  today: string
+  /** 이번 주 월요일 */
+  weekStart: string
+  /** 이번 주 근무 시간 */
+  weekHours: number
+  /** 주휴수당 기준 시간 (15) */
+  weeklyAllowanceHours: number
+  /** 이번 주 한 줄 설명 (예: 오늘 마감 후 15시간 · 주휴수당 대상) */
+  weekNote: string
+  /** 확정된 내 근무 (날짜 순) */
+  shifts: Shift[]
+}
+
+export type AvailabilityStatus = 'available' | 'unavailable'
+
+export interface AvailabilityDay {
+  date: string
+  status: AvailabilityStatus
+}
+
+/** GET /stores/{storeId}/availabilities/me — 아직 안 냈으면 availabilityId · submittedAt 이 null */
+export interface MyAvailability {
+  /** 낸 근무 가능 시간 ID (수정 · 삭제할 때). 안 냈으면 null */
+  availabilityId: string | null
+  /** 가능 시간을 받는 달 "2026-12" */
+  month: string
+  deadline: string
+  days: AvailabilityDay[]
+  memo: string
+  /** 제출 시각. 안 냈으면 null */
+  submittedAt: string | null
+}
+
+/** PATCH /stores/{storeId}/availabilities/{availabilityId} 요청 */
+export interface AvailabilityInput {
+  days: AvailabilityDay[]
+  memo: string
+}
+
+/** POST /stores/{storeId}/availabilities 요청 (처음 낼 때) */
+export interface NewAvailability extends AvailabilityInput {
+  /** 받는 달 "2026-12" */
+  month: string
+}
