@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { To } from 'react-router'
 import type { Manual } from '@/lib/api/types'
 import { ManualCard } from '@/shared/manual/ManualCard'
@@ -8,10 +9,12 @@ import { EmptyState } from '@/ui/EmptyState'
 interface ManualGridProps {
   manuals: Manual[]
   getHref: (manual: Manual) => To
+  /** 매뉴얼이 없을 때 보여 줄 것 (없으면 기본 문구) */
+  empty?: ReactNode
 }
 
-export function ManualGrid({ manuals, getHref }: ManualGridProps) {
-  if (manuals.length === 0) return <EmptyState message="아직 등록된 매뉴얼이 없어요" />
+export function ManualGrid({ manuals, getHref, empty }: ManualGridProps) {
+  if (manuals.length === 0) return empty ?? <EmptyState message="아직 등록된 매뉴얼이 없어요" />
 
   return (
     <div className="grid grid-cols-2 gap-2.5">

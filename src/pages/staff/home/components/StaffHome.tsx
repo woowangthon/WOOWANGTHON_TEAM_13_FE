@@ -1,15 +1,17 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
 import { useMySchedule } from '@/lib/api/schedule'
 import type { Shift } from '@/lib/api/types'
 import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
+import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
@@ -53,6 +55,7 @@ function HomeBody({
   week: WeekDay[]
   todayShift?: Shift
 }) {
+  const navigate = useNavigate()
   const todayDate = todayOfStore.getDate()
   const [selected, setSelected] = useState(todayDate)
 
@@ -92,8 +95,32 @@ function HomeBody({
         })}
       </div>
 
-      {/* 오늘 근무가 없으면 카드를 숨긴다 */}
-      {todayShift && <TodayShiftCard store={store} shift={todayShift} />}
+      {todayShift ? (
+        <TodayShiftCard store={store} shift={todayShift} />
+      ) : week.some((d) => d.work) ? (
+        <EmptyGuide
+          message="오늘은 근무가 없어요"
+          action={
+            <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/schedule')}>
+              근무표 보기
+            </Button>
+          }
+        />
+      ) : (
+        <EmptyGuide
+          message="아직 확정된 근무가 없어요"
+          hint="근무 가능 시간을 내면 사장님이 근무표를 짜요"
+          action={
+            <Button
+              size="md"
+              className="h-[46px] px-5"
+              onClick={() => navigate('/staff/availability')}
+            >
+              가능 시간 내기
+            </Button>
+          }
+        />
+      )}
 
       <HandoverSection store={store} today={todayOfStore} week={week} selectedDay={selected} />
     </div>
@@ -162,6 +189,7 @@ function HandoverSection({
     week.find((w) => w.date.getDate() === selectedDay)?.date ??
     new Date(today.getFullYear(), today.getMonth(), selectedDay)
   const date = toDateKey(selectedDate)
+  const navigate = useNavigate()
   const notesQuery = useHandoverNotes(store.id, date)
   const confirm = useConfirmHandoverItem(store.id, date)
 
@@ -206,6 +234,15 @@ function HandoverSection({
             />
           </div>
         ))
+      ) : live && notes.length === 0 ? (
+        <EmptyGuide
+          message="아직 오늘 인수인계가 없어요"
+          action={
+            <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/handover')}>
+              인수인계 남기기
+            </Button>
+          }
+        />
       ) : (
         <EmptyState
           icon={selectedDay > todayDate ? Clock : notes.length > 0 ? Check : Minus}

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
@@ -78,6 +79,23 @@ function RecipeSection({ storeId }: { storeId: string }) {
       { replace: true },
     )
 
+  const askAi = (draft: string) => navigate('/staff/chat', { state: { draft } })
+
+  // 레시피가 하나도 없는 매장 (새 매장): 검색 · 카테고리 대신 안내
+  if (recipesQuery.isSuccess && all.length === 0) {
+    return (
+      <EmptyGuide
+        message="아직 등록된 레시피가 없어요"
+        hint="사장님이 레시피를 등록하면 여기에 보여요"
+        action={
+          <Button size="md" className="h-[46px] px-5" onClick={() => askAi('')}>
+            AI 사수에게 묻기
+          </Button>
+        }
+      />
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <label className="flex h-[54px] items-center gap-2.5 rounded-[20px] bg-card px-[18px] shadow-soft">
@@ -119,11 +137,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
             <EmptyState
               message="검색 결과가 없어요"
               action={
-                <Button
-                  size="md"
-                  className="h-[46px] px-5"
-                  onClick={() => navigate('/staff/chat', { state: { draft: q } })}
-                >
+                <Button size="md" className="h-[46px] px-5" onClick={() => askAi(q)}>
                   AI 사수에게 묻기
                 </Button>
               }
@@ -136,6 +150,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
 }
 
 function ManualCards({ storeId }: { storeId: string }) {
+  const navigate = useNavigate()
   const manualsQuery = useManuals(storeId)
 
   if (manualsQuery.isPending) return <Spinner />
@@ -146,6 +161,21 @@ function ManualCards({ storeId }: { storeId: string }) {
     <ManualGrid
       manuals={manualsQuery.data?.manuals ?? []}
       getHref={(m) => `/staff/manuals/${m.manualId}`}
+      empty={
+        <EmptyGuide
+          message="아직 등록된 매뉴얼이 없어요"
+          hint="사장님이 매뉴얼을 등록하면 여기에 보여요"
+          action={
+            <Button
+              size="md"
+              className="h-[46px] px-5"
+              onClick={() => navigate('/staff/chat', { state: { draft: '' } })}
+            >
+              AI 사수에게 묻기
+            </Button>
+          }
+        />
+      }
     />
   )
 }
