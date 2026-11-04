@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRecipe, getRecipes } from '@/api/mocks/staff/api/recipes'
+import { http, isRealApi } from '@/lib/api/source'
+import type { Recipe, RecipeList } from '@/lib/api/types'
 
 /*
  * 레시피 훅 — 담당: 민지 (사장 화면도 import 해서 쓴다)
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만
- * apiFetch(`/stores/${storeId}/recipes`) 또는 orval 생성 함수로 바꾸면 된다. 응답 모양: docs/07 3
+ * .env VITE_REAL_API 에 'recipes'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 3
  */
 
 export const recipeKeys = {
@@ -12,8 +13,12 @@ export const recipeKeys = {
   detail: (storeId: string, recipeId: string) => ['stores', storeId, 'recipes', recipeId] as const,
 }
 
-const fetchRecipes = (storeId: string) => getRecipes(storeId)
-const fetchRecipe = (storeId: string, recipeId: string) => getRecipe(storeId, recipeId)
+const fetchRecipes = (storeId: string) =>
+  isRealApi('recipes') ? http.get<RecipeList>(`/stores/${storeId}/recipes`) : getRecipes(storeId)
+const fetchRecipe = (storeId: string, recipeId: string) =>
+  isRealApi('recipes')
+    ? http.get<Recipe>(`/stores/${storeId}/recipes/${recipeId}`)
+    : getRecipe(storeId, recipeId)
 
 /** 레시피 목록: 카테고리(개수) · 처음 카테고리 · 메뉴 */
 export function useRecipes(storeId: string) {

@@ -1,15 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { joinMembership, verifyInvitation } from '@/api/mocks/staff/api/invitations'
+import { http, isRealApi } from '@/lib/api/source'
+import type { InviteVerification, Membership } from '@/lib/api/types'
 import { userKeys } from '@/lib/api/users'
 
 /*
  * 초대코드 훅 — 담당: 민지
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만
- * apiFetch('/invitations/verify') · apiFetch('/memberships/join') 으로 바꾸면 된다. 응답 · 에러 코드: docs/07 2
+ * .env VITE_REAL_API 에 'invitations'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 2
  */
 
-const postVerify = (code: string) => verifyInvitation(code)
-const postJoin = (code: string) => joinMembership(code)
+const postVerify = (code: string) =>
+  isRealApi('invitations')
+    ? http.post<InviteVerification>('/invitations/verify', { code })
+    : verifyInvitation(code)
+const postJoin = (code: string) =>
+  isRealApi('invitations')
+    ? http.post<Membership>('/memberships/join', { code })
+    : joinMembership(code)
 
 /** 초대코드 확인 (입장은 안 함) */
 export function useVerifyInvite() {

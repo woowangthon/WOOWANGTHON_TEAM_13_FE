@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { getMe, getMyStores } from '@/api/mocks/staff/api/users'
+import { http, isRealApi } from '@/lib/api/source'
+import type { MyStoreList } from '@/lib/api/types'
 import type { Me } from '@/lib/authStore'
 
 /*
  * 사용자 · 내 매장 훅 — 담당: 민지
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만
- * apiFetch('/users/me') · apiFetch('/users/me/stores') 로 바꾸면 된다. 응답 모양: docs/07 1
+ * .env VITE_REAL_API 에 'users'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 1
  * 로그인 사용자(me)는 화면 보호(guards)에서도 쓰므로 useAuthStore 에 둔다 (auth.ts 가 fetchMe 로 채움).
  */
 
@@ -18,10 +19,11 @@ export const userKeys = {
  * 가짜 서버는 Supabase 로그인 정보(이름 · 이메일 · 로그인 방식)를 받아서 만든다.
  */
 export function fetchMe(loginUser: Omit<Me, 'stores'>): Promise<Me> {
-  return getMe(loginUser)
+  return isRealApi('users') ? http.get<Me>('/users/me') : getMe(loginUser)
 }
 
-const fetchMyStores = () => getMyStores()
+const fetchMyStores = () =>
+  isRealApi('users') ? http.get<MyStoreList>('/users/me/stores') : getMyStores()
 
 /** 내 매장 (알바 화면 매장 전환 · 홈 · 마이페이지) */
 export function useMyStores() {

@@ -5,13 +5,19 @@ import {
   createHandoverNote,
   getHandoverNotes,
 } from '@/api/mocks/staff/api/handover'
+import { http, isRealApi } from '@/lib/api/source'
 import { toastApiError } from '@/lib/api/errors'
-import type { HandoverConfirmation, HandoverNoteList, NewHandoverNote } from '@/lib/api/types'
+import type {
+  HandoverConfirmation,
+  HandoverDraft,
+  HandoverNote,
+  HandoverNoteList,
+  NewHandoverNote,
+} from '@/lib/api/types'
 
 /*
  * 인수인계 훅 — 담당: 민지 (사장 화면도 import 해서 쓴다)
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만
- * apiFetch(`/stores/${storeId}/handover-…`) 또는 orval 생성 함수로 바꾸면 된다. 응답 모양: docs/07 6
+ * .env VITE_REAL_API 에 'handover'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 6
  */
 
 export const handoverKeys = {
@@ -19,12 +25,24 @@ export const handoverKeys = {
   notes: (storeId: string, date: string) => ['stores', storeId, 'handover-notes', date] as const,
 }
 
-const fetchNotes = (storeId: string, date: string) => getHandoverNotes(storeId, date)
-const postDraft = (storeId: string, text: string) => createHandoverDraft(storeId, text)
-const postNote = (storeId: string, body: NewHandoverNote) => createHandoverNote(storeId, body)
+const real = () => isRealApi('handover')
+const notesPath = (storeId: string) => `/stores/${storeId}/handover-notes`
+
+const fetchNotes = (storeId: string, date: string) =>
+  real()
+    ? http.get<HandoverNoteList>(`${notesPath(storeId)}?date=${encodeURIComponent(date)}`)
+    : getHandoverNotes(storeId, date)
+const postDraft = (storeId: string, text: string) =>
+  real()
+    ? http.post<HandoverDraft>(`/stores/${storeId}/handover-drafts`, { text })
+    : createHandoverDraft(storeId, text)
+const postNote = (storeId: string, body: NewHandoverNote) =>
+  real() ? http.post<HandoverNote>(notesPath(storeId), body) : createHandoverNote(storeId, body)
 // 항목별 체크는 docs/07 6-7 제안 모양. BE 가 다르게 정하면 이 함수 안쪽만 바꾼다
 const postConfirmation = (storeId: string, noteId: string, body: HandoverConfirmation) =>
-  confirmHandoverItem(storeId, noteId, body)
+  real()
+    ? http.post<HandoverNote>(`${notesPath(storeId)}/${noteId}/confirmations`, body)
+    : confirmHandoverItem(storeId, noteId, body)
 
 /** 그날 인수인계 노트 (최신 순) */
 export function useHandoverNotes(storeId: string, date: string) {

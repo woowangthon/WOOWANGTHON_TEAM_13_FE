@@ -7,13 +7,20 @@ import {
   listChats,
   sendMessage,
 } from '@/api/mocks/staff/api/assistantChat'
+import { http, isRealApi } from '@/lib/api/source'
 import { toastApiError } from '@/lib/api/errors'
-import type { AssistantChatList, ChatMessage, ChatMessageList } from '@/lib/api/types'
+import type {
+  AssistantChatList,
+  ChatMessage,
+  ChatMessageList,
+  CreatedAssistantChat,
+  OwnerQuestion,
+  SentChatMessage,
+} from '@/lib/api/types'
 
 /*
  * AI 사수 채팅 훅 — 담당: 민지
- * 지금은 가짜 서버(api/mocks/staff/api)를 부른다. BE 연결 시 fetch 함수 안쪽만
- * apiFetch(`/stores/${storeId}/assistant-chats…`) 또는 orval 생성 함수로 바꾸면 된다. 응답 모양: docs/07 5
+ * .env VITE_REAL_API 에 'assistantChat'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 5
  */
 
 export const chatKeys = {
@@ -22,11 +29,25 @@ export const chatKeys = {
     ['stores', storeId, 'assistant-chats', chatId, 'messages'] as const,
 }
 
-const fetchChats = (storeId: string) => listChats(storeId)
-const postChat = (storeId: string) => createChat(storeId)
-const fetchMessages = (chatId: string) => getMessages(chatId)
-const postMessage = (chatId: string, text: string) => sendMessage(chatId, text)
-const postOwnerQuestion = (chatId: string, messageId: string) => askOwner(chatId, messageId)
+const real = () => isRealApi('assistantChat')
+const chatsPath = (storeId: string) => `/stores/${storeId}/assistant-chats`
+const messagesPath = (storeId: string, chatId: string) => `${chatsPath(storeId)}/${chatId}/messages`
+
+const fetchChats = (storeId: string) =>
+  real() ? http.get<AssistantChatList>(chatsPath(storeId)) : listChats(storeId)
+const postChat = (storeId: string) =>
+  real() ? http.post<CreatedAssistantChat>(chatsPath(storeId)) : createChat(storeId)
+const fetchMessages = (storeId: string, chatId: string) =>
+  real() ? http.get<ChatMessageList>(messagesPath(storeId, chatId)) : getMessages(chatId)
+const postMessage = (storeId: string, chatId: string, text: string) =>
+  real()
+    ? http.post<SentChatMessage>(messagesPath(storeId, chatId), { text })
+    : sendMessage(chatId, text)
+// 사장님께 물어보기는 BE 표에 없어 경로 제안 (docs/07 5-3)
+const postOwnerQuestion = (storeId: string, chatId: string, messageId: string) =>
+  real()
+    ? http.post<OwnerQuestion>(`${messagesPath(storeId, chatId)}/${messageId}/owner-questions`)
+    : askOwner(chatId, messageId)
 
 /** 사장님 답변을 기다리는 중인 메시지가 있으면 1초마다 내역을 다시 불러온다 (답이 오면 멈춤) */
 const OWNER_POLL_MS = 1000
@@ -74,7 +95,7 @@ export function useAssistantChat(storeId: string) {
 
   const messagesQuery = useQuery({
     queryKey: chatKeys.messages(storeId, chatId ?? ''),
-    queryFn: () => fetchMessages(chatId!),
+    queryFn: () => fetchMessages(storeId, chatId!),
     enabled: !!chatId,
     refetchInterval: (query) => (isWaitingOwner(query.state.data) ? OWNER_POLL_MS : false),
   })
@@ -99,7 +120,7 @@ export function useSendMessage(storeId: string, chatId: string | undefined) {
     )
 
   const send = useMutation({
-    mutationFn: (text: string) => postMessage(chatId!, text),
+    mutationFn: (text: string) => postMessage(storeId, chatId!, text),
     onMutate: (text) => {
       const tempId = `temp_${Date.now()}`
       patch((list) => [
@@ -136,7 +157,7 @@ export function useAskOwner(storeId: string, chatId: string | undefined) {
   const key = chatKeys.messages(storeId, chatId ?? '')
 
   const ask = useMutation({
-    mutationFn: (messageId: string) => postOwnerQuestion(chatId!, messageId),
+    mutationFn: (messageId: string) => postOwnerQuestion(storeId, chatId!, messageId),
     onSuccess: (result, messageId) => {
       queryClient.setQueryData<ChatMessageList>(key, (old) =>
         old
