@@ -26,7 +26,7 @@ export default function MyPage() {
   const { store, stores, setCurrentStoreId } = useCurrentStore()
   const [profileName, setProfileName] = useProfileName()
   // 로그인 방식. SKIP_AUTH 로 로그인 없이 볼 때는 가짜(카카오)
-  const loginProvider = useAuthStore((state) => state.provider)
+  const loginProvider = useAuthStore((state) => state.me?.provider)
   const provider: OAuthProvider = loginProvider === 'google' ? 'google' : 'kakao'
   const removeStore = useStaffStore((state) => state.removeStore)
   const restoreStoreByCode = useStaffStore((state) => state.restoreStoreByCode)
