@@ -8,8 +8,8 @@ import {
 import { staffStores } from '@/api/mocks/staff/stores'
 
 /*
- * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 체크 · 제출 내용이 유지된다.
- * 채팅은 src/lib/api/assistantChat 훅으로 옮겼다.
+ * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 제출 내용이 유지된다.
+ * 채팅 · 인수인계는 src/lib/api 훅(assistantChat · handover)으로 옮겼다.
  * BE 가 준비되면 이 상태들은 TanStack Query(서버 데이터)로 바꾼다.
  */
 
@@ -17,8 +17,6 @@ interface StaffState {
   profileName: string
   /** 마이페이지에서 삭제한 매장 */
   removedStoreIds: string[]
-  /** 오늘 인수인계 체크 */
-  checkedHandovers: Record<string, boolean>
   availability: Record<number, AvailabilityMark>
   availabilityMemo: string
   availabilitySubmitted: boolean
@@ -27,7 +25,6 @@ interface StaffState {
   setProfileName: (name: string) => void
   removeStore: (storeId: string) => void
   restoreStoreByCode: (code: string) => string | null
-  toggleHandover: (id: string) => void
   cycleAvailability: (day: number) => void
   setAvailabilityMemo: (memo: string) => void
   submitAvailability: () => void
@@ -38,7 +35,6 @@ export const useStaffStore = create<StaffState>((set, get) => {
   return {
     profileName: '지은',
     removedStoreIds: [],
-    checkedHandovers: {},
     availability: initialAvailability,
     availabilityMemo: initialAvailabilityMemo,
     availabilitySubmitted: false,
@@ -55,11 +51,6 @@ export const useStaffStore = create<StaffState>((set, get) => {
       set((state) => ({ removedStoreIds: state.removedStoreIds.filter((id) => id !== store.id) }))
       return store.id
     },
-
-    toggleHandover: (id) =>
-      set((state) => ({
-        checkedHandovers: { ...state.checkedHandovers, [id]: !state.checkedHandovers[id] },
-      })),
 
     cycleAvailability: (day) =>
       set((state) => ({

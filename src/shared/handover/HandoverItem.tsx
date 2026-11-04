@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import type { HandoverItem as HandoverItemData } from '@/api/mocks/staff/handovers'
+import type { HandoverItem as HandoverItemData } from '@/lib/api/types'
 import { HANDOVER_TAG_COLOR } from '@/shared/icons'
 import { cn } from '@/ui/utils'
 
