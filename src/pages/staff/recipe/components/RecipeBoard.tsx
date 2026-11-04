@@ -1,19 +1,15 @@
 import { Search } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { storeManuals } from '@/api/mocks/staff/manuals'
-import {
-  defaultRecipeCategory,
-  recipeCategories,
-  storeRecipes,
-  type RecipeCategory,
-} from '@/api/mocks/staff/recipes'
-import { useStaffStore } from '@/pages/staff/staffStore'
+import { useManuals } from '@/lib/api/manuals'
+import { useQueryErrorToast } from '@/lib/api/query'
+import { useRecipes } from '@/lib/api/recipes'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
+import { Spinner } from '@/ui/Spinner'
 import { Tabs } from '@/ui/Tabs'
 
 export type BoardSegment = 'recipe' | 'manual'
@@ -54,22 +50,21 @@ export function RecipeBoard({ segment }: { segment: BoardSegment }) {
 function RecipeSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const categories = recipeCategories[storeId] ?? []
-  const all = storeRecipes(storeId)
+  const recipesQuery = useRecipes(storeId)
+  useQueryErrorToast(recipesQuery)
+
+  const categories = recipesQuery.data?.categories ?? []
+  const all = recipesQuery.data?.recipes ?? []
 
   const q = (params.get('q') ?? '').trim()
-  const catParam = params.get('cat') as RecipeCategory | null
+  const catParam = params.get('cat')
   const category =
-    catParam && categories.includes(catParam)
+    catParam && categories.some((c) => c.name === catParam)
       ? catParam
-      : (defaultRecipeCategory[storeId] ?? categories[0])
-
-  const counts = Object.fromEntries(
-    categories.map((c) => [c, all.filter((r) => r.category === c).length]),
-  )
+      : (recipesQuery.data?.defaultCategory ?? categories[0]?.name ?? '')
 
   const shown = q
-    ? all.filter((r) => r.name.includes(q) || r.ingredients.some(([name]) => name.includes(q)))
+    ? all.filter((r) => r.name.includes(q) || r.ingredients.some(({ name }) => name.includes(q)))
     : all.filter((r) => r.category === category)
 
   const update = (next: Record<string, string>) =>
@@ -97,46 +92,57 @@ function RecipeSection({ storeId }: { storeId: string }) {
         />
       </label>
 
-      <CategoryTabs
-        categories={categories}
-        counts={counts}
-        value={q ? null : category}
-        onChange={(c) => update({ cat: c, q: '' })}
-      />
-
-      <h2 className="m-0 px-1 text-lg font-extrabold tracking-[-0.02em]">
-        {q ? `"${q}" 검색 결과 ${shown.length}개` : `${category} ${shown.length}개`}
-      </h2>
-
-      {shown.length > 0 ? (
-        <RecipeGrid
-          recipes={shown}
-          getHref={(r) => ({ pathname: `/staff/recipes/${r.id}`, search: params.toString() })}
-        />
+      {recipesQuery.isPending ? (
+        <Spinner />
       ) : (
-        <EmptyState
-          message="검색 결과가 없어요"
-          action={
-            <Button
-              size="md"
-              className="h-[46px] px-5"
-              onClick={() => navigate('/staff/chat', { state: { draft: q } })}
-            >
-              AI 사수에게 묻기
-            </Button>
-          }
-        />
+        <>
+          <CategoryTabs
+            categories={categories}
+            value={q ? null : category}
+            onChange={(c) => update({ cat: c, q: '' })}
+          />
+
+          <h2 className="m-0 px-1 text-lg font-extrabold tracking-[-0.02em]">
+            {q ? `"${q}" 검색 결과 ${shown.length}개` : `${category} ${shown.length}개`}
+          </h2>
+
+          {shown.length > 0 ? (
+            <RecipeGrid
+              recipes={shown}
+              getHref={(r) => ({
+                pathname: `/staff/recipes/${r.recipeId}`,
+                search: params.toString(),
+              })}
+            />
+          ) : (
+            <EmptyState
+              message="검색 결과가 없어요"
+              action={
+                <Button
+                  size="md"
+                  className="h-[46px] px-5"
+                  onClick={() => navigate('/staff/chat', { state: { draft: q } })}
+                >
+                  AI 사수에게 묻기
+                </Button>
+              }
+            />
+          )}
+        </>
       )}
     </div>
   )
 }
 
 function ManualCards({ storeId }: { storeId: string }) {
-  const umbrellaAdded = useStaffStore((state) => state.umbrellaAdded)
+  const manualsQuery = useManuals(storeId)
+  useQueryErrorToast(manualsQuery)
+
+  if (manualsQuery.isPending) return <Spinner />
   return (
     <ManualGrid
-      manuals={storeManuals(storeId, umbrellaAdded)}
-      getHref={(m) => `/staff/manuals/${m.id}`}
+      manuals={manualsQuery.data?.manuals ?? []}
+      getHref={(m) => `/staff/manuals/${m.manualId}`}
     />
   )
 }
