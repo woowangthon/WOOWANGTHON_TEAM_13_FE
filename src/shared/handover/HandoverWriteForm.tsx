@@ -163,7 +163,11 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
                     onBlur={finishEdit}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter') finishEdit()
-                      if (event.key === 'Escape') cancelEdit()
+                      if (event.key === 'Escape') {
+                        // 시트(BottomSheet)도 Esc 로 닫히므로, 고치기만 취소하고 시트까지 전달하지 않는다
+                        event.stopPropagation()
+                        cancelEdit()
+                      }
                     }}
                     aria-label="인수인계 항목 고치기"
                     className="min-w-0 flex-1 border-none bg-transparent p-0 text-sm leading-[1.45]"
