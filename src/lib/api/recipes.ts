@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRecipe, getRecipes } from '@/api/mocks/staff/api/recipes'
-import { retryExceptNotFound } from '@/lib/api/query'
 
 /*
  * 레시피 훅 — 담당: 민지 (사장 화면도 import 해서 쓴다)
@@ -29,6 +28,5 @@ export function useRecipe(storeId: string, recipeId: string) {
   return useQuery({
     queryKey: recipeKeys.detail(storeId, recipeId),
     queryFn: () => fetchRecipe(storeId, recipeId),
-    retry: retryExceptNotFound,
   })
 }

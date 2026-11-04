@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getManual, getManuals } from '@/api/mocks/staff/api/manuals'
-import { retryExceptNotFound } from '@/lib/api/query'
 
 /*
  * 매뉴얼 훅 — 담당: 민지 (사장 화면도 import 해서 쓴다)
@@ -27,6 +26,5 @@ export function useManual(storeId: string, manualId: string) {
   return useQuery({
     queryKey: manualKeys.detail(storeId, manualId),
     queryFn: () => fetchManual(storeId, manualId),
-    retry: retryExceptNotFound,
   })
 }

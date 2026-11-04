@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   askOwner,
   createChat,
@@ -7,8 +7,8 @@ import {
   listChats,
   sendMessage,
 } from '@/api/mocks/staff/api/assistantChat'
+import { toastApiError } from '@/lib/api/errors'
 import type { AssistantChatList, ChatMessage, ChatMessageList } from '@/lib/api/types'
-import { toast } from '@/ui/toastStore'
 
 /*
  * AI 사수 채팅 훅 — 담당: 민지
@@ -46,6 +46,8 @@ export function useAssistantChat(storeId: string) {
 
   const create = useMutation({
     mutationFn: () => postChat(storeId),
+    onError: (error) =>
+      toastApiError(error, '채팅방을 열지 못했어요. 다시 시도해 주세요', () => create.mutate()),
     onSuccess: (created) => {
       const { suggestions, messages, ...chat } = created
       queryClient.setQueryData<AssistantChatList>(chatKeys.list(storeId), {
@@ -78,24 +80,12 @@ export function useAssistantChat(storeId: string) {
   })
 
   const isError = listQuery.isError || create.isError || messagesQuery.isError
-  // 실패한 단계만 다시 (refetch · mutate 는 렌더마다 같은 함수라 retry 도 실패 상태가 바뀔 때만 바뀐다)
-  const { refetch: refetchList } = listQuery
-  const { refetch: refetchMessages } = messagesQuery
-  const listFailed = listQuery.isError
-  const createFailed = create.isError
-  const retry = useCallback(() => {
-    if (listFailed) return refetchList()
-    if (createFailed) return createRoom()
-    return refetchMessages()
-  }, [listFailed, createFailed, refetchList, createRoom, refetchMessages])
-
   return {
     chatId,
     suggestions: listQuery.data?.suggestions ?? [],
     messages: messagesQuery.data?.messages,
     isPending: !messagesQuery.data && !isError,
     isError,
-    retry,
   }
 }
 
@@ -132,11 +122,9 @@ export function useSendMessage(storeId: string, chatId: string | undefined) {
       const drop = new Set([context.tempId, question.messageId, answer.messageId])
       patch((list) => [...list.filter((m) => !drop.has(m.messageId)), question, answer])
     },
-    onError: (_error, text, context) => {
+    onError: (error, text, context) => {
       patch((list) => list.filter((m) => m.messageId !== context?.tempId))
-      toast.error('답변을 받지 못했어요. 다시 시도해 주세요', {
-        onRetry: () => send.mutate(text),
-      })
+      toastApiError(error, '답변을 받지 못했어요. 다시 시도해 주세요', () => send.mutate(text))
     },
   })
   return send
@@ -175,10 +163,10 @@ export function useAskOwner(storeId: string, chatId: string | undefined) {
           : old,
       )
     },
-    onError: (_error, messageId) =>
-      toast.error('사장님께 전달하지 못했어요. 다시 시도해 주세요', {
-        onRetry: () => ask.mutate(messageId),
-      }),
+    onError: (error, messageId) =>
+      toastApiError(error, '사장님께 전달하지 못했어요. 다시 시도해 주세요', () =>
+        ask.mutate(messageId),
+      ),
   })
   return ask
 }

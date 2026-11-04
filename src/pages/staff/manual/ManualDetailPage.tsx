@@ -1,6 +1,6 @@
 import { Navigate, useParams } from 'react-router'
 import { useManual } from '@/lib/api/manuals'
-import { isNotFound, useQueryErrorToast } from '@/lib/api/query'
+import { isNotFound } from '@/lib/api/errors'
 import { ManualSheet } from '@/pages/staff/manual/components/ManualSheet'
 import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
@@ -12,7 +12,6 @@ export default function ManualDetailPage() {
   const { store } = useCurrentStore()
   const close = useCloseTo('/staff/manuals')
   const manualQuery = useManual(store.id, manualId)
-  useQueryErrorToast(manualQuery)
 
   if (isNotFound(manualQuery.error)) return <Navigate to="/staff/manuals" replace />
 

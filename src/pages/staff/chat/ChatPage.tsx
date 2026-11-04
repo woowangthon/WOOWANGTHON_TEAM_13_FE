@@ -2,7 +2,6 @@ import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assistantChat'
-import { useQueryErrorToast } from '@/lib/api/query'
 import { ChatBubble, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
@@ -17,7 +16,6 @@ export default function ChatPage() {
   const chat = useAssistantChat(store.id)
   const send = useSendMessage(store.id, chat.chatId)
   const askOwner = useAskOwner(store.id, chat.chatId)
-  useQueryErrorToast({ isError: chat.isError, error: null, refetch: chat.retry })
   // 레시피 시트의 'AI 사수에게 묻기'에서 오면 입력창에 메뉴 이름을 미리 넣는다
   const [draft, setDraft] = useState(
     () => (location.state as { draft?: string } | null)?.draft ?? '',

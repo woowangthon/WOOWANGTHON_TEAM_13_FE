@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { sameDay, type StaffStore } from '@/api/mocks/staff/stores'
 import { toDateParam, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
-import { useQueryErrorToast } from '@/lib/api/query'
 import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
@@ -121,7 +120,6 @@ function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDa
     new Date(store.today.getFullYear(), store.today.getMonth(), selectedDay)
   const date = toDateParam(selectedDate)
   const notesQuery = useHandoverNotes(store.id, date)
-  useQueryErrorToast(notesQuery)
   const confirm = useConfirmHandoverItem(store.id, date)
 
   const notes = notesQuery.data?.notes ?? []
