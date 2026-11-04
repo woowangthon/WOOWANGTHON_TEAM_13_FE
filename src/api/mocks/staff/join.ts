@@ -7,6 +7,8 @@
 export const INVITES = [
   { code: 'K7P2QX', storeId: 'dalbit', staffName: '지은' },
   { code: 'M3XR9D', storeId: 'afternoon', staffName: '지은' },
+  // 빈 화면 점검용 매장 (데이터 없음)
+  { code: 'N4EW7K', storeId: 'sprout', staffName: '지은' },
 ]
 
 /** 이 코드를 넣으면 서버가 "잠김"을 준 것처럼 동작한다 (화면 확인용, BE 연결 시 삭제) */

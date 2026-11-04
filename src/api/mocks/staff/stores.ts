@@ -1,4 +1,4 @@
-// 가짜 데이터: 알바생 소속 매장 (n잡 2곳) — BE 연결 전까지 사용
+// 가짜 데이터: 알바생 소속 매장 (n잡 2곳 + 데이터가 빈 테스트 매장) — BE 연결 전까지 사용
 
 export type StoreIcon = 'moon' | 'sunset'
 
@@ -9,7 +9,8 @@ export interface StaffStore {
   kind: string
   address: string
   ownerName: string
-  icon: StoreIcon
+  /** 테마 키. 없으면 FE 가 매장 순서대로 색을 정한다 */
+  icon?: StoreIcon
   /** 매장 색 (--brand) */
   color: string
   /** 매장 연한 색 (--brand-soft) */
@@ -29,6 +30,8 @@ export interface StaffStore {
   weekHours: number
   weekNote: string
   chips: string[]
+  /** 초대코드로 들어가야만 보이는 매장 (VITE_SKIP_AUTH 시연 목록에서 뺀다) */
+  hiddenUntilJoined?: boolean
 }
 
 const d = (month: number, day: number) => new Date(2026, month - 1, day)
@@ -81,6 +84,28 @@ export const staffStores: StaffStore[] = [
     weekHours: 6,
     weekNote: '주휴수당 대상 아님',
     chips: ['화장실', '환불', '아메리카노 샷'],
+  },
+  {
+    // 빈 화면 점검용: 레시피 · 매뉴얼 · 인수인계 · 채팅 · 근무 · 급여 · 사진 · 테마가 하나도 없는 새 매장
+    // 초대코드 N4EW7K 로 들어간다 (join.ts)
+    id: 'sprout',
+    code: 'N4EW7K',
+    name: '새싹 카페',
+    kind: '카페',
+    address: '서울 서대문구 연희로 11',
+    ownerName: '정 사장님',
+    color: '#2A4536',
+    soft: '#E3E8DC',
+    scrim: 'linear-gradient(180deg, rgba(24,36,29,0.15) 0%, rgba(24,36,29,0.85) 78%)',
+    meta: '',
+    today: d(11, 20),
+    shift: { start: '', end: '', role: '' },
+    crew: '',
+    week: week(16, []),
+    weekHours: 0,
+    weekNote: '',
+    chips: [],
+    hiddenUntilJoined: true,
   },
 ]
 

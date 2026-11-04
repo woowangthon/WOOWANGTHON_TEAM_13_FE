@@ -27,7 +27,7 @@ function toDetail(store: StaffStore): MyStoreDetail {
     memberId: `mbr_${store.id}`,
     staffName: staffNameOf(store.id),
     photoUrl: store.photo ?? null,
-    theme: store.icon,
+    theme: store.icon ?? null,
     joinedAt: '2026-11-03T22:40:00+09:00',
   }
 }
@@ -36,6 +36,8 @@ function toDetail(store: StaffStore): MyStoreDetail {
 export async function getMyStores(): Promise<MyStoreList> {
   const showAll = env.skipAuth && !useAuthStore.getState().me
   const joined = getJoinedStoreIds()
-  const list = showAll ? staffStores : staffStores.filter((store) => joined.includes(store.id))
+  const list = staffStores.filter((store) =>
+    showAll ? !store.hiddenUntilJoined || joined.includes(store.id) : joined.includes(store.id),
+  )
   return { stores: list.map(toDetail) }
 }

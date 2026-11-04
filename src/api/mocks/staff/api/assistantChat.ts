@@ -74,6 +74,7 @@ function append(chatId: string, ...added: ChatMessage[]) {
   const list = [...(messages.get(chatId) ?? []), ...added]
   messages.set(chatId, list)
   const last = list[list.length - 1]
+  if (!last) return // 지난 대화가 없는 새 매장 방
   chats.set(chatId, {
     ...findChat(chatId),
     lastMessageAt: last.createdAt,

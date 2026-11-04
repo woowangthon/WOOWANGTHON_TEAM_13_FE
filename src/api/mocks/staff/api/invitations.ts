@@ -46,7 +46,7 @@ export async function verifyInvitation(code: string): Promise<InviteVerification
       name: store.name,
       ownerName: store.ownerName,
       photoUrl: store.photo ?? null,
-      theme: store.icon,
+      theme: store.icon ?? null,
     },
   }
 }
