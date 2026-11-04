@@ -11,6 +11,8 @@ export interface BottomNavItem {
   end?: boolean
   /** 이 주소들에서도 활성으로 본다 (예: 레시피 탭 ↔ /staff/manuals) */
   alsoActive?: string[]
+  /** 탭 아이콘 옆 빨간 점 (새 알림 · 확인 필요) — 그 탭에 있을 때는 숨긴다 */
+  badge?: boolean
 }
 
 interface BottomNavProps {
@@ -59,7 +61,7 @@ function NavTab({ item, pathname }: { item: BottomNavItem; pathname: string }) {
       aria-label={item.label}
       className={({ isActive }) =>
         cn(
-          'flex flex-col items-center gap-[5px] pt-2 pb-1',
+          'relative flex flex-col items-center gap-[5px] pt-2 pb-1',
           isActive || extra ? 'text-foreground' : 'text-faint',
         )
       }
@@ -69,6 +71,12 @@ function NavTab({ item, pathname }: { item: BottomNavItem; pathname: string }) {
         return (
           <>
             <item.icon className="size-6" strokeWidth={active ? 2.4 : 1.8} />
+            {item.badge && !active && (
+              <span
+                aria-label="새 알림"
+                className="absolute top-[5px] right-[calc(50%-16px)] size-2 rounded-full border-2 border-card bg-destructive"
+              />
+            )}
             <span className="text-[11px] font-semibold whitespace-nowrap">{item.label}</span>
             <span
               className={cn('size-[5px] rounded-full', active ? 'bg-brand' : 'bg-transparent')}
