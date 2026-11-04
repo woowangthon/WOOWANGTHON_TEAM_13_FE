@@ -1,5 +1,6 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { StoreInfoBoard } from '@/pages/owner/recipe/components/StoreInfoBoard'
 
+// 레시피 관리 · 카테고리 (매장 정보 탭의 레시피 칸)
 export default function RecipeManagePage() {
-  return <PagePlaceholder title="레시피 관리" owner="나현" />
+  return <StoreInfoBoard segment="recipe" />
 }

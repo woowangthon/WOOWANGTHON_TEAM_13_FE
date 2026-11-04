@@ -1,0 +1,90 @@
+import { useState } from 'react'
+import { toastApiError } from '@/lib/api/errors'
+import type { Recipe } from '@/lib/api/types'
+import { useDeleteRecipe, useHideRecipe } from '@/pages/owner/api/content'
+import { RecipeCard } from '@/shared/recipe/RecipeCard'
+import { BottomSheet } from '@/ui/BottomSheet'
+import { Button } from '@/ui/Button'
+import { toast } from '@/ui/toastStore'
+
+// 레시피 상세 (사장님): 카드(shared/recipe/RecipeCard) + 삭제 · 숨기기 · 수정
+interface RecipeDetailSheetProps {
+  storeId: string
+  storeName: string
+  recipe: Recipe
+  onClose: () => void
+  onEdit: () => void
+  /** 삭제 · 숨기기 뒤 (목록으로) */
+  onGone: () => void
+}
+
+export function RecipeDetailSheet({
+  storeId,
+  storeName,
+  recipe,
+  onClose,
+  onEdit,
+  onGone,
+}: RecipeDetailSheetProps) {
+  const [askDelete, setAskDelete] = useState(false)
+  const remove = useDeleteRecipe(storeId)
+  const hide = useHideRecipe(storeId)
+
+  const run = (mutation: typeof remove, message: string) =>
+    mutation.mutate(recipe.recipeId, {
+      onSuccess: () => {
+        toast(message)
+        onGone()
+      },
+      onError: (error) => toastApiError(error, '바꾸지 못했어요. 다시 시도해 주세요'),
+    })
+
+  return (
+    <BottomSheet open onClose={onClose} label={recipe.name} closeButton>
+      <RecipeCard
+        recipe={recipe}
+        storeName={storeName}
+        footer={
+          <div className="flex flex-col gap-2.5">
+            {askDelete && (
+              <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
+                <span className="text-sm text-[#7E352C]">
+                  알바생 화면과 AI 사수 답변에서도 사라져요.
+                </span>
+                <Button
+                  variant="danger"
+                  size="md"
+                  className="h-[46px]"
+                  disabled={remove.isPending}
+                  onClick={() => run(remove, '삭제했어요')}
+                >
+                  삭제
+                </Button>
+              </div>
+            )}
+            <div className="grid grid-cols-[1fr_1fr_1.4fr] gap-2">
+              <Button
+                variant="soft"
+                className="h-[50px] text-sm text-destructive-foreground"
+                onClick={() => setAskDelete(true)}
+              >
+                삭제
+              </Button>
+              <Button
+                variant="soft"
+                className="h-[50px] text-sm"
+                disabled={hide.isPending}
+                onClick={() => run(hide, '숨겼어요. 알바생 화면에서 안 보여요')}
+              >
+                숨기기
+              </Button>
+              <Button className="h-[50px] text-sm" onClick={onEdit}>
+                수정
+              </Button>
+            </div>
+          </div>
+        }
+      />
+    </BottomSheet>
+  )
+}
