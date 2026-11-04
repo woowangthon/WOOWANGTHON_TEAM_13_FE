@@ -1,28 +1,29 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
-import { ChatBubble } from '@/pages/staff/chat/components/ChatBubble'
+import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assistantChat'
+import { useQueryErrorToast } from '@/lib/api/query'
+import { ChatBubble, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
-import { useStaffStore } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { Card } from '@/ui/Card'
-import type { ChatMessage } from '@/api/mocks/staff/chat'
-
-const NO_MESSAGES: ChatMessage[] = []
+import { Spinner } from '@/ui/Spinner'
 
 // ⭐ AI 사수 채팅: 지금 매장의 매뉴얼 · 레시피만 근거로 답하고 출처를 보여 준다
+// 매장마다 채팅방 1개 (없으면 자동으로 만든다). 근거가 없으면 사장님께 물어보기
 export default function ChatPage() {
   const { store } = useCurrentStore()
   const location = useLocation()
-  const messages = useStaffStore((state) => state.chats[store.id] ?? NO_MESSAGES)
-  const sendQuestion = useStaffStore((state) => state.sendQuestion)
-  const askOwner = useStaffStore((state) => state.askOwner)
+  const chat = useAssistantChat(store.id)
+  const send = useSendMessage(store.id, chat.chatId)
+  const askOwner = useAskOwner(store.id, chat.chatId)
+  useQueryErrorToast({ isError: chat.isError, error: null, refetch: chat.retry })
   // 레시피 시트의 'AI 사수에게 묻기'에서 오면 입력창에 메뉴 이름을 미리 넣는다
   const [draft, setDraft] = useState(
     () => (location.state as { draft?: string } | null)?.draft ?? '',
   )
 
-  // 메시지가 바뀔 때마다 맨 아래로. 개수만 보면 '입력 중(···)'이 답변으로 바뀔 때(개수 그대로) 놓친다
+  // 메시지가 바뀌거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로
   const first = useRef(true)
   useEffect(() => {
     window.scrollTo({
@@ -30,11 +31,12 @@ export default function ChatPage() {
       behavior: first.current ? 'auto' : 'smooth',
     })
     first.current = false
-  }, [messages])
+  }, [chat.messages, send.isPending])
 
-  const send = (text: string) => {
-    if (!text.trim()) return
-    sendQuestion(store.id, text)
+  const submit = (text: string) => {
+    const question = text.trim()
+    if (!question || !chat.chatId) return
+    send.mutate(question)
     setDraft('')
   }
 
@@ -52,18 +54,23 @@ export default function ChatPage() {
         </div>
       </Card>
 
-      <div className="flex flex-col gap-3.5" aria-live="polite">
-        {messages.map((message, i) => (
-          <ChatBubble
-            key={i}
-            message={message}
-            ownerName={store.ownerName}
-            onAskOwner={() => askOwner(store.id)}
-          />
-        ))}
-      </div>
+      {chat.isPending ? (
+        <Spinner />
+      ) : (
+        <div className="flex flex-col gap-3.5" aria-live="polite">
+          {chat.messages?.map((message) => (
+            <ChatBubble
+              key={message.messageId}
+              message={message}
+              ownerName={store.ownerName}
+              onAskOwner={() => askOwner.mutate(message.messageId)}
+            />
+          ))}
+          {send.isPending && <TypingBubble />}
+        </div>
+      )}
 
-      <ChatInput value={draft} onChange={setDraft} onSend={send} chips={store.chips} />
+      <ChatInput value={draft} onChange={setDraft} onSend={submit} chips={chat.suggestions} />
     </div>
   )
 }

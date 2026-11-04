@@ -1,6 +1,4 @@
 import { create } from 'zustand'
-import { addUmbrellaManual, isUmbrellaAdded } from '@/api/mocks/staff/api/db'
-import { initialChats, mockAnswer, OWNER_ANSWER, type ChatMessage } from '@/api/mocks/staff/chat'
 import { initialPaySettings, type PaySettings } from '@/api/mocks/staff/payroll'
 import {
   initialAvailability,
@@ -10,7 +8,8 @@ import {
 import { staffStores } from '@/api/mocks/staff/stores'
 
 /*
- * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 채팅 · 체크 · 제출 내용이 유지된다.
+ * 알바생 화면 상태 (BE 연결 전 시연용) — 화면을 옮겨 다녀도 체크 · 제출 내용이 유지된다.
+ * 채팅은 src/lib/api/assistantChat 훅으로 옮겼다.
  * BE 가 준비되면 이 상태들은 TanStack Query(서버 데이터)로 바꾼다.
  */
 
@@ -18,7 +17,6 @@ interface StaffState {
   profileName: string
   /** 마이페이지에서 삭제한 매장 */
   removedStoreIds: string[]
-  chats: Record<string, ChatMessage[]>
   /** 오늘 인수인계 체크 */
   checkedHandovers: Record<string, boolean>
   availability: Record<number, AvailabilityMark>
@@ -29,8 +27,6 @@ interface StaffState {
   setProfileName: (name: string) => void
   removeStore: (storeId: string) => void
   restoreStoreByCode: (code: string) => string | null
-  sendQuestion: (storeId: string, text: string) => void
-  askOwner: (storeId: string) => void
   toggleHandover: (id: string) => void
   cycleAvailability: (day: number) => void
   setAvailabilityMemo: (memo: string) => void
@@ -39,15 +35,9 @@ interface StaffState {
 }
 
 export const useStaffStore = create<StaffState>((set, get) => {
-  const push = (storeId: string, ...messages: ChatMessage[]) =>
-    set((state) => ({
-      chats: { ...state.chats, [storeId]: [...(state.chats[storeId] ?? []), ...messages] },
-    }))
-
   return {
     profileName: '지은',
     removedStoreIds: [],
-    chats: initialChats,
     checkedHandovers: {},
     availability: initialAvailability,
     availabilityMemo: initialAvailabilityMemo,
@@ -64,46 +54,6 @@ export const useStaffStore = create<StaffState>((set, get) => {
       if (!store) return null
       set((state) => ({ removedStoreIds: state.removedStoreIds.filter((id) => id !== store.id) }))
       return store.id
-    },
-
-    sendQuestion: (storeId, text) => {
-      const question = text.trim()
-      if (!question) return
-      push(storeId, { who: 'me', text: question }, { who: 'typing' })
-      setTimeout(() => {
-        const answer = mockAnswer(storeId, question, isUmbrellaAdded())
-        set((state) => ({
-          chats: {
-            ...state.chats,
-            [storeId]: [...state.chats[storeId].filter((m) => m.who !== 'typing'), answer],
-          },
-        }))
-      }, 800)
-    },
-
-    askOwner: (storeId) => {
-      set((state) => ({
-        chats: {
-          ...state.chats,
-          [storeId]: [
-            ...state.chats[storeId].map((m) =>
-              m.who === 'ai' && m.askOwner ? { ...m, askOwner: false, asked: true } : m,
-            ),
-            { who: 'system', text: '사장님께 전달했어요' },
-          ],
-        },
-      }))
-      // 시연: 달빛 카페는 사장님이 잠시 뒤 답하고, 답이 매뉴얼에 추가된다
-      if (storeId === 'dalbit') {
-        setTimeout(() => {
-          push(
-            'dalbit',
-            { who: 'owner', text: OWNER_ANSWER },
-            { who: 'system', text: '매뉴얼에 추가했어요' },
-          )
-          addUmbrellaManual() // 가짜 서버에 매뉴얼 추가 → 매뉴얼 목록을 다시 불러오면 보인다
-        }, 2600)
-      }
     },
 
     toggleHandover: (id) =>

@@ -63,3 +63,78 @@ export interface Manual {
 export interface ManualList {
   manuals: Manual[]
 }
+
+// ── AI 사수 채팅 (docs/07 5) ──
+
+export type ChatSender = 'staff' | 'ai' | 'owner' | 'system'
+
+/** AI 답변 종류: 근거 있음 · 근거 없음(사장님께 물어보기) · 매장 업무와 무관 */
+export type AnswerType = 'answered' | 'not_found' | 'out_of_scope'
+
+/** 출처 카드 (docs/07 0-2). 화면 문구 "레시피 › 딸기라떼"는 FE 가 만든다 */
+export interface Source {
+  kind: 'recipe' | 'manual'
+  id: string
+  title: string
+}
+
+export interface OwnerQuestionRef {
+  ownerQuestionId: string
+  /** asked 사장님께 전달됨 · answered 사장님이 답함 */
+  status: 'asked' | 'answered'
+}
+
+export interface ChatMessage {
+  messageId: string
+  sender: ChatSender
+  text: string
+  /** AI 답변만. 다른 sender 는 null */
+  answerType: AnswerType | null
+  sources: Source[]
+  canAskOwner: boolean
+  ownerQuestion: OwnerQuestionRef | null
+  createdAt: string
+}
+
+export interface AssistantChat {
+  chatId: string
+  storeId: string
+  createdAt: string
+  lastMessageAt: string
+  lastMessageText: string
+}
+
+/** GET /stores/{storeId}/assistant-chats */
+export interface AssistantChatList {
+  /** 입력창 위 자주 묻는 질문 칩 */
+  suggestions: string[]
+  chats: AssistantChat[]
+}
+
+/** POST /stores/{storeId}/assistant-chats */
+export interface CreatedAssistantChat extends AssistantChat {
+  suggestions: string[]
+  messages: ChatMessage[]
+}
+
+/** GET /stores/{storeId}/assistant-chats/{chatId}/messages */
+export interface ChatMessageList {
+  chatId: string
+  hasMore: boolean
+  messages: ChatMessage[]
+}
+
+/** POST …/messages: 저장된 질문 + AI 답변 */
+export interface SentChatMessage {
+  question: ChatMessage
+  answer: ChatMessage
+}
+
+/** 사장님께 물어보기 (docs/07 5-3, BE 표에 없어 경로 제안) */
+export interface OwnerQuestion {
+  ownerQuestionId: string
+  status: 'asked' | 'answered'
+  question: string
+  createdAt: string
+  systemMessage: ChatMessage
+}
