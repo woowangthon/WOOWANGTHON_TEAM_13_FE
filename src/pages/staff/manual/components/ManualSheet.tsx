@@ -1,4 +1,5 @@
 import type { Manual } from '@/lib/api/types'
+import { SheetCloseButton } from '@/pages/staff/components/SheetCloseButton'
 import { DEFAULT_MANUAL_ICON, MANUAL_ICON } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 
@@ -15,7 +16,8 @@ export function ManualSheet({
   const Icon = (manual.icon && MANUAL_ICON[manual.icon]) || DEFAULT_MANUAL_ICON
   return (
     <BottomSheet open onClose={onClose} label={manual.title}>
-      <div className="flex flex-col gap-3">
+      <div className="relative flex flex-col gap-3">
+        <SheetCloseButton onClose={onClose} />
         <span className="flex size-[52px] items-center justify-center rounded-full bg-brand-soft text-brand">
           <Icon className="size-[26px]" />
         </span>
