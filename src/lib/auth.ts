@@ -1,6 +1,6 @@
 import { createClient, type Session } from '@supabase/supabase-js'
 import { mockMe } from '@/api/mocks/staff/me'
-import { useAuthStore, type Me } from '@/lib/authStore'
+import { useAuthStore, type LoginProvider, type Me } from '@/lib/authStore'
 import { env } from '@/lib/env'
 
 /*
@@ -14,7 +14,7 @@ export const supabase =
     ? createClient(env.supabaseUrl, env.supabasePublishableKey)
     : null
 
-export type OAuthProvider = 'kakao' | 'google'
+export type OAuthProvider = LoginProvider
 
 export async function signIn(provider: OAuthProvider) {
   if (!supabase) throw new Error('Supabase 설정(.env)이 비어 있어요')
@@ -69,14 +69,19 @@ export function takeRedirect(): string | null {
   return path
 }
 
-/** GET /me — 응답 모양이 정해지기 전까지는 가짜 데이터 */
+/** GET /users/me (응답 모양 확정 11/4, docs/07 1-1) — BE 연결 전까지는 가짜 데이터 */
 export async function fetchMe(): Promise<Me> {
   const session = await getSession()
   if (!session) throw new Error('로그인이 필요해요')
-  // TODO: BE 응답 모양이 정해지면 apiFetch<Me>('/me') 로 바꾼다
+  // TODO: BE 연결 시 apiFetch<Me>('/users/me') 로 바꾼다
   const { user } = session
   const nickname: string = user.user_metadata.full_name ?? user.user_metadata.name ?? '사용자'
-  return mockMe(user.id, nickname)
+  return mockMe({
+    userId: user.id,
+    nickname,
+    email: user.email ?? null,
+    provider: user.app_metadata.provider === 'google' ? 'google' : 'kakao',
+  })
 }
 
 /** me 를 다시 불러온다 (매장 입장 · 생성 뒤) */
@@ -86,9 +91,8 @@ export async function refreshMe() {
 
 /** 세션을 확인하고 me 를 불러와 useAuthStore 에 넣는다. me 를 못 불러오면 에러를 던진다 */
 export async function restoreSession() {
-  const { setLoggedIn, setProvider, setMe } = useAuthStore.getState()
+  const { setLoggedIn, setMe } = useAuthStore.getState()
   const session = await getSession()
   setLoggedIn(Boolean(session))
-  setProvider(session?.user.app_metadata.provider ?? null)
   setMe(session ? await fetchMe() : null)
 }

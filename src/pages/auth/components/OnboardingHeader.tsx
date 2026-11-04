@@ -15,7 +15,7 @@ const STEPS = 2 // 역할 선택 → 매장 등록 · 초대코드 입력
 
 /** step: 0 역할 선택 · 1 매장 등록 · 초대코드 입력 */
 export function OnboardingHeader({ step, onBack }: { step: 0 | 1; onBack: () => void }) {
-  const provider = useAuthStore((state) => state.provider)
+  const provider = useAuthStore((state) => state.me?.provider)
   const mark = provider ? PROVIDER_MARK[provider] : undefined
 
   return (

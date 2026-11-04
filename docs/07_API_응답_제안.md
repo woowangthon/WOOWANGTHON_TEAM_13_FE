@@ -89,7 +89,7 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 
 > 처음 로그인한 사용자를 어디서 만드는지는 [질문 1](#8-be에-확인하고-싶은-것)에 적었어요. `GET /users/me`에서 없으면 자동으로 만들어 줘도 FE는 괜찮아요.
 
-### 1-1. `GET /users/me`
+### 1-1. `GET /users/me` ✅ 확정 (11/4, 은교)
 로그인 사용자 + 소속 매장 · 역할. FE는 `stores`가 비어 있으면 `/role`, 있으면 역할 홈(`/staff`, `/owner`)으로 보내요.
 
 응답 `200`
@@ -97,6 +97,7 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 {
   "userId": "usr_8f2c",
   "nickname": "지은",
+  "email": null,
   "provider": "kakao",
   "stores": [
     { "storeId": "str_dalbit", "storeName": "달빛 카페", "role": "staff" },
@@ -107,10 +108,11 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | 필드 | 뜻 |
 | --- | --- |
 | `nickname` | 카카오는 닉네임, 구글은 이름 (`docs/05`: 카카오는 닉네임만) |
+| `email` | 이메일. 카카오는 이메일을 받지 않아서 `null` |
 | `provider` | `"kakao"` · `"google"` (역할 선택 화면 상단 표시) |
 | `stores[].role` | `"owner"` · `"staff"`. 한 사람이 매장마다 다른 역할일 수 있어요 |
 
-> FE 타입: `src/lib/authStore.ts`의 `Me` — 이 모양으로 확정되면 그대로 써요.
+> FE 타입: `src/lib/authStore.ts`의 `Me` — 확정된 이 모양으로 맞췄어요.
 
 ### 1-2. `PATCH /users/me`
 마이페이지에서 이름(닉네임) 바꾸기.
@@ -120,11 +122,12 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 { "nickname": "박지은" }
 ```
 
-응답 `200` — [1-1](#1-1-get-usersme)과 같은 모양
+응답 `200` — [1-1](#1-1-get-usersme--확정-114-은교)과 같은 모양
 ```json
 {
   "userId": "usr_8f2c",
   "nickname": "박지은",
+  "email": null,
   "provider": "kakao",
   "stores": [{ "storeId": "str_dalbit", "storeName": "달빛 카페", "role": "staff" }]
 }
