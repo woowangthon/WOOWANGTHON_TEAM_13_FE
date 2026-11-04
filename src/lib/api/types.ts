@@ -138,3 +138,64 @@ export interface OwnerQuestion {
   createdAt: string
   systemMessage: ChatMessage
 }
+
+// ── 인수인계 (docs/07 6) ──
+
+/** credit 외상 · stock 재고 · etc 기타 (화면 글자는 shared/icons HANDOVER_TAG_LABEL) */
+export type HandoverTag = 'credit' | 'stock' | 'etc'
+
+export interface UserRef {
+  userId: string
+  name: string
+}
+
+export interface HandoverItem {
+  itemId: string
+  tag: HandoverTag
+  text: string
+  /** 처리 여부 (매장 공용) */
+  checked: boolean
+  checkedBy: UserRef | null
+  checkedAt: string | null
+}
+
+export interface HandoverNote {
+  noteId: string
+  author: UserRef
+  createdAt: string
+  updatedAt: string
+  rawText: string
+  /** [특이사항 없음]으로 남긴 노트 (summary "", items []) */
+  noIssue: boolean
+  summary: string
+  items: HandoverItem[]
+}
+
+/** GET /stores/{storeId}/handover-notes?date= */
+export interface HandoverNoteList {
+  date: string
+  notes: HandoverNote[]
+}
+
+export interface HandoverDraftItem {
+  tag: HandoverTag
+  text: string
+}
+
+/** POST /stores/{storeId}/handover-drafts (저장하지 않은 AI 정리 결과) */
+export interface HandoverDraft {
+  summary: string
+  items: HandoverDraftItem[]
+}
+
+/** POST /stores/{storeId}/handover-notes 요청 */
+export interface NewHandoverNote extends HandoverDraft {
+  rawText: string
+  noIssue: boolean
+}
+
+/** POST …/handover-notes/{noteId}/confirmations 요청 (docs/07 6-7 제안: 항목별 체크) */
+export interface HandoverConfirmation {
+  itemId: string
+  checked: boolean
+}
