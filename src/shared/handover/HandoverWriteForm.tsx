@@ -1,10 +1,10 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { toastApiError } from '@/lib/api/errors'
 import type { HandoverDraft, NewHandoverNote } from '@/lib/api/types'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
-import { toast } from '@/ui/toastStore'
 
 // 공용 보기 부품: 인수인계 텍스트 작성 폼 · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 텍스트 → AI 정리(태그) → 저장. AI 정리 요청 · 저장 뒤 할 일(시트 닫기 · 토스트)은 화면이 정한다
@@ -36,10 +36,10 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
       if (!alive.current) return
       setDraft(result)
       setStage('done')
-    } catch {
+    } catch (error) {
       if (!alive.current) return
       setStage('write')
-      toast.error('정리하지 못했어요. 다시 시도해 주세요', { onRetry: summarize })
+      toastApiError(error, '정리하지 못했어요. 다시 시도해 주세요', summarize)
     }
   }
 

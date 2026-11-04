@@ -5,8 +5,8 @@ import {
   createHandoverNote,
   getHandoverNotes,
 } from '@/api/mocks/staff/api/handover'
+import { toastApiError } from '@/lib/api/errors'
 import type { HandoverConfirmation, HandoverNoteList, NewHandoverNote } from '@/lib/api/types'
-import { toast } from '@/ui/toastStore'
 
 /*
  * 인수인계 훅 — 담당: 민지 (사장 화면도 import 해서 쓴다)
@@ -93,11 +93,9 @@ export function useConfirmHandoverItem(storeId: string, date: string) {
             }
           : old,
       ),
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous)
-      toast.error('저장하지 못했어요. 다시 시도해 주세요', {
-        onRetry: () => confirm.mutate(variables),
-      })
+      toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', () => confirm.mutate(variables))
     },
   })
   return confirm

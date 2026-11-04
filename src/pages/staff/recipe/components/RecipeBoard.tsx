@@ -1,7 +1,6 @@
 import { Search } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useManuals } from '@/lib/api/manuals'
-import { useQueryErrorToast } from '@/lib/api/query'
 import { useRecipes } from '@/lib/api/recipes'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
@@ -51,7 +50,6 @@ function RecipeSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const recipesQuery = useRecipes(storeId)
-  useQueryErrorToast(recipesQuery)
 
   const categories = recipesQuery.data?.categories ?? []
   const all = recipesQuery.data?.recipes ?? []
@@ -136,7 +134,6 @@ function RecipeSection({ storeId }: { storeId: string }) {
 
 function ManualCards({ storeId }: { storeId: string }) {
   const manualsQuery = useManuals(storeId)
-  useQueryErrorToast(manualsQuery)
 
   if (manualsQuery.isPending) return <Spinner />
   return (

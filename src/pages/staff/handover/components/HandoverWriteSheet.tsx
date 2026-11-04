@@ -1,3 +1,4 @@
+import { toastApiError } from '@/lib/api/errors'
 import { useCreateHandoverNote, useHandoverDraft } from '@/lib/api/handover'
 import type { NewHandoverNote } from '@/lib/api/types'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
@@ -19,10 +20,10 @@ export function HandoverWriteSheet({ onClose }: { onClose: () => void }) {
         onClose()
         toast(doneMessage)
       },
-      onError: () =>
-        toast.error('저장하지 못했어요. 다시 시도해 주세요', {
-          onRetry: () => save(note, doneMessage),
-        }),
+      onError: (error) =>
+        toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', () =>
+          save(note, doneMessage),
+        ),
     })
 
   return (

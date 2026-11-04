@@ -1,5 +1,5 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router'
-import { isNotFound, useQueryErrorToast } from '@/lib/api/query'
+import { isNotFound } from '@/lib/api/errors'
 import { useRecipe } from '@/lib/api/recipes'
 import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
 import { RecipeSheet } from '@/pages/staff/recipe/components/RecipeSheet'
@@ -14,7 +14,6 @@ export default function RecipeDetailPage() {
   const navigate = useNavigate()
   const close = useCloseTo(`/staff/recipes${search}`)
   const recipeQuery = useRecipe(store.id, recipeId)
-  useQueryErrorToast(recipeQuery)
 
   // 다른 매장 레시피 · 삭제된 레시피면 (매장을 바꾼 경우 등) 목록으로 돌아간다
   if (isNotFound(recipeQuery.error)) return <Navigate to="/staff/recipes" replace />
