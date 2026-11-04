@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { findStaffStore } from '@/api/mocks/staff/stores'
+import { useWorkSummaries } from '@/lib/api/schedule'
 import { useMyStores } from '@/lib/api/users'
 import type { MyStoreDetail, StoreTheme } from '@/lib/api/types'
 import { useStoreStore } from '@/lib/storeStore'
@@ -32,7 +33,7 @@ export interface StaffStoreView {
   shift: { start: string; end: string; role: string }
 }
 
-function toView(store: MyStoreDetail, index: number): StaffStoreView {
+function toView(store: MyStoreDetail, index: number, workSummary: string | null): StaffStoreView {
   const icon = themeOf(store.theme, index)
   // TODO(챕터 8): 급여 화면 전용 값 — 급여 API 로 교체
   const { today, shift } = findStaffStore(store.storeId)
@@ -47,7 +48,8 @@ function toView(store: MyStoreDetail, index: number): StaffStoreView {
     icon,
     ...STORE_THEME[icon],
     photo: store.photoUrl ?? undefined,
-    meta: [store.workSummary, store.ownerName].filter(Boolean).join(' · '),
+    // 매장 목록 한 줄: 이번 주 근무(FE 계산) · 사장님 이름
+    meta: [workSummary, store.ownerName].filter(Boolean).join(' · '),
     today,
     shift,
   }
@@ -67,10 +69,10 @@ const EMPTY_STORE: StaffStoreView = {
       staffName: null,
       photoUrl: null,
       theme: null,
-      workSummary: null,
       joinedAt: '',
     },
     0,
+    null,
   ),
 }
 
@@ -85,14 +87,19 @@ export function useCurrentStore() {
   const storesQuery = useMyStores()
 
   const data = storesQuery.data
+  const storeIds = useMemo(() => (data?.stores ?? []).map((store) => store.storeId), [data])
+  const summaries = useWorkSummaries(storeIds)
   const stores = useMemo(
     () =>
       (data?.stores ?? [])
         // 테마 순서는 삭제 · 사장님 매장을 빼기 전 내 매장 목록 순서로 (매장 색이 바뀌지 않게)
-        .map((store, index) => ({ store, view: toView(store, index) }))
+        .map((store, index) => ({
+          store,
+          view: toView(store, index, summaries[store.storeId] ?? null),
+        }))
         .filter(({ store }) => store.role === 'staff' && !removedStoreIds.includes(store.storeId))
         .map(({ view }) => view),
-    [data, removedStoreIds],
+    [data, removedStoreIds, summaries],
   )
   const store = stores.find((s) => s.id === currentStoreId) ?? stores[0] ?? EMPTY_STORE
 

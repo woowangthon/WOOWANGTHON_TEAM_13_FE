@@ -74,7 +74,7 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
 
   const submit = () =>
     submitAvailability.mutate(
-      { days: toDays(saved.month, availability), memo },
+      { saved, days: toDays(saved.month, availability), memo },
       {
         onSuccess: () => {
           clearDraft(store.id)

@@ -218,8 +218,6 @@ export interface MyStoreDetail {
   staffName: string | null
   photoUrl: string | null
   theme: StoreTheme | null
-  /** 매장 목록 한 줄 (예: 주 3회 마감). FE 추가 요청 · 없으면 null */
-  workSummary: string | null
   joinedAt: string
 }
 
@@ -260,7 +258,7 @@ export interface AlreadyJoinedDetail {
   storeName: string
 }
 
-// ── 근무 (docs/07 7, P1 · 경로 제안) ──
+// ── 근무 (docs/07 7, P1) ──
 
 export interface Shift {
   shiftId: string
@@ -273,7 +271,7 @@ export interface Shift {
   crew: string[]
 }
 
-/** GET /stores/{storeId}/schedules/me (제안) */
+/** GET /stores/{storeId}/schedules/me */
 export interface MySchedule {
   /** 서버 기준 오늘 */
   today: string
@@ -296,8 +294,10 @@ export interface AvailabilityDay {
   status: AvailabilityStatus
 }
 
-/** GET /stores/{storeId}/availability/me (제안) */
+/** GET /stores/{storeId}/availabilities/me — 아직 안 냈으면 availabilityId · submittedAt 이 null */
 export interface MyAvailability {
+  /** 낸 근무 가능 시간 ID (수정 · 삭제할 때). 안 냈으면 null */
+  availabilityId: string | null
   /** 가능 시간을 받는 달 "2026-12" */
   month: string
   deadline: string
@@ -307,8 +307,14 @@ export interface MyAvailability {
   submittedAt: string | null
 }
 
-/** PUT /stores/{storeId}/availability/me 요청 (제안) */
+/** PATCH /stores/{storeId}/availabilities/{availabilityId} 요청 */
 export interface AvailabilityInput {
   days: AvailabilityDay[]
   memo: string
+}
+
+/** POST /stores/{storeId}/availabilities 요청 (처음 낼 때) */
+export interface NewAvailability extends AvailabilityInput {
+  /** 받는 달 "2026-12" */
+  month: string
 }
