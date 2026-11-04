@@ -1,14 +1,15 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { handoverDays } from '@/api/mocks/staff/handovers'
 import { sameDay, type StaffStore } from '@/api/mocks/staff/stores'
-import { formatDate } from '@/lib/format'
-import { useStaffStore } from '@/pages/staff/staffStore'
+import { toDateParam, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
+import { useQueryErrorToast } from '@/lib/api/query'
+import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { EmptyState } from '@/ui/EmptyState'
+import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -111,20 +112,22 @@ function TodayShiftCard({ store }: { store: StaffStore }) {
   )
 }
 
+// 노트마다 AI 요약 카드 + 항목 (최신 순). 오늘만 체크할 수 있다
 function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDay: number }) {
-  const checked = useStaffStore((state) => state.checkedHandovers)
-  const toggle = useStaffStore((state) => state.toggleHandover)
-
   const todayDate = store.today.getDate()
   const live = selectedDay === todayDate
-  const day = handoverDays[store.id]?.[selectedDay]
-  const items = day?.items ?? []
-  const doneCount = live ? items.filter((item) => checked[item.id]).length : items.length
-  const selectedDate = store.week.find((w) => w.date.getDate() === selectedDay)?.date
+  const selectedDate =
+    store.week.find((w) => w.date.getDate() === selectedDay)?.date ??
+    new Date(store.today.getFullYear(), store.today.getMonth(), selectedDay)
+  const date = toDateParam(selectedDate)
+  const notesQuery = useHandoverNotes(store.id, date)
+  useQueryErrorToast(notesQuery)
+  const confirm = useConfirmHandoverItem(store.id, date)
 
-  const title = live
-    ? '오늘의 인수인계'
-    : `${selectedDate ? formatDate(selectedDate) : `${selectedDay}일`} 인수인계`
+  const notes = notesQuery.data?.notes ?? []
+  const withItems = notes.filter((note) => !note.noIssue && note.items.length > 0)
+
+  const title = live ? '오늘의 인수인계' : `${formatDate(selectedDate)} 인수인계`
 
   return (
     <section className="flex flex-col gap-3.5">
@@ -140,26 +143,35 @@ function HandoverSection({ store, selectedDay }: { store: StaffStore; selectedDa
         )}
       </div>
 
-      {items.length > 0 && day ? (
-        <div className="flex flex-col gap-2.5">
-          <AiSummaryCard
-            from={day.from}
-            summary={day.summary}
-            done={doneCount}
-            total={items.length}
-          />
-          <HandoverList
-            items={items}
-            live={live}
-            isChecked={(id) => !!checked[id]}
-            onToggle={toggle}
-          />
-        </div>
+      {notesQuery.isPending ? (
+        <Spinner />
+      ) : withItems.length > 0 ? (
+        withItems.map((note) => (
+          <div key={note.noteId} className="flex flex-col gap-2.5">
+            <AiSummaryCard
+              from={`${note.author.name} · ${formatTime(note.createdAt)}`}
+              summary={note.summary}
+              done={live ? note.items.filter((item) => item.checked).length : note.items.length}
+              total={note.items.length}
+            />
+            <HandoverList
+              items={note.items}
+              live={live}
+              onToggle={(item) =>
+                confirm.mutate({ noteId: note.noteId, itemId: item.itemId, checked: !item.checked })
+              }
+            />
+          </div>
+        ))
       ) : (
         <EmptyState
-          icon={selectedDay > todayDate ? Clock : day ? Check : Minus}
+          icon={selectedDay > todayDate ? Clock : notes.length > 0 ? Check : Minus}
           message={
-            selectedDay > todayDate ? '아직 기록 전이에요' : day ? '특이사항 없음' : '기록 없음'
+            selectedDay > todayDate
+              ? '아직 기록 전이에요'
+              : notes.length > 0
+                ? '특이사항 없음'
+                : '기록 없음'
           }
         />
       )}

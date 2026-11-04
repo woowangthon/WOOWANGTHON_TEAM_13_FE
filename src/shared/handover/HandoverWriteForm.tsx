@@ -1,30 +1,46 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { mockSummarize, type HandoverItem } from '@/api/mocks/staff/handovers'
-import { HANDOVER_TAG_PILL } from '@/shared/icons'
+import type { HandoverDraft, NewHandoverNote } from '@/lib/api/types'
+import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
+import { toast } from '@/ui/toastStore'
 
 // 공용 보기 부품: 인수인계 텍스트 작성 폼 · 사장/알바 화면이 함께 사용 — 담당: 민지
-// 텍스트 → AI 정리(태그) → 저장. 저장 뒤 할 일(시트 닫기 · 토스트)은 화면이 정한다
+// 텍스트 → AI 정리(태그) → 저장. AI 정리 요청 · 저장 뒤 할 일(시트 닫기 · 토스트)은 화면이 정한다
 interface HandoverWriteFormProps {
-  onSave: (items: HandoverItem[]) => void
+  /** AI 초안 요청 (알바: useHandoverDraft) */
+  requestDraft: (text: string) => Promise<HandoverDraft>
+  onSave: (note: NewHandoverNote) => void
   onNoIssue: () => void
 }
 
-export function HandoverWriteForm({ onSave, onNoIssue }: HandoverWriteFormProps) {
+export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverWriteFormProps) {
   const [note, setNote] = useState('')
   const [stage, setStage] = useState<'write' | 'loading' | 'done'>('write')
-  const [summary, setSummary] = useState<HandoverItem[]>([])
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [draft, setDraft] = useState<HandoverDraft>({ summary: '', items: [] })
+  // 정리 중에 시트를 닫으면 결과를 버린다
+  const alive = useRef(true)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
-  useEffect(() => () => clearTimeout(timer.current), [])
-
-  const summarize = () => {
+  const summarize = async () => {
     if (!note.trim()) return
-    setSummary(mockSummarize(note))
     setStage('loading')
-    timer.current = setTimeout(() => setStage('done'), 1200)
+    try {
+      const result = await requestDraft(note)
+      if (!alive.current) return
+      setDraft(result)
+      setStage('done')
+    } catch {
+      if (!alive.current) return
+      setStage('write')
+      toast.error('정리하지 못했어요. 다시 시도해 주세요', { onRetry: summarize })
+    }
   }
 
   return (
@@ -60,18 +76,18 @@ export function HandoverWriteForm({ onSave, onNoIssue }: HandoverWriteFormProps)
       {stage === 'done' && (
         <div className="flex flex-col gap-2.5">
           <span className="text-[13px] text-[#6B7068]">AI 정리 결과 · 틀린 곳은 고쳐 주세요</span>
-          {summary.map((item) => {
+          {draft.items.map((item, i) => {
             const [bg, fg] = HANDOVER_TAG_PILL[item.tag]
             return (
               <div
-                key={item.id}
+                key={`${i}-${item.text}`}
                 className="flex items-center gap-2.5 rounded-[18px] bg-white px-3.5 py-[13px]"
               >
                 <span
                   className="shrink-0 rounded-full px-[9px] py-1 text-[11px] font-bold"
                   style={{ background: bg, color: fg }}
                 >
-                  {item.tag}
+                  {HANDOVER_TAG_LABEL[item.tag]}
                 </span>
                 <span className="text-sm leading-[1.45]">{item.text}</span>
               </div>
@@ -81,7 +97,11 @@ export function HandoverWriteForm({ onSave, onNoIssue }: HandoverWriteFormProps)
             <Button variant="soft" onClick={() => setStage('write')}>
               고치기
             </Button>
-            <Button size="lg" className="h-[54px]" onClick={() => onSave(summary)}>
+            <Button
+              size="lg"
+              className="h-[54px]"
+              onClick={() => onSave({ rawText: note, noIssue: false, ...draft })}
+            >
               저장
             </Button>
           </div>

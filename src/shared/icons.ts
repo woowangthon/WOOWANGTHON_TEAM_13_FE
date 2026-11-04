@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { StoreIcon } from '@/api/mocks/staff/stores'
-import type { ManualIcon } from '@/lib/api/types'
+import type { HandoverTag, ManualIcon } from '@/lib/api/types'
 
 // 아이콘 · 카테고리 색 모음 — 사장 · 알바 화면이 함께 사용 (담당: 민지)
 
@@ -65,12 +65,23 @@ export function getCategoryTint(category: string): [string, string] {
   return CATEGORY_TINT[category] ?? CATEGORY_TINT['커피']
 }
 
+/** 인수인계 태그 화면 글자 (API 는 credit · stock · etc) */
+export const HANDOVER_TAG_LABEL: Record<HandoverTag, string> = {
+  credit: '외상',
+  stock: '재고',
+  etc: '기타',
+}
+
 /** 인수인계 태그 점 색 */
-export const HANDOVER_TAG_COLOR = { 외상: '#A86A26', 재고: '#2A4536', 기타: '#C0463F' } as const
+export const HANDOVER_TAG_COLOR: Record<HandoverTag, string> = {
+  credit: '#A86A26',
+  stock: '#2A4536',
+  etc: '#C0463F',
+}
 
 /** 인수인계 태그 알약 [바탕, 글자] */
-export const HANDOVER_TAG_PILL = {
-  외상: ['#F5E6D6', '#8A5630'],
-  재고: ['#E3E8DC', '#2A4536'],
-  기타: ['#F1EFE9', '#5F6862'],
-} as const
+export const HANDOVER_TAG_PILL: Record<HandoverTag, readonly [string, string]> = {
+  credit: ['#F5E6D6', '#8A5630'],
+  stock: ['#E3E8DC', '#2A4536'],
+  etc: ['#F1EFE9', '#5F6862'],
+}
