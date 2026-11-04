@@ -5,9 +5,9 @@ import { fromDateKey, isSameDay } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { Badge } from '@/ui/Badge'
-import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
@@ -62,7 +62,9 @@ export function ShiftView() {
         </div>
         <div className="flex flex-col gap-1.5 break-keep">
           <h2 className="m-0 text-lg font-bold">이번 주 근무</h2>
-          <span className="text-[13px] leading-relaxed text-[#4F554D]">{weekNote}</span>
+          <span className="text-[13px] leading-relaxed text-[#4F554D]">
+            {weekNote || '이번 주 근무가 없어요'}
+          </span>
         </div>
       </section>
 
@@ -119,7 +121,10 @@ export function ShiftView() {
           })}
         </ol>
       ) : (
-        <EmptyState message="아직 확정된 근무가 없어요" />
+        <EmptyGuide
+          message="아직 확정된 근무가 없어요"
+          hint="아래에서 근무 가능 시간을 내면 사장님이 근무표를 짜요"
+        />
       )}
 
       <Link

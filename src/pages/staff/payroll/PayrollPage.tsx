@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useMyPayrollEstimates } from '@/lib/api/payroll'
 import { useMySchedule } from '@/lib/api/schedule'
 import type { PayrollEstimate, TaxType } from '@/lib/api/types'
@@ -8,7 +8,9 @@ import { fromDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
+import { Button } from '@/ui/Button'
 import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
@@ -29,6 +31,7 @@ type Target = { store: StaffStoreView; estimate: PayrollEstimate }
 // 예상 급여 (참고용): 확정 근무 × 시급 + 주휴수당 − 공제. 계산은 서버 규칙(useMyPayrollEstimate), 설명만 AI
 // "전체"는 매장별 금액을 더하기만 한다
 export default function PayrollPage() {
+  const navigate = useNavigate()
   const { store, stores, setCurrentStoreId } = useCurrentStore()
   const [showAll, setShowAll] = useState(false)
   const [pickedDay, setPickedDay] = useState<number | null>(null)
@@ -72,6 +75,8 @@ export default function PayrollPage() {
   const payMonth = { year, month }
   const today = fromDateKey(schedule.today)
   const selectedDay = pickedDay ?? today.getDate()
+  // 보고 있는 매장 모두 근무가 없으면 (새 매장) 0원 카드 · 빈 달력 대신 안내
+  const noWork = estimates.every((e) => e.workDays.length === 0)
   const setSelectedDay = setPickedDay
 
   // 급여일: 다음 달 n일 (31 = 말일)
@@ -112,54 +117,74 @@ export default function PayrollPage() {
           ))}
         </div>
 
-        <Card variant="dark" className="gap-1.5 px-[18px] pt-[22px] pb-[18px]">
-          <div className="flex items-center justify-between gap-2.5 px-1">
-            <span className="text-sm font-semibold whitespace-nowrap opacity-85">
-              {formatDate(payDate)} 입금 예정 · D-{dDay}
-            </span>
-            <Link
-              to={`/staff/stores/${store.id}`}
-              className="py-1 text-[13px] font-semibold whitespace-nowrap text-white opacity-85"
-            >
-              급여 설정 ›
-            </Link>
-          </div>
-          <span className="px-1 pt-1.5 text-[44px] leading-[1.1] font-extrabold tracking-[-0.035em]">
-            {formatWon(total.net)}
-          </span>
-          <span className="px-1 pb-2.5 text-sm opacity-75">
-            세전 {formatWon(total.gross)} · 참고용
-          </span>
-          <div className="grid grid-cols-3 gap-1.5">
-            <PayTile
-              label={`${total.hours}시간 × ${hourly.toLocaleString('ko-KR')}`}
-              value={formatWon(total.base)}
-            />
-            <PayTile label="주휴수당" value={`+ ${formatWon(total.weeklyAllowance)}`} />
-            <PayTile
-              label={taxTypes.size > 1 ? '공제' : TAX_LABEL[settings.tax]}
-              value={total.deduction ? `− ${formatWon(total.deduction)}` : '0원'}
-            />
-          </div>
-        </Card>
+        {noWork ? (
+          <EmptyGuide
+            message="아직 계산할 근무가 없어요"
+            hint="근무가 확정되면 예상 급여가 보여요"
+            action={
+              <Button
+                size="md"
+                className="h-[46px] px-5"
+                onClick={() => navigate('/staff/schedule')}
+              >
+                근무표 보기
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <Card variant="dark" className="gap-1.5 px-[18px] pt-[22px] pb-[18px]">
+              <div className="flex items-center justify-between gap-2.5 px-1">
+                <span className="text-sm font-semibold whitespace-nowrap opacity-85">
+                  {formatDate(payDate)} 입금 예정 · D-{dDay}
+                </span>
+                <Link
+                  to={`/staff/stores/${store.id}`}
+                  className="py-1 text-[13px] font-semibold whitespace-nowrap text-white opacity-85"
+                >
+                  급여 설정 ›
+                </Link>
+              </div>
+              <span className="px-1 pt-1.5 text-[44px] leading-[1.1] font-extrabold tracking-[-0.035em]">
+                {formatWon(total.net)}
+              </span>
+              <span className="px-1 pb-2.5 text-sm opacity-75">
+                세전 {formatWon(total.gross)} · 참고용
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <PayTile
+                  label={`${total.hours}시간 × ${hourly.toLocaleString('ko-KR')}`}
+                  value={formatWon(total.base)}
+                />
+                <PayTile label="주휴수당" value={`+ ${formatWon(total.weeklyAllowance)}`} />
+                <PayTile
+                  label={taxTypes.size > 1 ? '공제' : TAX_LABEL[settings.tax]}
+                  value={total.deduction ? `− ${formatWon(total.deduction)}` : '0원'}
+                />
+              </div>
+            </Card>
 
-        <PayCalendar
-          targets={targets}
-          payMonth={payMonth}
-          showAll={showAll}
-          today={today}
-          selectedDay={selectedDay}
-          onSelect={setSelectedDay}
-        />
+            <PayCalendar
+              targets={targets}
+              payMonth={payMonth}
+              showAll={showAll}
+              today={today}
+              selectedDay={selectedDay}
+              onSelect={setSelectedDay}
+            />
 
-        <div className="flex items-start gap-3.5 rounded-[24px] bg-card px-5 py-[18px] shadow-soft">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-            <Sparkles className="size-[18px]" fill="currentColor" />
-          </span>
-          <p className="m-0 text-[15px] leading-[1.65] break-keep text-[#2E3A33]">
-            {current.aiNote}
-          </p>
-        </div>
+            {current.aiNote && (
+              <div className="flex items-start gap-3.5 rounded-[24px] bg-card px-5 py-[18px] shadow-soft">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+                  <Sparkles className="size-[18px]" fill="currentColor" />
+                </span>
+                <p className="m-0 text-[15px] leading-[1.65] break-keep text-[#2E3A33]">
+                  {current.aiNote}
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

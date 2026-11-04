@@ -5,6 +5,7 @@ import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assista
 import { ChatBubble, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { Card } from '@/ui/Card'
 import { Spinner } from '@/ui/Spinner'
@@ -59,6 +60,12 @@ export default function ChatPage() {
         <LoadError error={chat.error} onRetry={chat.retry} />
       ) : (
         <div className="flex flex-col gap-3.5" aria-live="polite">
+          {chat.messages?.length === 0 && !send.isPending && (
+            <EmptyGuide
+              message="아직 나눈 대화가 없어요"
+              hint="궁금한 걸 아래에 적어 보세요. 매뉴얼에 없으면 사장님께 물어봐 드려요"
+            />
+          )}
           {chat.messages?.map((message) => (
             <ChatBubble
               key={message.messageId}

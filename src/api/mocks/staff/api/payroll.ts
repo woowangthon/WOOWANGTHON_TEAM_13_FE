@@ -22,7 +22,14 @@ const dateOf = (day: number) => `${monthKey}-${String(day).padStart(2, '0')}`
 
 /** GET /stores/{storeId}/payroll/estimates/me */
 export async function getMyPayrollEstimate(storeId: string): Promise<PayrollEstimate> {
-  const payroll = storePayrolls[storeId] ?? storePayrolls.dalbit
+  // 급여 데이터가 없는 매장(새 매장)은 근무 0 으로
+  const payroll = storePayrolls[storeId] ?? {
+    worked: [],
+    planned: [],
+    hours: 0,
+    weeklyAllowanceBase: 0,
+    aiNote: '',
+  }
   const store = findStaffStore(storeId)
   const current = settingsOf(storeId)
   const result = calcPay(payroll, {
