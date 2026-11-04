@@ -1,5 +1,5 @@
 import type { To } from 'react-router'
-import type { Manual } from '@/api/mocks/staff/manuals'
+import type { Manual } from '@/lib/api/types'
 import { ManualCard } from '@/shared/manual/ManualCard'
 import { EmptyState } from '@/ui/EmptyState'
 
@@ -16,7 +16,7 @@ export function ManualGrid({ manuals, getHref }: ManualGridProps) {
   return (
     <div className="grid grid-cols-2 gap-2.5">
       {manuals.map((m) => (
-        <ManualCard key={m.id} manual={m} href={getHref(m)} />
+        <ManualCard key={m.manualId} manual={m} href={getHref(m)} />
       ))}
     </div>
   )

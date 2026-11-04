@@ -1,12 +1,12 @@
-import { ChevronRight, StickyNote } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link, type To } from 'react-router'
-import type { Manual } from '@/api/mocks/staff/manuals'
-import { MANUAL_ICON } from '@/shared/icons'
+import type { Manual } from '@/lib/api/types'
+import { DEFAULT_MANUAL_ICON, MANUAL_ICON } from '@/shared/icons'
 import { Badge } from '@/ui/Badge'
 
 // 공용 보기 부품: 매뉴얼 카드 1장 · 사장/알바 화면이 함께 사용 — 담당: 민지
 export function ManualCard({ manual, href }: { manual: Manual; href: To }) {
-  const Icon = MANUAL_ICON[manual.icon] ?? StickyNote
+  const Icon = (manual.icon && MANUAL_ICON[manual.icon]) || DEFAULT_MANUAL_ICON
   return (
     <Link
       to={href}

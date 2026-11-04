@@ -1,24 +1,24 @@
 import { Link, type To } from 'react-router'
-import type { Recipe } from '@/api/mocks/staff/recipes'
-import { CATEGORY_ICON, CATEGORY_TINT } from '@/shared/icons'
+import type { RecipeSummary } from '@/lib/api/types'
+import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/icons'
 import { Badge } from '@/ui/Badge'
 
 // 공용 보기 부품: 포스기식 메뉴 버튼 격자 · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
 interface RecipeGridProps {
-  recipes: Recipe[]
-  getHref: (recipe: Recipe) => To
+  recipes: RecipeSummary[]
+  getHref: (recipe: RecipeSummary) => To
 }
 
 export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
   return (
     <div className="grid grid-cols-2 gap-2.5">
       {recipes.map((r) => {
-        const Icon = CATEGORY_ICON[r.category]
-        const [tint, ink] = CATEGORY_TINT[r.category]
+        const Icon = CATEGORY_ICON[r.category] ?? DEFAULT_CATEGORY_ICON
+        const [tint, ink] = getCategoryTint(r.category)
         return (
           <Link
-            key={r.id}
+            key={r.recipeId}
             to={getHref(r)}
             className="flex flex-col gap-2.5 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3.5 text-foreground shadow-soft"
           >

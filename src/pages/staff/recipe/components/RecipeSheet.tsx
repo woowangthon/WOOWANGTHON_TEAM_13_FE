@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react'
-import type { Recipe } from '@/api/mocks/staff/recipes'
+import type { Recipe } from '@/lib/api/types'
 import { RecipeCard } from '@/shared/recipe/RecipeCard'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'

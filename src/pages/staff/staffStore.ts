@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { addUmbrellaManual, isUmbrellaAdded } from '@/api/mocks/staff/api/db'
 import { initialChats, mockAnswer, OWNER_ANSWER, type ChatMessage } from '@/api/mocks/staff/chat'
 import { initialPaySettings, type PaySettings } from '@/api/mocks/staff/payroll'
 import {
@@ -18,8 +19,6 @@ interface StaffState {
   /** 마이페이지에서 삭제한 매장 */
   removedStoreIds: string[]
   chats: Record<string, ChatMessage[]>
-  /** 사장님 답변이 매뉴얼에 추가됐는지 (우산 시연 흐름) */
-  umbrellaAdded: boolean
   /** 오늘 인수인계 체크 */
   checkedHandovers: Record<string, boolean>
   availability: Record<number, AvailabilityMark>
@@ -49,7 +48,6 @@ export const useStaffStore = create<StaffState>((set, get) => {
     profileName: '지은',
     removedStoreIds: [],
     chats: initialChats,
-    umbrellaAdded: false,
     checkedHandovers: {},
     availability: initialAvailability,
     availabilityMemo: initialAvailabilityMemo,
@@ -73,7 +71,7 @@ export const useStaffStore = create<StaffState>((set, get) => {
       if (!question) return
       push(storeId, { who: 'me', text: question }, { who: 'typing' })
       setTimeout(() => {
-        const answer = mockAnswer(storeId, question, get().umbrellaAdded)
+        const answer = mockAnswer(storeId, question, isUmbrellaAdded())
         set((state) => ({
           chats: {
             ...state.chats,
@@ -103,7 +101,7 @@ export const useStaffStore = create<StaffState>((set, get) => {
             { who: 'owner', text: OWNER_ANSWER },
             { who: 'system', text: '매뉴얼에 추가했어요' },
           )
-          set({ umbrellaAdded: true })
+          addUmbrellaManual() // 가짜 서버에 매뉴얼 추가 → 매뉴얼 목록을 다시 불러오면 보인다
         }, 2600)
       }
     },

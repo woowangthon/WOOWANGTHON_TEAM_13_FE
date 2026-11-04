@@ -1,6 +1,5 @@
-import { StickyNote } from 'lucide-react'
-import type { Manual } from '@/api/mocks/staff/manuals'
-import { MANUAL_ICON } from '@/shared/icons'
+import type { Manual } from '@/lib/api/types'
+import { DEFAULT_MANUAL_ICON, MANUAL_ICON } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 
 // 매뉴얼 상세 시트
@@ -13,7 +12,7 @@ export function ManualSheet({
   storeName: string
   onClose: () => void
 }) {
-  const Icon = MANUAL_ICON[manual.icon] ?? StickyNote
+  const Icon = (manual.icon && MANUAL_ICON[manual.icon]) || DEFAULT_MANUAL_ICON
   return (
     <BottomSheet open onClose={onClose} label={manual.title}>
       <div className="flex flex-col gap-3">
