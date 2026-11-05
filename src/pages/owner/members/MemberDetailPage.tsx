@@ -1,5 +1,124 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router'
+import { MIN_WAGE } from '@/api/mocks/owner/data'
+import { formatWon } from '@/lib/format'
+import { toastApiError } from '@/lib/api/errors'
+import { useMembers, useRemoveMember, useUpdateHourlyWage } from '@/pages/owner/api/members'
+import type { Member } from '@/pages/owner/api/types'
+import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
+import { MemberBoard } from '@/pages/owner/members/components/MemberBoard'
+import { WageInput } from '@/pages/owner/members/components/WageInput'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { useCloseTo } from '@/pages/staff/useCloseTo'
+import { BottomSheet } from '@/ui/BottomSheet'
+import { Button } from '@/ui/Button'
+import { toast } from '@/ui/toastStore'
 
+// 직원 상세: 초대코드(복사 · 카톡) · 시급 · 퇴사 처리(초대코드 삭제 → 바로 차단, 기록은 남김)
 export default function MemberDetailPage() {
-  return <PagePlaceholder title="초대코드 재발급 · 삭제" owner="나현" />
+  const { memberId } = useParams()
+  const { store } = useOwnerStore()
+  const query = useMembers(store.storeId)
+  const close = useCloseTo('/owner/members')
+  const member = query.data?.members.find((m) => m.memberId === memberId)
+
+  if (query.data && !member) return <Navigate to="/owner/members" replace />
+
+  return (
+    <>
+      <MemberBoard />
+      {member && (
+        <MemberSheet key={member.memberId} member={member} storeName={store.name} onClose={close} />
+      )}
+    </>
+  )
+}
+
+function MemberSheet({
+  member,
+  storeName,
+  onClose,
+}: {
+  member: Member
+  storeName: string
+  onClose: () => void
+}) {
+  const navigate = useNavigate()
+  const [wage, setWage] = useState(String(member.hourlyWage))
+  const [askRemove, setAskRemove] = useState(false)
+  const updateWage = useUpdateHourlyWage(member.storeId)
+  const remove = useRemoveMember()
+  const active = member.status === 'active'
+
+  // 칸을 벗어나면 저장 (최저시급 미만 · 그대로면 저장하지 않음)
+  const saveWage = () => {
+    const next = Number(wage)
+    if (next === member.hourlyWage || next < MIN_WAGE) return
+    updateWage.mutate(
+      { memberId: member.memberId, hourlyWage: next },
+      {
+        onSuccess: () => toast(`시급을 ${formatWon(next)}으로 바꿨어요`),
+        onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', saveWage),
+      },
+    )
+  }
+
+  const doRemove = () =>
+    remove.mutate(member.memberId, {
+      onSuccess: () => {
+        toast('초대코드를 삭제했어요')
+        navigate('/owner/members', { replace: true })
+      },
+      onError: (error) => toastApiError(error, '삭제하지 못했어요. 다시 시도해 주세요', doRemove),
+    })
+
+  return (
+    <BottomSheet open onClose={onClose} label={member.name} closeButton>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3.5">
+          <span className="flex size-14 items-center justify-center rounded-full bg-accent text-xl font-extrabold text-[#2A4536]">
+            {member.name.slice(0, 1)}
+          </span>
+          <div className="flex flex-col gap-[3px]">
+            <h2 className="m-0 text-[22px] font-extrabold">{member.name}</h2>
+            <span className="text-[13px] text-muted-foreground">
+              {storeName} · 시급 {formatWon(member.hourlyWage)} · {active ? '사용 중' : '입장 전'}
+            </span>
+          </div>
+        </div>
+
+        <InviteCodeCard
+          label="초대코드"
+          code={member.inviteCode}
+          storeName={storeName}
+          name={member.name}
+        />
+
+        <WageInput value={wage} onChange={setWage} onBlur={saveWage} />
+
+        {askRemove ? (
+          <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
+            <span className="text-sm text-[#7E352C]">접근이 바로 차단돼요. 기록은 남아요.</span>
+            <Button
+              variant="danger"
+              size="md"
+              className="h-[46px]"
+              disabled={remove.isPending}
+              onClick={doRemove}
+            >
+              초대코드 삭제
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAskRemove(true)}
+            className="p-1.5 text-sm font-semibold text-destructive-foreground"
+          >
+            퇴사 처리
+          </button>
+        )}
+      </div>
+    </BottomSheet>
+  )
 }

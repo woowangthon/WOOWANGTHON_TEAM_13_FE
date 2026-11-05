@@ -1,5 +1,6 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { MemberBoard } from '@/pages/owner/members/components/MemberBoard'
 
+// 직원 목록 · 코드 상태
 export default function MemberListPage() {
-  return <PagePlaceholder title="직원 목록 · 코드 상태" owner="나현" />
+  return <MemberBoard />
 }

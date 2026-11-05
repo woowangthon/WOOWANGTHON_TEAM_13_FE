@@ -8,6 +8,8 @@ import MemberListPage from '@/pages/owner/members/MemberListPage'
 import OwnerHandoverPage from '@/pages/owner/handover/OwnerHandoverPage'
 import OwnerHomePage from '@/pages/owner/home/OwnerHomePage'
 import OwnerLayout from '@/pages/owner/OwnerLayout'
+import OwnerMyPage from '@/pages/owner/me/OwnerMyPage'
+import OwnerStoreDetailPage from '@/pages/owner/me/OwnerStoreDetailPage'
 import OwnerPayrollPage from '@/pages/owner/payroll/OwnerPayrollPage'
 import RecipeEditPage from '@/pages/owner/recipe/RecipeEditPage'
 import RecipeManagePage from '@/pages/owner/recipe/RecipeManagePage'
@@ -18,12 +20,15 @@ import StoreCreatePage from '@/pages/owner/store/StoreCreatePage'
 
 // 사장 화면 주소 — 담당: 나현
 export const ownerRoutes: RouteObject[] = [
+  // 하단 탭 없이 전체 화면 (매장 등록 온보딩 · 마이페이지 · 매장 상세)
+  { path: '/owner/store/new', element: <StoreCreatePage /> },
+  { path: '/owner/me', element: <OwnerMyPage /> },
+  { path: '/owner/stores/:storeId', element: <OwnerStoreDetailPage /> },
   {
     path: '/owner',
     element: <OwnerLayout />,
     children: [
       { index: true, element: <OwnerHomePage /> },
-      { path: 'store/new', element: <StoreCreatePage /> },
       { path: 'store/verify', element: <BizVerifyPage /> },
       { path: 'members', element: <MemberListPage /> },
       { path: 'members/new', element: <MemberAddPage /> },
