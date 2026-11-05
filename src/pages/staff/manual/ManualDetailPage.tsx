@@ -3,7 +3,7 @@ import { useManual } from '@/lib/api/manuals'
 import { isNotFound } from '@/lib/api/errors'
 import { ManualSheet } from '@/pages/staff/manual/components/ManualSheet'
 import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
-import { useCloseTo } from '@/pages/staff/useCloseTo'
+import { useCloseTo } from '@/lib/useCloseTo'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 
 // 매뉴얼 상세: 매뉴얼 목록 위에 상세 시트를 띄운다

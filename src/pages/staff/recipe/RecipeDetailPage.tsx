@@ -3,7 +3,7 @@ import { isNotFound } from '@/lib/api/errors'
 import { useRecipe } from '@/lib/api/recipes'
 import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
 import { RecipeSheet } from '@/pages/staff/recipe/components/RecipeSheet'
-import { useCloseTo } from '@/pages/staff/useCloseTo'
+import { useCloseTo } from '@/lib/useCloseTo'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 
 // 레시피 상세: 레시피 목록 위에 상세 시트를 띄운다

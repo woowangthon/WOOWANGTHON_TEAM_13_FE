@@ -9,7 +9,7 @@ import {
 import type { PayrollEstimate, TaxType } from '@/lib/api/types'
 import { STORE_ICON } from '@/shared/icons'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
-import { useCloseTo } from '@/pages/staff/useCloseTo'
+import { useCloseTo } from '@/lib/useCloseTo'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { LoadError } from '@/shared/LoadError'
 import { Button } from '@/ui/Button'
