@@ -56,9 +56,8 @@ export default function LoginPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        {/* 카카오 노란색(#FEE500)은 나현에게 Button kakao 종류를 요청해 둠. 생기기 전까지 연한 회색 */}
         <Button
-          variant="soft"
+          variant="kakao"
           className="h-14 gap-2.5 rounded-[18px] text-base font-bold"
           disabled={pending !== null}
           onClick={() => start('kakao')}

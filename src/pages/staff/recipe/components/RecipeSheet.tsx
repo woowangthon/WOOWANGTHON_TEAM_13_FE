@@ -1,6 +1,5 @@
 import { Sparkles } from 'lucide-react'
 import type { Recipe } from '@/lib/api/types'
-import { SheetCloseButton } from '@/pages/staff/components/SheetCloseButton'
 import { RecipeCard } from '@/shared/recipe/RecipeCard'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -15,20 +14,17 @@ interface RecipeSheetProps {
 
 export function RecipeSheet({ recipe, storeName, onClose, onAsk }: RecipeSheetProps) {
   return (
-    <BottomSheet open onClose={onClose} label={recipe.name}>
-      <div className="relative">
-        <SheetCloseButton onClose={onClose} />
-        <RecipeCard
-          recipe={recipe}
-          storeName={storeName}
-          footer={
-            <Button variant="ink" className="text-sm" onClick={onAsk}>
-              <Sparkles />
-              AI 사수에게 묻기
-            </Button>
-          }
-        />
-      </div>
+    <BottomSheet open onClose={onClose} label={recipe.name} closeButton>
+      <RecipeCard
+        recipe={recipe}
+        storeName={storeName}
+        footer={
+          <Button variant="ink" className="text-sm" onClick={onAsk}>
+            <Sparkles />
+            AI 사수에게 묻기
+          </Button>
+        }
+      />
     </BottomSheet>
   )
 }
