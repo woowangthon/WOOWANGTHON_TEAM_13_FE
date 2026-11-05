@@ -42,6 +42,16 @@ const topic = (word: string) => `${word}${hasBatchim(word) ? '은' : '는'}`
 /** 받침에 맞는 끝말: "3스푼이에요" · "반 컵이에요" · "1개예요" */
 const isIt = (word: string) => `${word}${hasBatchim(word) ? '이에요' : '예요'}`
 
+/** 제목에서 찾을 때 빼는 흔한 말 ("오픈 순서" · "주차 안내"의 순서 · 안내) */
+const COMMON_TITLE_WORDS = new Set(['순서', '안내', '방법', '문의', '정리', '관리'])
+
+/** 매뉴얼 제목의 단어 (2글자 이상, 흔한 말 제외): "주차 안내" → ["주차"] */
+function titleWords(title: string) {
+  return title
+    .split(/[\s·,/()]+/)
+    .filter((word) => word.length >= 2 && !COMMON_TITLE_WORDS.has(word))
+}
+
 export function mockAnswer(storeId: string, question: string, umbrellaAdded: boolean): ChatMessage {
   const t = question.replace(/\s/g, '')
 
@@ -62,9 +72,14 @@ export function mockAnswer(storeId: string, question: string, umbrellaAdded: boo
     }
   }
 
-  const manual = storeManuals(storeId, umbrellaAdded).find((m) =>
-    m.keywords.some((k) => t.includes(k.replace(/\s/g, ''))),
-  )
+  // 1) 키워드가 맞는 매뉴얼 → 2) 없으면 제목 단어가 가장 많이 들어간 매뉴얼 ("주차 어디에 해요?" → 주차 안내)
+  const manuals = storeManuals(storeId, umbrellaAdded)
+  const byTitle = manuals
+    .map((m) => ({ m, hits: titleWords(m.title).filter((w) => t.includes(w)).length }))
+    .filter(({ hits }) => hits > 0)
+    .sort((a, b) => b.hits - a.hits)[0]?.m
+  const manual =
+    manuals.find((m) => m.keywords.some((k) => t.includes(k.replace(/\s/g, '')))) ?? byTitle
   if (manual) {
     return {
       who: 'ai',
