@@ -1,6 +1,5 @@
 import { Copy } from 'lucide-react'
 import type { Manual } from '@/lib/api/types'
-import { SheetCloseButton } from '@/pages/staff/components/SheetCloseButton'
 import { DEFAULT_MANUAL_ICON, MANUAL_ICON } from '@/shared/icons'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -35,9 +34,8 @@ export function ManualSheet({
   }
 
   return (
-    <BottomSheet open onClose={onClose} label={manual.title}>
-      <div className="relative flex flex-col gap-3">
-        <SheetCloseButton onClose={onClose} />
+    <BottomSheet open onClose={onClose} label={manual.title} closeButton>
+      <div className="flex flex-col gap-3">
         <span className="flex size-[52px] items-center justify-center rounded-full bg-brand-soft text-brand">
           <Icon className="size-[26px]" />
         </span>
