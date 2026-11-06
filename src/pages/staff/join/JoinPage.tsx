@@ -63,11 +63,7 @@ export default function JoinPage() {
     const reason = err instanceof ApiError && err.code ? REASON_BY_CODE[err.code] : undefined
     if (reason) {
       setError(reason)
-      setMemberStore(
-        reason === 'joined'
-          ? ((err as ApiError).data as { detail: AlreadyJoinedDetail }).detail
-          : null,
-      )
+      setMemberStore(reason === 'joined' ? ((err as ApiError).detail as AlreadyJoinedDetail) : null)
     } else {
       toastApiError(err, '코드를 확인하지 못했어요. 다시 시도해 주세요', retry)
     }

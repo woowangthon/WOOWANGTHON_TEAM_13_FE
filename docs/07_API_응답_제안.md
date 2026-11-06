@@ -51,7 +51,7 @@ FE가 지금 쓰는 **가짜 데이터(`src/api/mocks/staff/`) 모양을 기준�
 | `message` | 사용자에게 보여 줄 한국어 문장 |
 | `detail` | 추가 정보 (없으면 `null`). 예: 잠금 해제 시각, 이미 들어간 매장 |
 
-> FastAPI 기본 에러는 `{"detail": ...}` 모양이라, 예외 핸들러로 위 모양에 맞춰 주세요. 입력값 검증 실패(422)도 `VALIDATION_ERROR`로 감싸 주면 좋아요.
+> FastAPI 기본 에러 `{"detail": ...}`도 FE가 읽어요 (11/6, `src/lib/apiClient.ts` `normalizeErrorBody`): `code`는 HTTP 상태로 공통 코드(아래 표)를 정하고, `detail`이 영어 문장이면 화면에는 FE 문구를 보여 줘요. 422 배열은 `VALIDATION_ERROR`로 읽어요. 그래서 **FE가 `code`로 분기해야 하는 곳만** 위 모양으로 주면 돼요 (질문 15).
 
 공통 에러 코드
 
@@ -943,4 +943,5 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 12. 인수인계 체크는 매장 공용이 맞나요? (한 명이 체크하면 모두에게 체크)
 13. AI 답변이 몇 초 걸리나요? 길면 스트리밍 여부 논의
 14. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
+15. **에러 코드는 초대코드만 꼭 필요해요**: `INVITE_INVALID` · `INVITE_ALREADY_JOINED`(detail에 매장 ID · 이름) · `INVITE_LOCKED`. 나머지 API는 FastAPI 기본 `{detail}`이어도 FE가 읽어요. (11/6 BE main 확인: 이미 이 모양이에요 — 그대로 유지해 주세요)
 
