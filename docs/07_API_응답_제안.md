@@ -166,6 +166,8 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | `photoUrl` | 매장 사진. 없으면 `null` → FE가 매장 색으로 채워요 · 🙏 요청 중 (11/4) |
 | `theme` | 매장 색 · 아이콘 묶음 키: `"moon"`(초록) · `"sunset"`(갈색). 색 값(#2A4536 등)은 FE 디자인 토큰에서 정해요. 저장할 곳이 없으면 `null`이어도 돼요 (FE가 내 매장 순서대로 초록 → 갈색 … 정해요). 매장 목록 한 줄 "주 3회 마감 · 박 사장님"의 "주 3회 마감"은 FE가 [7-1](#7-1-get-storesstoreidschedulesme-내-스케줄) 근무 목록에서 계산해요 |
 
+> **11/7 BE 실제 응답**: 감싸지 않은 배열 `[{ "storeId", "storeName", "role" }]` (1-1의 `stores`와 같은 3칸). FE는 `src/lib/api/users.ts` `toMyStoreList`로 위 모양에 맞추고 없는 칸은 빈 값으로 둬요 → 알바 화면의 사장님 이름 · 내 이름 · 매장 사진 · 주소가 비어 보여요 (질문 16).
+
 > 가짜 데이터의 `shift` · `week` · `weekHours`(근무)는 [7. 근무](#7-근무-p1), `chips`(자주 묻는 질문)는 [5-1 채팅방](#5-1-ai-채팅방-생성--목록)의 `suggestions`로 옮겼어요.
 
 ---
@@ -944,4 +946,5 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 13. AI 답변이 몇 초 걸리나요? 길면 스트리밍 여부 논의
 14. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
 15. **에러 코드는 초대코드만 꼭 필요해요**: `INVITE_INVALID` · `INVITE_ALREADY_JOINED`(detail에 매장 ID · 이름) · `INVITE_LOCKED`. 나머지 API는 FastAPI 기본 `{detail}`이어도 FE가 읽어요. (11/6 BE main 확인: 이미 이 모양이에요 — 그대로 유지해 주세요)
+16. **`GET /users/me/stores`에 매장 정보를 더 넣어 주세요** ([1-3](#1-3-get-usersmestores)): 지금은 `storeId · storeName · role`뿐이고, 알바는 `GET /stores/{id}`(사장님 전용)도 못 불러요. 알바 화면에 `ownerName` · `staffName` · `address` · `photoUrl`(+ `memberId` · `joinedAt`)이 필요해요
 
