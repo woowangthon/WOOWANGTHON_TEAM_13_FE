@@ -107,7 +107,7 @@ export async function createChat(storeId: string): Promise<CreatedAssistantChat>
     storeId,
     createdAt: created,
     lastMessageAt: created,
-    lastMessageText: '',
+    lastMessageText: null,
   })
   messages.set(chatId, [])
   append(chatId, ...seeded)

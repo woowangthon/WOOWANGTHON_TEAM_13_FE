@@ -33,12 +33,14 @@ export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
               >
                 <Icon className="size-5" />
               </span>
-              <span
-                className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
-                style={{ color: ink }}
-              >
-                {r.temp}
-              </span>
+              {r.temp && (
+                <span
+                  className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
+                  style={{ color: ink }}
+                >
+                  {r.temp}
+                </span>
+              )}
               {r.isNew && (
                 <Badge className="absolute top-2 right-2" aria-label="새 레시피">
                   NEW
@@ -48,7 +50,7 @@ export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
             <span className="flex flex-col gap-[3px] px-1">
               <span className="text-[15px] leading-[1.3] font-bold break-keep">{r.name}</span>
               <span className="text-xs text-subtle">
-                {r.size} · 재료 {r.ingredients.length}가지
+                {[r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
               </span>
             </span>
           </Link>

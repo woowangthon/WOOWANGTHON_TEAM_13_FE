@@ -13,6 +13,17 @@ export function fromDateKey(key: string) {
   return new Date(y, m - 1, d)
 }
 
+/** 한국 시간(KST) 오늘 0시 — BE 가 "오늘"을 KST 로 정해서 기기 시간대와 상관없이 맞춘다 */
+export function todayInKst() {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  return new Date(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate())
+}
+
+/** 며칠 더하기 (빼려면 음수) */
+export function addDays(date: Date, days: number) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+}
+
 export function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&

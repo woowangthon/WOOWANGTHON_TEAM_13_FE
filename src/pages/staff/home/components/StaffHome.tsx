@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
 import { useMySchedule } from '@/lib/api/schedule'
+import { isRealApi } from '@/lib/api/source'
 import type { Shift } from '@/lib/api/types'
-import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
+import { addDays, fromDateKey, isSameDay, todayInKst, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
@@ -31,14 +32,21 @@ export function StaffHome() {
   }
   if (!schedule) return <Spinner />
 
-  const today = fromDateKey(schedule.today)
-  const weekStart = fromDateKey(schedule.weekStart)
+  // 인수인계가 진짜 API면 BE 는 실제 오늘(KST)로 저장한다 → 근무표가 아직 가짜(11/20)여도 홈은 실제 오늘 기준.
+  // 가짜 서버일 땐 시연 날짜 그대로. 주 시작 요일은 근무표를 따른다
+  const scheduleToday = fromDateKey(schedule.today)
+  const scheduleWeekStart = fromDateKey(schedule.weekStart)
+  const realToday = isRealApi('handover') ? todayInKst() : null
+  const today = realToday ?? scheduleToday
+  const weekStart = realToday
+    ? addDays(realToday, -((realToday.getDay() - scheduleWeekStart.getDay() + 7) % 7))
+    : scheduleWeekStart
   const workDays = new Set(schedule.shifts.map((shift) => shift.date))
   const week = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i)
     return { date, work: workDays.has(toDateKey(date)) }
   })
-  const todayShift = schedule.shifts.find((shift) => shift.date === schedule.today)
+  const todayShift = schedule.shifts.find((shift) => shift.date === toDateKey(today))
 
   // 매장을 바꾸면 선택한 날짜를 그 매장의 오늘로 되돌린다
   return <HomeBody key={store.id} store={store} today={today} week={week} todayShift={todayShift} />

@@ -1,4 +1,6 @@
 import { ArrowUp } from 'lucide-react'
+import { CHAT_TEXT_MAX } from '@/lib/api/assistantChat'
+import { LengthHint } from '@/shared/LengthHint'
 import { Chip } from '@/ui/Chip'
 import { IconButton } from '@/ui/IconButton'
 
@@ -20,6 +22,7 @@ export function ChatInput({ value, onChange, onSend, chips }: ChatInputProps) {
           </Chip>
         ))}
       </div>
+      <LengthHint length={value.length} max={CHAT_TEXT_MAX} className="px-4" />
       <form
         onSubmit={(event) => {
           event.preventDefault()
@@ -32,6 +35,7 @@ export function ChatInput({ value, onChange, onSend, chips }: ChatInputProps) {
           onChange={(event) => onChange(event.target.value)}
           placeholder="질문 입력"
           aria-label="질문 입력"
+          maxLength={CHAT_TEXT_MAX}
           className="min-w-0 flex-1 border-none bg-transparent text-[15px] placeholder:text-subtle"
         />
         <IconButton type="submit" aria-label="보내기" variant="brand" disabled={!value.trim()}>

@@ -1,6 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
+import { HANDOVER_TEXT_MAX } from '@/lib/api/handover'
 import type {
   HandoverDraft,
   HandoverDraftItem,
@@ -8,6 +9,7 @@ import type {
   NewHandoverNote,
 } from '@/lib/api/types'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
+import { LengthHint } from '@/shared/LengthHint'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
 
@@ -114,7 +116,9 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
             onChange={(event) => setNote(event.target.value)}
             placeholder="인수인계 내용"
             aria-label="인수인계 내용"
+            maxLength={HANDOVER_TEXT_MAX}
           />
+          <LengthHint length={note.length} max={HANDOVER_TEXT_MAX} className="-mt-1.5" />
           <div className="grid grid-cols-[1fr_1.6fr] gap-2">
             <Button variant="soft" className="text-sm" onClick={onNoIssue}>
               특이사항 없음

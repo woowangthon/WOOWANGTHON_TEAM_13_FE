@@ -40,7 +40,7 @@ BE API가 기능별로 하나씩 나오니, **기능마다** 진짜 API와 가�
 | `VITE_REAL_API=all` | 모두 진짜 API |
 
 - 기능 이름 = `src/lib/api/`의 훅 파일 이름: `users`(내 정보 · 내 매장) · `invitations`(초대코드) · `recipes` · `manuals` · `assistantChat`(AI 채팅) · `handover`(인수인계) · `schedule`(근무) · `payroll`(급여)
-- 진짜 API는 `apiFetch`로 **docs/07 경로**를 부른다 (`VITE_API_URL` + 경로, Supabase 토큰 자동). 고르는 곳: `src/lib/api/source.ts` `isRealApi`
+- 진짜 API는 `apiFetch`로 **docs/07 경로**를 부른다 (`VITE_API_URL`(`…/api/v1`) + 경로, Supabase 토큰 자동). 고르는 곳: `src/lib/api/source.ts` `isRealApi`
 - BE 서버가 꺼져 있는데 켜면 "서버에 연결하지 못했어요" 토스트가 뜬다 (API 공통 처리)
 - `.env`를 바꾸면 개발 서버를 다시 켠다 (`npm run dev`). 개발 중에는 콘솔에 진짜 API 목록이 찍히고, 이름을 잘못 적으면 경고가 뜬다
 - `payroll`을 켜면 알바 화면의 급여 설정 저장은 실패로 알린다 (알바용 저장 API가 아직 없음, docs/07 질문 4)
@@ -49,7 +49,7 @@ BE API가 기능별로 하나씩 나오니, **기능마다** 진짜 API와 가�
 ## 환경 변수 (`.env.example` 참고)
 | 이름 | 뜻 |
 | --- | --- |
-| `VITE_API_URL` | BE 서버 주소 |
+| `VITE_API_URL` | BE API 주소 — `/api/v1`까지 적는다 (예: `http://localhost:8000/api/v1`). BE는 모든 경로가 `/api/v1` 아래 |
 | `VITE_SUPABASE_URL` · `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase 로그인 |
 | `VITE_KAKAO_JS_KEY` | 카카오 JavaScript 키 (카톡 공유) |
 | `VITE_SKIP_AUTH` | `true`면 로그인 없이 모든 화면 확인 (로컬 개발용) |

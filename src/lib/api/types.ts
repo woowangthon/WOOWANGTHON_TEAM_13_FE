@@ -19,8 +19,10 @@ export interface RecipeSummary {
   name: string
   /** 사장님이 정한 카테고리 이름 (커피 · 라떼 …) */
   category: string
-  temp: RecipeTemp
-  size: string
+  /** 정하지 않았으면 null */
+  temp: RecipeTemp | null
+  /** 정하지 않았으면 null */
+  size: string | null
   ingredients: Ingredient[]
   isNew: boolean
   updatedAt: string
@@ -101,13 +103,15 @@ export interface AssistantChat {
   storeId: string
   createdAt: string
   lastMessageAt: string
-  lastMessageText: string
+  /** 아직 메시지가 없는 새 방이면 null */
+  lastMessageText: string | null
 }
 
 /** GET /stores/{storeId}/assistant-chats */
 export interface AssistantChatList {
-  /** 입력창 위 자주 묻는 질문 칩 */
+  /** 입력창 위 자주 묻는 질문 칩 (BE: 매뉴얼 제목 최대 4개, 매뉴얼이 없으면 []) */
   suggestions: string[]
+  /** 최근 대화 순 */
   chats: AssistantChat[]
 }
 
@@ -120,6 +124,7 @@ export interface CreatedAssistantChat extends AssistantChat {
 /** GET /stores/{storeId}/assistant-chats/{chatId}/messages */
 export interface ChatMessageList {
   chatId: string
+  /** 더 오래된 메시지가 있음 (BE: 최근 50개씩, ?before=<가장 오래된 messageId> 로 더 받기). FE는 아직 최근 50개만 보여 준다 */
   hasMore: boolean
   messages: ChatMessage[]
 }
