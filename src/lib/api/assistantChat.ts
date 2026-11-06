@@ -23,6 +23,9 @@ import type {
  * .env VITE_REAL_API 에 'assistantChat'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 5
  */
 
+/** 질문 최대 글자 수 (BE 검증: text 1~1000자) */
+export const CHAT_TEXT_MAX = 1000
+
 export const chatKeys = {
   list: (storeId: string) => ['stores', storeId, 'assistant-chats'] as const,
   messages: (storeId: string, chatId: string) =>

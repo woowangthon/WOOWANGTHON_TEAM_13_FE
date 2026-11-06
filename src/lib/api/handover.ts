@@ -25,6 +25,9 @@ export const handoverKeys = {
   notes: (storeId: string, date: string) => ['stores', storeId, 'handover-notes', date] as const,
 }
 
+/** 인수인계 줄글 최대 글자 수 (BE 검증: 정리하기 text · 남기기 rawText 2000자) */
+export const HANDOVER_TEXT_MAX = 2000
+
 const real = () => isRealApi('handover')
 const notesPath = (storeId: string) => `/stores/${storeId}/handover-notes`
 
