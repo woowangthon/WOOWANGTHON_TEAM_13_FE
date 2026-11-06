@@ -19,8 +19,10 @@ export interface RecipeSummary {
   name: string
   /** 사장님이 정한 카테고리 이름 (커피 · 라떼 …) */
   category: string
-  temp: RecipeTemp
-  size: string
+  /** 정하지 않았으면 null */
+  temp: RecipeTemp | null
+  /** 정하지 않았으면 null */
+  size: string | null
   ingredients: Ingredient[]
   isNew: boolean
   updatedAt: string

@@ -14,6 +14,8 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
   const Icon = CATEGORY_ICON[recipe.category] ?? DEFAULT_CATEGORY_ICON
   const [tint, ink] = getCategoryTint(recipe.category)
+  // 온도 · 사이즈는 정하지 않으면 null → 있는 것만 (둘 다 없으면 배지 없음)
+  const tempSize = [recipe.temp, recipe.size].filter(Boolean).join(' · ')
 
   return (
     <div className="flex flex-col gap-[18px]">
@@ -27,12 +29,14 @@ export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
         >
           <Icon className="size-7" />
         </span>
-        <span
-          className="absolute top-3.5 left-3.5 rounded-full bg-white/70 px-[9px] py-1 text-[11px] font-extrabold"
-          style={{ color: ink }}
-        >
-          {recipe.temp} · {recipe.size}
-        </span>
+        {tempSize && (
+          <span
+            className="absolute top-3.5 left-3.5 rounded-full bg-white/70 px-[9px] py-1 text-[11px] font-extrabold"
+            style={{ color: ink }}
+          >
+            {tempSize}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
