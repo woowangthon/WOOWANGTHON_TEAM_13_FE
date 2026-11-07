@@ -12,7 +12,7 @@ import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): 매장 이름 · 직원 수 → 등록 완료
+// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): 매장 이름 · 주소 · 직원 수 → 등록 완료
 // 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new)
 
 const SIZES: { label: string; size: StoreSize }[] = [
@@ -26,13 +26,14 @@ export default function StoreCreatePage() {
   const create = useCreateStore()
   const { setCurrentStoreId } = useOwnerStore()
   const [name, setName] = useState('')
+  const [address, setAddress] = useState('')
   const [sizeLabel, setSizeLabel] = useState(SIZES[0].label)
   const [created, setCreated] = useState<OwnerStore | null>(null)
   const size = SIZES.find((s) => s.label === sizeLabel)?.size ?? 'under5'
 
   const submit = () =>
     create.mutate(
-      { name: name.trim(), size },
+      { name: name.trim(), address: address.trim(), size },
       {
         onSuccess: (store) => {
           setCurrentStoreId(store.storeId)
@@ -76,6 +77,15 @@ export default function StoreCreatePage() {
             className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
           />
         </label>
+        <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+          <span className="text-xs font-bold text-muted-foreground">매장 주소</span>
+          <input
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            placeholder="서울 마포구 와우산로21길 8"
+            className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+          />
+        </label>
         <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
           <span className="text-xs font-bold text-muted-foreground">직원 수</span>
           <div className="mt-0.5 grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="직원 수">
@@ -103,7 +113,7 @@ export default function StoreCreatePage() {
 
       <Button
         className="mt-auto h-14 text-base"
-        disabled={!name.trim() || create.isPending}
+        disabled={!name.trim() || !address.trim() || create.isPending}
         onClick={submit}
       >
         시작하기
