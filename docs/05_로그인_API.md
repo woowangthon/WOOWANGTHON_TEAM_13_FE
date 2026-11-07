@@ -39,7 +39,7 @@ BE API가 기능별로 하나씩 나오니, **기능마다** 진짜 API와 가�
 | `VITE_REAL_API=users,invitations` | 적은 기능만 진짜 API, 나머지는 가짜 서버 |
 | `VITE_REAL_API=all` | 모두 진짜 API |
 
-- 기능 이름 = `src/lib/api/`의 훅 파일 이름: `users`(내 정보 · 내 매장) · `invitations`(초대코드) · `recipes` · `manuals` · `assistantChat`(AI 채팅) · `handover`(인수인계) · `schedule`(근무) · `payroll`(급여)
+- 기능 이름 = `src/lib/api/`의 훅 파일 이름: `users`(내 정보 · 내 매장) · `invitations`(초대코드) · `recipes` · `manuals` · `assistantChat`(AI 채팅) · `handover`(인수인계) · `schedule`(근무) · `payroll`(급여) · 사장님 화면: `stores`(매장 만들기 · 수정) · `members`(직원 목록 · 시급)
 - 진짜 API는 `apiFetch`로 **docs/07 경로**를 부른다 (`VITE_API_URL`(`…/api/v1`) + 경로, Supabase 토큰 자동). 고르는 곳: `src/lib/api/source.ts` `isRealApi`
 - BE 서버가 꺼져 있는데 켜면 "서버에 연결하지 못했어요" 토스트가 뜬다 (API 공통 처리)
 - `.env`를 바꾸면 개발 서버를 다시 켠다 (`npm run dev`). 개발 중에는 콘솔에 진짜 API 목록이 찍히고, 이름을 잘못 적으면 경고가 뜬다

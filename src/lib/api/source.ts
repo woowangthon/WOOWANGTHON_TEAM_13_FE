@@ -19,6 +19,9 @@ export const API_FEATURES = [
   'handover',
   'schedule',
   'payroll',
+  // 사장님 화면 (나현, pages/owner/api): 매장 만들기 · 수정 / 직원 목록 · 시급
+  'stores',
+  'members',
 ] as const
 
 export type ApiFeature = (typeof API_FEATURES)[number]
