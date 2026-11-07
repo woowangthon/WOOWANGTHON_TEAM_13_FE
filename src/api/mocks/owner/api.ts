@@ -32,6 +32,7 @@ import type {
   MemberPay,
   MonthShifts,
   NewMember,
+  NewStore,
   OnDuty,
   OwnerAnswer,
   OwnerNotification,
@@ -40,7 +41,6 @@ import type {
   OwnerStore,
   RecipeInput,
   ScheduleDraft,
-  StoreSize,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -92,20 +92,17 @@ export async function getOwnerStores(): Promise<{ stores: OwnerStore[] }> {
   return { stores: db.stores.map(toStore) }
 }
 
-/** POST /stores (제안) — 매장 등록 */
-export async function createStore(input: {
-  name: string
-  size: StoreSize
-  bizNo?: string | null
-}): Promise<OwnerStore> {
+/** POST /stores — 매장 등록 (BE 는 name · address 필수) */
+export async function createStore(input: NewStore): Promise<OwnerStore> {
   await wait(500)
   const name = input.name.trim()
   if (!name) fail(422, 'VALIDATION_ERROR', '매장 이름을 입력해 주세요')
+  if (!input.address.trim()) fail(422, 'VALIDATION_ERROR', '매장 주소를 입력해 주세요')
   const store = {
     storeId: `str_${Date.now()}`,
     name,
     kind: '카페',
-    address: '',
+    address: input.address.trim(),
     theme: THEME_ORDER[db.stores.length % THEME_ORDER.length],
     photoUrl: null,
     payday: 10,

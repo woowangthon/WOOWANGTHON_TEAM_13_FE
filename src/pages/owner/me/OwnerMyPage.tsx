@@ -231,9 +231,10 @@ function StoreRow({
   )
 }
 
-/** 매장 추가: 이름 + 사업자등록번호 확인(P2) → 추가 */
+/** 매장 추가: 이름 · 주소 + 사업자등록번호 확인(P2) → 추가 */
 function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
   const [name, setName] = useState('')
+  const [address, setAddress] = useState('')
   const [bizNo, setBizNo] = useState('')
   const [verified, setVerified] = useState(false)
   const [bizError, setBizError] = useState('')
@@ -259,11 +260,12 @@ function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
 
   const add = () =>
     create.mutate(
-      { name: name.trim(), size: 'under5', bizNo },
+      { name: name.trim(), address: address.trim(), size: 'under5', bizNo },
       {
         onSuccess: (store) => {
           toast(`${store.name} 매장을 추가했어요`)
           setName('')
+          setAddress('')
           setBizNo('')
           setVerified(false)
           onAdded(store.storeId)
@@ -280,6 +282,13 @@ function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
         onChange={(event) => setName(event.target.value)}
         placeholder="매장 이름"
         aria-label="새 매장 이름"
+      />
+      <Input
+        variant="card"
+        value={address}
+        onChange={(event) => setAddress(event.target.value)}
+        placeholder="매장 주소"
+        aria-label="새 매장 주소"
       />
       <div className="flex gap-2">
         <Input
@@ -311,7 +320,7 @@ function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
       )}
       <Button
         className="text-sm"
-        disabled={!name.trim() || !verified || create.isPending}
+        disabled={!name.trim() || !address.trim() || !verified || create.isPending}
         onClick={add}
       >
         매장 추가

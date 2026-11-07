@@ -24,6 +24,37 @@ export interface OwnerStore {
   staffCount: number
 }
 
+/** 매장 등록 요청 (POST /stores — BE 는 name · address 필수) */
+export interface NewStore {
+  name: string
+  address: string
+  size: StoreSize
+  bizNo?: string | null
+}
+
+/** 매장 수정 요청 (PATCH /stores/{storeId}) — 급여일 · 규모는 아직 가짜 서버에만 저장 */
+export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size'>>
+
+/** BE 매장 응답 (GET · POST · PATCH /stores) */
+export interface StoreResponse {
+  storeId: string
+  name: string
+  address: string
+  ownerName: string
+  businessVerificationId: number | null
+  photoUrl: string | null
+}
+
+/** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */
+export interface InvitationResponse {
+  invitationId: string
+  storeId: string
+  code: string
+  staffName: string
+  hourlyWage: number
+  createdAt: string
+}
+
 export interface OwnerProfile {
   name: string
 }
