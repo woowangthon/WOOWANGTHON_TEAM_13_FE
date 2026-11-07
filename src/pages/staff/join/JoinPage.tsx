@@ -9,6 +9,7 @@ import { ApiError } from '@/lib/apiClient'
 import { refreshMe } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
 import { env } from '@/lib/env'
+import { formatOwner } from '@/lib/format'
 import { useStoreStore } from '@/lib/storeStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
@@ -184,7 +185,7 @@ export default function JoinPage() {
             <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
               <strong className="text-[17px] font-extrabold">{invite.store.name}</strong>
               <span className="text-[13px] text-muted-foreground">
-                {invite.store.ownerName} · {invite.staffName} 님 자리
+                {formatOwner(invite.store.ownerName)} · {invite.staffName} 님 자리
               </span>
             </span>
             <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand text-white">

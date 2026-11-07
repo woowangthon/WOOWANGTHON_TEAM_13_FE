@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import type { ChatMessage } from '@/lib/api/types'
+import { formatOwner } from '@/lib/format'
 import { AskOwnerButton } from '@/pages/staff/chat/components/AskOwnerButton'
 import { SourceCard } from '@/pages/staff/chat/components/SourceCard'
 
@@ -35,7 +36,7 @@ export function ChatBubble({ message, ownerName, onAskOwner }: ChatBubbleProps) 
     case 'owner':
       return (
         <div className="flex max-w-[88%] flex-col gap-1.5 self-start">
-          <span className="text-xs font-bold text-warm-foreground">{ownerName} 답변</span>
+          <span className="text-xs font-bold text-warm-foreground">{formatOwner(ownerName)} 답변</span>
           <div className="rounded-[6px_22px_22px_22px] bg-warm px-4 py-3.5 text-[15px] leading-[1.65] text-[#3A2A1E]">
             {message.text}
           </div>

@@ -16,6 +16,15 @@ export function formatTime(value: string | Date): string {
   return `${hh}:${mm}`
 }
 
+/**
+ * 사장님 호칭: BE 는 이름(닉네임)만 준다 ("류민지") → "류민지 사장님". 이미 "사장님"이 붙어 있으면 그대로, 없으면 "사장님"
+ */
+export function formatOwner(name: string | null | undefined): string {
+  const trimmed = name?.trim() ?? ''
+  if (!trimmed) return '사장님'
+  return trimmed.endsWith('사장님') ? trimmed : `${trimmed} 사장님`
+}
+
 /** 681120 → "681,120원" */
 export function formatWon(amount: number): string {
   return `${amount.toLocaleString('ko-KR')}원`
