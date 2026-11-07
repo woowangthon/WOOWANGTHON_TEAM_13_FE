@@ -8,13 +8,57 @@ import {
   updateStore,
   verifyBizNo,
 } from '@/api/mocks/owner/api'
-import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
+import { http } from '@/lib/api/source'
+import { isOwnerRealApi } from '@/pages/owner/api/source'
+import type { NewStore, OwnerStore, StoreResponse, StoreUpdate } from '@/pages/owner/api/types'
 
 /*
- * 사장님 매장 · 프로필 훅 (임시) — 담당: 나현
- * src/lib/api 와 같은 모양으로 만들어 두고, 사장님 API 가 정해지면 lib/api 로 옮긴다 (민지와 상의).
- * 지금은 가짜 서버(api/mocks/owner)를 부른다.
+ * 사장님 매장 · 프로필 훅 — 담당: 나현
+ * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — pages/owner/api/source.
+ * 프로필 · 사업자 확인은 아직 가짜 서버만 (BE 미구현).
  */
+
+/*
+ * BE 매장 응답 → 화면 모양. BE 에 아직 없는 값(종류 · 급여일 · 규모 · 직원 수)은 기본값으로 채운다.
+ * 테마는 null 이면 화면(useOwnerStore)이 매장 순서대로 색을 고른다.
+ */
+const toOwnerStore = (store: StoreResponse): OwnerStore => ({
+  storeId: store.storeId,
+  name: store.name,
+  kind: '카페',
+  address: store.address,
+  theme: null,
+  photoUrl: store.photoUrl,
+  payday: 10,
+  size: 'under5',
+  bizNo: null,
+  staffCount: 0,
+})
+
+const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {
+  if (!isOwnerRealApi('stores')) return getOwnerStores()
+  const { stores } = await http.get<{ stores: StoreResponse[] }>('/stores')
+  return { stores: stores.map(toOwnerStore) }
+}
+
+const postStore = async (input: NewStore): Promise<OwnerStore> => {
+  if (!isOwnerRealApi('stores')) return createStore(input)
+  const store = await http.post<StoreResponse>('/stores', {
+    name: input.name,
+    address: input.address,
+  })
+  return toOwnerStore(store)
+}
+
+// BE 는 이름 · 주소 · 사진만 바꿀 수 있다. 급여일 · 규모는 BE 에 칸이 생기면 같이 보낸다
+const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerStore> => {
+  if (!isOwnerRealApi('stores')) return updateStore(storeId, patch)
+  const store = await http.patch<StoreResponse>(`/stores/${storeId}`, { name: patch.name })
+  return toOwnerStore(store)
+}
+
+const removeStore = (storeId: string): Promise<void> =>
+  isOwnerRealApi('stores') ? http.delete<void>(`/stores/${storeId}`) : deleteStore(storeId)
 
 export const ownerKeys = {
   all: ['owner'] as const,
@@ -32,7 +76,7 @@ export const ownerKeys = {
 }
 
 export function useOwnerStores() {
-  return useQuery({ queryKey: ownerKeys.stores, queryFn: getOwnerStores })
+  return useQuery({ queryKey: ownerKeys.stores, queryFn: fetchStores })
 }
 
 export function useOwnerProfile() {
@@ -51,8 +95,7 @@ export function useUpdateOwnerProfile() {
 export function useCreateStore() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: { name: string; size: StoreSize; bizNo?: string | null }) =>
-      createStore(input),
+    mutationFn: postStore,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
   })
 }
@@ -60,8 +103,7 @@ export function useCreateStore() {
 export function useUpdateStore(storeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (patch: Partial<Pick<OwnerStore, 'name' | 'payday' | 'size'>>) =>
-      updateStore(storeId, patch),
+    mutationFn: (patch: StoreUpdate) => patchStore(storeId, patch),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
   })
 }
@@ -69,7 +111,7 @@ export function useUpdateStore(storeId: string) {
 export function useDeleteStore() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: deleteStore,
+    mutationFn: removeStore,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.all }),
   })
 }
