@@ -26,6 +26,8 @@ type InviteErrorReason = 'invalid' | 'joined' | 'locked' | 'revoked'
 /** BE 에러 코드(docs/07 2-1) → 화면에서 칸 아래에 보여 줄 이유 */
 const REASON_BY_CODE: Record<string, InviteErrorReason> = {
   INVITE_INVALID: 'invalid',
+  // BE 는 코드에 0 · O · 1 · I 가 있으면 형식 오류(422)로 거절한다 (틀린 횟수에는 안 들어감) → 유효하지 않은 코드로 보여 준다
+  VALIDATION_ERROR: 'invalid',
   INVITE_ALREADY_JOINED: 'joined',
   INVITE_LOCKED: 'locked',
   INVITE_REVOKED: 'revoked',
@@ -36,7 +38,7 @@ const ERROR_TEXT: Record<InviteErrorReason, string> = {
   joined: '이미 들어간 매장이에요',
   // 틀린 횟수는 BE 가 센다. 서버가 잠김을 주면 이 문구만 보여 준다
   locked: '5번 틀려서 10분 동안 입력할 수 없어요',
-  revoked: '사장님이 삭제한 코드예요',
+  revoked: '사장님이 삭제했거나 이미 사용한 코드예요',
 }
 
 export default function JoinPage() {
@@ -58,12 +60,20 @@ export default function JoinPage() {
   )
   /** 이미 들어간 매장 코드를 넣었을 때 그 매장 ([○○로 가기]) */
   const [memberStore, setMemberStore] = useState<AlreadyJoinedDetail | null>(null)
+  /** 틀렸을 때 남은 횟수 (BE INVITE_INVALID detail.remainingAttempts, 0 이 되면 10분 잠김) */
+  const [remaining, setRemaining] = useState<number | null>(null)
 
   const handleError = (err: unknown, retry: () => void) => {
     setInvite(null)
     const reason = err instanceof ApiError && err.code ? REASON_BY_CODE[err.code] : undefined
     if (reason) {
       setError(reason)
+      const left = (err as ApiError).detail as { remainingAttempts?: unknown } | null
+      setRemaining(
+        reason === 'invalid' && typeof left?.remainingAttempts === 'number'
+          ? left.remainingAttempts
+          : null,
+      )
       setMemberStore(reason === 'joined' ? ((err as ApiError).detail as AlreadyJoinedDetail) : null)
     } else {
       toastApiError(err, '코드를 확인하지 못했어요. 다시 시도해 주세요', retry)
@@ -121,6 +131,7 @@ export default function JoinPage() {
     setInvite(null)
     setError(null)
     setMemberStore(null)
+    setRemaining(null)
   }
 
   const full = code.length === CODE_LENGTH
@@ -156,6 +167,7 @@ export default function JoinPage() {
           {error && (
             <p role="alert" className="m-0 px-1.5 text-[13px] text-destructive-foreground">
               {ERROR_TEXT[error]}
+              {remaining !== null && remaining > 0 && ` · ${remaining}번 더 틀리면 10분 동안 잠겨요`}
             </p>
           )}
           {error === 'joined' && memberStore && (
