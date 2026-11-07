@@ -1,5 +1,5 @@
 import { ApiError, NETWORK_ERROR_STATUS } from '@/lib/apiClient'
-import { signOut } from '@/lib/auth'
+import { isAuthCallbackPath, signOut } from '@/lib/auth'
 import { toast } from '@/ui/toastStore'
 
 /*
@@ -42,9 +42,9 @@ export function shouldRetry(failureCount: number, error: unknown) {
 
 let signingOut = false
 
-/** 로그인 만료: 한 번만 로그아웃하고 안내 (동시에 여러 요청이 401 이어도) */
+/** 로그인 만료: 한 번만 로그아웃하고 안내 (동시에 여러 요청이 401 이어도). 로그인 처리 화면에서는 로그아웃하지 않는다 */
 export async function handleUnauthorized() {
-  if (signingOut) return
+  if (signingOut || isAuthCallbackPath()) return
   signingOut = true
   try {
     await signOut()

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { getMe, getMyStores } from '@/api/mocks/staff/api/users'
 import { http, isRealApi } from '@/lib/api/source'
-import type { MyStoreList } from '@/lib/api/types'
-import type { Me } from '@/lib/authStore'
+import type { MyStoreDetail, MyStoreList } from '@/lib/api/types'
+import type { Me, MyStore } from '@/lib/authStore'
 
 /*
  * 사용자 · 내 매장 훅 — 담당: 민지
@@ -22,8 +22,36 @@ export function fetchMe(loginUser: Omit<Me, 'stores'>): Promise<Me> {
   return isRealApi('users') ? http.get<Me>('/users/me') : getMe(loginUser)
 }
 
-const fetchMyStores = () =>
-  isRealApi('users') ? http.get<MyStoreList>('/users/me/stores') : getMyStores()
+/**
+ * BE GET /users/me/stores 실제 응답 (11/7 확인): 감싸지 않은 배열 + 3칸(storeId · storeName · role)만.
+ * 화면이 쓰는 매장 정보(docs/07 1-3)로 바꾸고, 아직 안 주는 칸은 빈 값으로 둔다 (BE 에 요청 중).
+ * BE 가 docs/07 모양({ stores: [...] })으로 바꾸면 그대로 쓴다.
+ */
+export function toMyStoreList(data: MyStore[] | MyStoreList): MyStoreList {
+  if (!Array.isArray(data)) return data
+  return {
+    stores: data.map(
+      (store): MyStoreDetail => ({
+        storeId: store.storeId,
+        name: store.storeName,
+        role: store.role,
+        kind: '',
+        address: '',
+        ownerName: '',
+        memberId: '',
+        staffName: null,
+        photoUrl: null,
+        theme: null,
+        joinedAt: '',
+      }),
+    ),
+  }
+}
+
+const fetchMyStores = async () =>
+  isRealApi('users')
+    ? toMyStoreList(await http.get<MyStore[] | MyStoreList>('/users/me/stores'))
+    : getMyStores()
 
 /** 내 매장 (알바 화면 매장 전환 · 홈 · 마이페이지) */
 export function useMyStores() {
