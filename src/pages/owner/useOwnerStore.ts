@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ownerToday } from '@/api/mocks/owner/api'
+import { isRealApi } from '@/lib/api/source'
+import { todayInKst } from '@/lib/date'
 import { useOwnerStores } from '@/pages/owner/api/stores'
 import type { OwnerStore } from '@/pages/owner/api/types'
 import { STORE_THEME, themeOf, type StoreThemeColors } from '@/shared/storeTheme'
@@ -70,7 +72,7 @@ export function useOwnerStore() {
     isPending: query.isPending,
     error: query.error,
     retry: () => query.refetch(),
-    /** 시연 기준 오늘 (서버 시간) */
-    today: ownerToday(),
+    /** 오늘: 진짜 인수인계(handover)면 실제 오늘(KST), 가짜 데이터면 시연 날짜 (알바 홈과 같은 규칙) */
+    today: isRealApi('handover') ? todayInKst() : ownerToday(),
   }
 }
