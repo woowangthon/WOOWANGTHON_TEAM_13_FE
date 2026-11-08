@@ -33,7 +33,10 @@ export default function MemberAddPage() {
     create.mutate(
       { name: name.trim(), hourlyWage: Number(wage) },
       {
-        onSuccess: setCreated,
+        onSuccess: ({ member, existing }) => {
+          setCreated(member)
+          if (existing) toast(`${member.name} 님은 이미 만든 코드가 있어서 그 코드를 보여 드려요`)
+        },
         onError: (error) =>
           toastApiError(error, '코드를 만들지 못했어요. 다시 시도해 주세요', submit),
       },

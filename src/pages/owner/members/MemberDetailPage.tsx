@@ -14,7 +14,7 @@ import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 직원 상세: 초대코드(복사 · 카톡) · 시급 · 퇴사 처리(초대코드 삭제 → 바로 차단, 기록은 남김)
+// 직원 상세: 초대코드(복사 · 카톡) · 시급 · 퇴사 처리(입장한 직원은 퇴사 → 바로 차단, 기록은 남김 · 입장 전이면 코드 삭제)
 export default function MemberDetailPage() {
   const { memberId } = useParams()
   const { store } = useOwnerStore()
@@ -64,9 +64,9 @@ function MemberSheet({
   }
 
   const doRemove = () =>
-    remove.mutate(member.memberId, {
+    remove.mutate(member, {
       onSuccess: () => {
-        toast('초대코드를 삭제했어요')
+        toast(active ? `${member.name} 님을 퇴사 처리했어요` : '초대코드를 삭제했어요')
         navigate('/owner/members', { replace: true })
       },
       onError: (error) => toastApiError(error, '삭제하지 못했어요. 다시 시도해 주세요', doRemove),
@@ -87,18 +87,24 @@ function MemberSheet({
           </div>
         </div>
 
-        <InviteCodeCard
-          label="초대코드"
-          code={member.inviteCode}
-          storeName={storeName}
-          name={member.name}
-        />
+        {member.inviteCode && (
+          <InviteCodeCard
+            label="초대코드"
+            code={member.inviteCode}
+            storeName={storeName}
+            name={member.name}
+          />
+        )}
 
         <WageInput value={wage} onChange={setWage} onBlur={saveWage} />
 
         {askRemove ? (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-            <span className="text-sm text-[#7E352C]">접근이 바로 차단돼요. 기록은 남아요.</span>
+            <span className="text-sm text-[#7E352C]">
+              {active
+                ? '접근이 바로 차단돼요. 기록은 남아요.'
+                : '이 코드로는 더 이상 입장할 수 없어요.'}
+            </span>
             <Button
               variant="danger"
               size="md"
@@ -106,7 +112,7 @@ function MemberSheet({
               disabled={remove.isPending}
               onClick={doRemove}
             >
-              초대코드 삭제
+              {active ? '퇴사 처리' : '초대코드 삭제'}
             </Button>
           </div>
         ) : (
@@ -115,7 +121,7 @@ function MemberSheet({
             onClick={() => setAskRemove(true)}
             className="p-1.5 text-sm font-semibold text-destructive-foreground"
           >
-            퇴사 처리
+            {active ? '퇴사 처리' : '초대코드 삭제'}
           </button>
         )}
       </div>
