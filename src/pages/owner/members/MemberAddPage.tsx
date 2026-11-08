@@ -55,6 +55,8 @@ export default function MemberAddPage() {
                 code={created.inviteCode}
                 storeName={target.name}
                 name={created.name}
+                storeId={created.storeId}
+                invitationId={created.invitationId}
               />
               <Button
                 className="h-[52px]"

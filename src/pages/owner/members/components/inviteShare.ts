@@ -4,9 +4,12 @@ import { toast } from '@/ui/toastStore'
 
 // 초대코드 복사 · 카톡 보내기 (P1, docs/03 S4). 카톡이 안 되면 복사로 안내한다
 
-/** 받은 사람이 누르면 코드가 채워진 입장 화면으로 (/staff/join?code=…) */
-export function inviteLink(code: string) {
-  return `${window.location.origin}/staff/join?code=${code}`
+/**
+ * 받은 사람이 누르면 코드가 채워진 입장 화면으로 (/staff/join?code=…).
+ * 진짜 API 면 BE share-info 의 deepLink 를, 아니면 같은 모양으로 만든다.
+ */
+export function inviteLink(code: string, deepLink?: string) {
+  return `${window.location.origin}${deepLink ?? `/staff/join?code=${code}`}`
 }
 
 export async function copyInviteCode(code: string) {
@@ -18,14 +21,19 @@ export async function copyInviteCode(code: string) {
   }
 }
 
-export async function shareInviteByKakao(storeName: string, name: string, code: string) {
+export async function shareInviteByKakao(
+  storeName: string,
+  name: string,
+  code: string,
+  deepLink?: string,
+) {
   if (!env.kakaoJsKey) {
     toast.error('카카오 공유 설정이 아직 없어요. 코드를 복사해서 보내 주세요')
     return
   }
   try {
     const kakao = await loadKakao()
-    const link = inviteLink(code)
+    const link = inviteLink(code, deepLink)
     kakao.Share.sendDefault({
       objectType: 'text',
       text: `${storeName}에서 ${name} 님을 초대했어요.\n초대코드: ${code}`,

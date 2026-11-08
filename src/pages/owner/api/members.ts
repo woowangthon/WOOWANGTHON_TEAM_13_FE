@@ -6,6 +6,7 @@ import { ownerKeys } from '@/pages/owner/api/stores'
 import type {
   InvitationResponse,
   InvitationSummary,
+  InviteShareInfo,
   Member,
   MemberResponse,
   NewMember,
@@ -117,6 +118,19 @@ export function useMembers(storeId: string) {
     queryKey: ownerKeys.members(storeId),
     queryFn: () => fetchMembers(storeId),
     enabled: !!storeId,
+  })
+}
+
+/**
+ * 카톡 공유 정보 (입장 전 코드만). 카톡은 누른 순간 열어야 막히지 않아서 카드가 보일 때 미리 불러 둔다.
+ * 이미 쓰였거나 취소된 코드면 410 INVITE_REVOKED → 공통 토스트로 알린다. 가짜 서버 모드에서는 부르지 않는다.
+ */
+export function useInviteShareInfo(storeId: string, invitationId: string | null | undefined) {
+  return useQuery({
+    queryKey: [...ownerKeys.members(storeId), 'share-info', invitationId] as const,
+    queryFn: () =>
+      http.get<InviteShareInfo>(`/stores/${storeId}/invitations/${invitationId}/share-info`),
+    enabled: isRealApi('invitations') && !!storeId && !!invitationId,
   })
 }
 
