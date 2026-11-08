@@ -1,7 +1,13 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { toastApiError } from '@/lib/api/errors'
-import { HANDOVER_TEXT_MAX } from '@/lib/api/handover'
+import { isNetworkError } from '@/lib/api/errors'
+import {
+  HANDOVER_ITEM_MAX,
+  HANDOVER_ITEMS_MAX,
+  HANDOVER_SUMMARY_MAX,
+  HANDOVER_TEXT_MAX,
+} from '@/lib/api/handover'
+import { ApiError } from '@/lib/apiClient'
 import type {
   HandoverDraft,
   HandoverDraftItem,
@@ -18,6 +24,30 @@ import { Textarea } from '@/ui/Textarea'
 /** 태그를 누르면 이 순서로 바뀐다 */
 const TAG_ORDER: HandoverTag[] = ['credit', 'stock', 'etc']
 
+/** 직접 정리할 때 태그 짐작 (틀리면 눌러서 바꾼다) */
+function guessTag(text: string): HandoverTag {
+  if (/외상|계산|미수|돈/.test(text)) return 'credit'
+  if (/남음|남았|재고|부족|떨어|채워|주문|입고/.test(text)) return 'stock'
+  return 'etc'
+}
+
+/** AI 정리를 못 할 때: 줄 · 문장 단위로 나눠 항목으로 (BE 한도: 항목 50개 · 500자) */
+function splitIntoItems(text: string): HandoverDraftItem[] {
+  return text
+    .split(/\n+|(?<=[.!?。])\s+/)
+    .map((line) => line.replace(/^[\s\-•·*\d.)]+/, '').trim())
+    .filter(Boolean)
+    .slice(0, HANDOVER_ITEMS_MAX)
+    .map((line) => ({ tag: guessTag(line), text: line.slice(0, HANDOVER_ITEM_MAX) }))
+}
+
+/** AI 정리 실패 안내: BE 가 AI 를 못 쓰면(503, 예: Gemini 키 없음) "지금 못 해요", 연결 실패 · 그 밖은 "정리하지 못했어요" */
+function draftFailText(error: unknown) {
+  if (isNetworkError(error)) return '서버에 연결하지 못해서 AI 정리를 못 했어요'
+  if (error instanceof ApiError && error.status === 503) return 'AI 정리를 지금 못 해요'
+  return 'AI 정리를 하지 못했어요'
+}
+
 interface HandoverWriteFormProps {
   /** AI 초안 요청 (알바: useHandoverDraft) */
   requestDraft: (text: string) => Promise<HandoverDraft>
@@ -33,6 +63,10 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
   const [items, setItems] = useState<HandoverDraftItem[]>([])
   const [edited, setEdited] = useState(false)
   const [editing, setEditing] = useState<{ index: number; text: string } | null>(null)
+  /** AI 정리 실패 안내 (있으면 [다시 시도] · [직접 정리하기]) */
+  const [draftFail, setDraftFail] = useState<string | null>(null)
+  /** AI 없이 직접 나눈 결과인지 */
+  const [manual, setManual] = useState(false)
   // Enter · Esc 로 끝낸 뒤 입력칸이 사라지며 blur 가 또 와도 한 번만 처리한다
   const editDone = useRef(false)
   // 정리 중에 시트를 닫으면 결과를 버린다
@@ -47,19 +81,35 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
   const summarize = async () => {
     if (!note.trim()) return
     setStage('loading')
+    setDraftFail(null)
     try {
       const result = await requestDraft(note)
       if (!alive.current) return
       setDraft(result)
       setItems(result.items)
       setEdited(false)
+      setManual(false)
       setEditing(null)
       setStage('done')
     } catch (error) {
       if (!alive.current) return
+      // 401 은 공통 처리(로그아웃)가 한다. 그 밖은 화면 안에서 안내하고 직접 정리할 수 있게
       setStage('write')
-      toastApiError(error, '정리하지 못했어요. 다시 시도해 주세요', summarize)
+      setDraftFail(draftFailText(error))
     }
+  }
+
+  /** AI 없이: 줄 · 문장으로 나눠 항목을 만들고, 고친 뒤 저장 (요약은 앞 2개) */
+  const writeManually = () => {
+    const list = splitIntoItems(note)
+    if (list.length === 0) return
+    setDraft({ summary: '', items: list })
+    setItems(list)
+    setEdited(true)
+    setManual(true)
+    setEditing(null)
+    setDraftFail(null)
+    setStage('done')
   }
 
   const changeItem = (index: number, patch: Partial<HandoverDraftItem>) => {
@@ -97,12 +147,13 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
       noIssue: false,
       items,
       // 하나라도 고쳤으면 고친 항목 앞 2개로 요약을 다시, 아니면 AI 요약 그대로
-      summary: edited
+      summary: (edited
         ? items
             .slice(0, 2)
             .map((item) => item.text)
             .join(' · ')
-        : draft.summary,
+        : draft.summary
+      ).slice(0, HANDOVER_SUMMARY_MAX),
     })
 
   return (
@@ -113,12 +164,33 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
         <div className="flex flex-col gap-3">
           <Textarea
             value={note}
-            onChange={(event) => setNote(event.target.value)}
+            onChange={(event) => {
+              setNote(event.target.value)
+              setDraftFail(null)
+            }}
             placeholder="인수인계 내용"
             aria-label="인수인계 내용"
             maxLength={HANDOVER_TEXT_MAX}
           />
           <LengthHint length={note.length} max={HANDOVER_TEXT_MAX} className="-mt-1.5" />
+          {draftFail && (
+            <div
+              role="alert"
+              className="flex flex-col gap-2.5 rounded-[18px] bg-warm p-3.5 text-sm text-warm-foreground"
+            >
+              <span>
+                <strong className="font-bold">{draftFail}.</strong> 직접 나눠서 저장할 수 있어요
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="white" size="md" onClick={summarize}>
+                  다시 시도
+                </Button>
+                <Button variant="ink" size="md" onClick={writeManually}>
+                  직접 정리하기
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-[1fr_1.6fr] gap-2">
             <Button variant="soft" className="text-sm" onClick={onNoIssue}>
               특이사항 없음
@@ -140,7 +212,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
       {stage === 'done' && (
         <div className="flex flex-col gap-2.5">
           <span className="text-[13px] text-[#6B7068]">
-            AI 정리 결과 · 태그나 글자를 눌러 고쳐 주세요
+            {manual ? '직접 정리' : 'AI 정리 결과'} · 태그나 글자를 눌러 고쳐 주세요
           </span>
           {items.map((item, i) => {
             const [bg, fg] = HANDOVER_TAG_PILL[item.tag]
@@ -174,6 +246,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
                       }
                     }}
                     aria-label="인수인계 항목 고치기"
+                    maxLength={HANDOVER_ITEM_MAX}
                     className="min-w-0 flex-1 border-none bg-transparent p-0 text-sm leading-[1.45]"
                   />
                 ) : (
