@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   askOwner,
   createChat,
@@ -42,8 +42,46 @@ const fetchChats = (storeId: string) =>
   real() ? http.get<AssistantChatList>(chatsPath(storeId)) : listChats(storeId)
 const postChat = (storeId: string) =>
   real() ? http.post<CreatedAssistantChat>(chatsPath(storeId)) : createChat(storeId)
-const fetchMessages = (storeId: string, chatId: string) =>
-  real() ? http.get<ChatMessageList>(messagesPath(storeId, chatId)) : getMessages(chatId)
+/**
+ * 메시지 한 번에 불러오는 개수 (BE 기본 50, 1~100).
+ * 메시지가 적을 때 '이전 대화 더 보기'를 확인하려고, 개발 중(npm run dev)에만 localStorage 'chat-page-size'(예: 5)로 줄일 수 있다
+ */
+export function chatPageSize() {
+  if (import.meta.env.DEV) {
+    try {
+      const size = Number(localStorage.getItem('chat-page-size'))
+      if (Number.isInteger(size) && size >= 1 && size <= 100) return size
+    } catch {
+      // 저장소를 못 쓰면 기본값
+    }
+  }
+  return 50
+}
+
+/** 최근 메시지 (before 없음) 또는 before 메시지보다 앞의 메시지 — 오래된 순 + hasMore (docs/07 5-2) */
+const fetchMessages = (storeId: string, chatId: string, before?: string) => {
+  const limit = chatPageSize()
+  const query = new URLSearchParams({ limit: String(limit) })
+  if (before) query.set('before', before)
+  return real()
+    ? http.get<ChatMessageList>(`${messagesPath(storeId, chatId)}?${query}`)
+    : getMessages(chatId, { before, limit })
+}
+
+/**
+ * 이전 대화 + 최근 메시지 합치기: 이전 대화는 항상 최근 메시지보다 앞이라 이어 붙이고, 겹치면 최근 것(상태가 새것)만 남긴다
+ */
+function mergeMessages(older: ChatMessage[], latest: ChatMessage[]) {
+  if (older.length === 0) return latest
+  const latestIds = new Set(latest.map((m) => m.messageId))
+  const seen = new Set<string>()
+  const before = older.filter((m) => {
+    if (latestIds.has(m.messageId) || seen.has(m.messageId)) return false
+    seen.add(m.messageId)
+    return true
+  })
+  return [...before, ...latest]
+}
 const postMessage = (storeId: string, chatId: string, text: string) =>
   real()
     ? http.post<SentChatMessage>(messagesPath(storeId, chatId), { text })
@@ -64,6 +102,8 @@ const isWaitingOwner = (data?: ChatMessageList) =>
 
 /**
  * 매장의 AI 사수 채팅방 + 메시지. 방이 없으면 자동으로 하나 만든다 (매장마다 방 1개).
+ * 메시지는 최근 50개(내역 query, 새 메시지 · 사장님 답변 기다리기로 다시 불러옴) + 위로 올려 불러온 이전 대화(older)를 합쳐서 보여 준다.
+ * 이전 대화를 따로 두어서 최근 메시지를 다시 불러와도 지워지지 않는다.
  */
 export function useAssistantChat(storeId: string) {
   const queryClient = useQueryClient()
@@ -108,6 +148,59 @@ export function useAssistantChat(storeId: string) {
     refetchInterval: (query) => (isWaitingOwner(query.state.data) ? OWNER_POLL_MS() : false),
   })
 
+  // 이전 대화 — 방이 바뀌면 버린다.
+  // 위로 올려 불러온 것 + 최근 메시지를 다시 불러올 때 최근 묶음 밖으로 밀려난 것(새 메시지 · 사장님 답변이 끝에 붙으면 앞쪽이 밀려남)을 모아 둔다
+  const latest = messagesQuery.data
+  const [older, setOlder] = useState<{
+    chatId: string | undefined
+    messages: ChatMessage[]
+    /** 위로 불러온 마지막 결과의 hasMore (아직 안 불렀으면 null → 최근 메시지의 hasMore) */
+    hasMore: boolean | null
+    /** 이 상태를 만들 때 본 최근 메시지 묶음 (바뀌면 밀려난 것을 옮긴다) */
+    seenLatest: ChatMessageList | undefined
+  }>({ chatId, messages: [], hasMore: null, seenLatest: latest })
+  if (older.chatId !== chatId) {
+    setOlder({ chatId, messages: [], hasMore: null, seenLatest: latest })
+  } else if (older.seenLatest !== latest) {
+    const nowIds = new Set(latest?.messages.map((m) => m.messageId))
+    const pushedOut = (older.seenLatest?.messages ?? []).filter(
+      (m) => !nowIds.has(m.messageId) && !m.messageId.startsWith('temp_'),
+    )
+    // 최근 묶음이 앞으로 밀렸을 때만 (밀려난 것이 새 묶음의 첫 메시지보다 앞이면)
+    const firstAt = latest?.messages[0]?.createdAt
+    const kept = firstAt ? pushedOut.filter((m) => m.createdAt <= firstAt) : []
+    setOlder({ ...older, messages: [...older.messages, ...kept], seenLatest: latest })
+  }
+  const olderOfChat = older.chatId === chatId ? older : null
+  const messages = useMemo(
+    () => (latest ? mergeMessages(olderOfChat?.messages ?? [], latest.messages) : undefined),
+    [latest, olderOfChat],
+  )
+  const hasOlder = olderOfChat?.hasMore ?? !!latest?.hasMore
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const loadingOlderRef = useRef(false)
+
+  /** 이전 대화 더 불러오기: 지금 보이는 가장 오래된 메시지 앞의 50개 (더 없으면 안 부름) */
+  const loadOlder = useCallback(async () => {
+    const cursor = messages?.find((m) => !m.messageId.startsWith('temp_'))?.messageId
+    if (!chatId || !cursor || !hasOlder || loadingOlderRef.current) return
+    loadingOlderRef.current = true
+    setLoadingOlder(true)
+    try {
+      const page = await fetchMessages(storeId, chatId, cursor)
+      setOlder((prev) =>
+        prev.chatId === chatId
+          ? { ...prev, messages: [...page.messages, ...prev.messages], hasMore: page.hasMore }
+          : prev,
+      )
+    } catch (error) {
+      toastApiError(error, '이전 대화를 불러오지 못했어요. 다시 시도해 주세요')
+    } finally {
+      loadingOlderRef.current = false
+      setLoadingOlder(false)
+    }
+  }, [chatId, hasOlder, messages, storeId])
+
   const isError = listQuery.isError || create.isError || messagesQuery.isError
   return {
     error: listQuery.error ?? create.error ?? messagesQuery.error,
@@ -119,7 +212,11 @@ export function useAssistantChat(storeId: string) {
     },
     chatId,
     suggestions: listQuery.data?.suggestions ?? [],
-    messages: messagesQuery.data?.messages,
+    messages,
+    /** 이전 대화가 더 있는지 · 불러오는 중 · 더 불러오기 */
+    hasOlder,
+    loadingOlder,
+    loadOlder,
     isPending: !messagesQuery.data && !isError,
     isError,
   }

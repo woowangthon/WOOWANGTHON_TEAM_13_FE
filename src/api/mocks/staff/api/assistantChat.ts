@@ -114,10 +114,19 @@ export async function createChat(storeId: string): Promise<CreatedAssistantChat>
   return { ...findChat(chatId), suggestions: findStaffStore(storeId).chips, messages: seeded }
 }
 
-/** GET /stores/{storeId}/assistant-chats/{chatId}/messages */
-export async function getMessages(chatId: string): Promise<ChatMessageList> {
+/** GET /stores/{storeId}/assistant-chats/{chatId}/messages?before=&limit= — before 메시지보다 앞의 limit 개 (오래된 순) + 더 있는지 */
+export async function getMessages(
+  chatId: string,
+  { before, limit = 50 }: { before?: string; limit?: number } = {},
+): Promise<ChatMessageList> {
   findChat(chatId)
-  return { chatId, hasMore: false, messages: [...(messages.get(chatId) ?? [])] }
+  const list = messages.get(chatId) ?? []
+  const end = before ? list.findIndex((m) => m.messageId === before) : list.length
+  if (end < 0) {
+    throw new ApiError(404, { code: 'NOT_FOUND', message: '메시지를 찾지 못했어요', detail: null })
+  }
+  const start = Math.max(0, end - limit)
+  return { chatId, hasMore: start > 0, messages: list.slice(start, end) }
 }
 
 /** POST /stores/{storeId}/assistant-chats/{chatId}/messages */
