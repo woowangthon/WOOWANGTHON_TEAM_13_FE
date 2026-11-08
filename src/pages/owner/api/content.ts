@@ -4,7 +4,6 @@ import {
   createRecipe,
   deleteManual,
   deleteRecipe,
-  hideRecipe,
   scanRecipePhoto,
   updateManual,
   updateRecipe,
@@ -19,7 +18,7 @@ import type { ManualInput, RecipeInput } from '@/pages/owner/api/types'
  * 레시피 · 매뉴얼 등록 · 수정 · 삭제 훅 — 담당: 나현
  * 보기는 민지의 lib/api 훅(useRecipes · useManuals)을 그대로 쓰고, 바꾼 뒤 그 캐시를 다시 불러온다.
  * .env VITE_REAL_API 에 'recipes' · 'manuals'를 넣으면 진짜 API, 아니면 가짜 서버(api/mocks/owner).
- * 숨기기 · 사진 스캔은 아직 가짜 서버만 (BE 미구현). 알바생은 이 훅을 쓰지 않는다 (보기만).
+ * 사진 스캔은 아직 가짜 서버만. 알바생은 이 훅을 쓰지 않는다 (보기만).
  */
 
 // 등록은 multipart: JSON 은 recipe · manual 칸에 문자열로 (사진 · 파일 칸은 BE 저장소가 정해지면)
@@ -86,14 +85,6 @@ export function useDeleteRecipe(storeId: string) {
   const invalidate = useInvalidateRecipes(storeId)
   return useMutation({
     mutationFn: (recipeId: string) => removeRecipe(storeId, recipeId),
-    onSuccess: invalidate,
-  })
-}
-
-export function useHideRecipe(storeId: string) {
-  const invalidate = useInvalidateRecipes(storeId)
-  return useMutation({
-    mutationFn: (recipeId: string) => hideRecipe(storeId, recipeId),
     onSuccess: invalidate,
   })
 }

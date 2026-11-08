@@ -362,15 +362,6 @@ export async function deleteRecipe(storeId: string, recipeId: string): Promise<v
   staffRecipes.splice(recipeIndex(storeId, recipeId), 1)
 }
 
-const hiddenRecipes: StaffRecipe[] = []
-
-/** POST /stores/{storeId}/recipes/{recipeId}/hide (제안) — 숨기면 알바 화면 · 사장님 목록에서 빠진다 */
-export async function hideRecipe(storeId: string, recipeId: string): Promise<void> {
-  await wait()
-  const [recipe] = staffRecipes.splice(recipeIndex(storeId, recipeId), 1)
-  hiddenRecipes.push(recipe)
-}
-
 /** POST /stores/{storeId}/recipe-scans (제안, P1 비전 LLM) — 사진 → AI 초안 (저장 안 함) */
 export async function scanRecipePhoto() {
   await wait(1800)

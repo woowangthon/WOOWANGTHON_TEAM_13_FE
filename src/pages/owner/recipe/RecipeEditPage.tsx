@@ -10,7 +10,7 @@ import { useCloseTo } from '@/pages/staff/useCloseTo'
 
 // 레시피 작성 · 수정 · 삭제: 레시피 목록 위에 시트
 //   /owner/recipes/new        → 추가 시트 (템플릿)
-//   /owner/recipes/:recipeId  → 상세 시트 (삭제 · 숨기기 · 수정 → 수정 시트)
+//   /owner/recipes/:recipeId  → 상세 시트 (삭제 · 수정 → 수정 시트)
 export default function RecipeEditPage() {
   const { recipeId } = useParams()
   const { store } = useOwnerStore()
