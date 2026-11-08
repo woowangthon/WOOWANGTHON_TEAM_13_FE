@@ -18,6 +18,8 @@ export const API_FEATURES = [
   'assistantChat',
   'handover',
   'schedule',
+  // 근무 가능 시간: 내 근무표(schedule)와 BE 나오는 시기가 달라서 따로 켠다
+  'availability',
   'payroll',
   // 사장님 화면 (나현, pages/owner/api): 매장 만들기 · 수정 / 직원 목록 · 시급
   'stores',

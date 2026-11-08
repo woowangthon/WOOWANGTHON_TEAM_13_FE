@@ -39,11 +39,12 @@ BE API가 기능별로 하나씩 나오니, **기능마다** 진짜 API와 가�
 | `VITE_REAL_API=users,invitations` | 적은 기능만 진짜 API, 나머지는 가짜 서버 |
 | `VITE_REAL_API=all` | 모두 진짜 API |
 
-- 기능 이름 = `src/lib/api/`의 훅 파일 이름: `users`(내 정보 · 내 매장) · `invitations`(초대코드) · `recipes` · `manuals` · `assistantChat`(AI 채팅) · `handover`(인수인계) · `schedule`(근무) · `payroll`(급여) · 사장님 화면: `stores`(매장 만들기 · 수정) · `members`(직원 목록 · 시급)
+- 기능 이름 = `src/lib/api/`의 훅 파일 이름: `users`(내 정보 · 내 매장) · `invitations`(초대코드) · `recipes` · `manuals` · `assistantChat`(AI 채팅) · `handover`(인수인계) · `schedule`(내 근무표) · `availability`(근무 가능 시간) · `payroll`(급여) · 사장님 화면: `stores`(매장 만들기 · 수정) · `members`(직원 목록 · 시급)
 - 진짜 API는 `apiFetch`로 **docs/07 경로**를 부른다 (`VITE_API_URL`(`…/api/v1`) + 경로, Supabase 토큰 자동). 고르는 곳: `src/lib/api/source.ts` `isRealApi`
 - BE 서버가 꺼져 있는데 켜면 "서버에 연결하지 못했어요" 토스트가 뜬다 (API 공통 처리)
 - `.env`를 바꾸면 개발 서버를 다시 켠다 (`npm run dev`). 개발 중에는 콘솔에 진짜 API 목록이 찍히고, 이름을 잘못 적으면 경고가 뜬다
 - `payroll`을 켜면 알바 화면의 급여 설정 저장은 실패로 알린다 (알바용 저장 API가 아직 없음, docs/07 질문 4)
+- 11/9 기준 BE에 **내 근무표(`schedule`) · 급여(`payroll`) API는 아직 없다** → 이 둘은 켜지 않는다 (켜면 404 → 근무 탭 · 홈이 "불러오지 못했어요"). 근무 가능 시간은 `availability`로 따로 켠다
 - 주의: `users`를 켜면 로그인 후 `GET /users/me`도 진짜로 부른다 → BE에 사용자가 있어야 `/role` · 알바 화면으로 들어갈 수 있다
 
 ## 환경 변수 (`.env.example` 참고)
