@@ -2,7 +2,9 @@ import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assistantChat'
-import { ChatBubble, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
+import { isNetworkError } from '@/lib/api/errors'
+import { ApiError } from '@/lib/apiClient'
+import { ChatBubble, FailedAnswer, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
@@ -10,6 +12,14 @@ import { LoadError } from '@/shared/LoadError'
 import { Card } from '@/ui/Card'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
+
+/** 답을 못 받은 이유: AI 를 못 씀(503, 예: Gemini 키 없음) · 연결 끊김 · 그 밖 */
+function failReason(error: unknown) {
+  if (isNetworkError(error)) return '서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요'
+  if (error instanceof ApiError && error.status === 503)
+    return 'AI 답변을 지금 못 받아요. 잠시 뒤 다시 시도해 주세요'
+  return '답변을 받지 못했어요. 다시 시도해 주세요'
+}
 
 // ⭐ AI 사수 채팅: 지금 매장의 매뉴얼 · 레시피만 근거로 답하고 출처를 보여 준다
 // 매장마다 채팅방 1개 (없으면 자동으로 만든다). 근거가 없으면 사장님께 물어보기
@@ -23,6 +33,8 @@ export default function ChatPage() {
   const [draft, setDraft] = useState(
     () => (location.state as { draft?: string } | null)?.draft ?? '',
   )
+  // 답을 못 받은 질문 (채팅 안에 안내 + 다시 시도)
+  const [failed, setFailed] = useState<{ text: string; reason: string } | null>(null)
 
   // 메시지가 바뀌거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로
   // 조금이라도 스크롤하면 헤더를 작게
@@ -41,12 +53,15 @@ export default function ChatPage() {
       behavior: first.current ? 'auto' : 'smooth',
     })
     first.current = false
-  }, [chat.messages, send.isPending])
+  }, [chat.messages, send.isPending, failed])
 
   const submit = (text: string) => {
     const question = text.trim()
     if (!question || !chat.chatId) return
-    send.mutate(question)
+    setFailed(null)
+    send.mutate(question, {
+      onError: (error) => setFailed({ text: question, reason: failReason(error) }),
+    })
     setDraft('')
   }
 
@@ -87,7 +102,7 @@ export default function ChatPage() {
         <LoadError error={chat.error} onRetry={chat.retry} />
       ) : (
         <div className="flex flex-col gap-3.5" aria-live="polite">
-          {chat.messages?.length === 0 && !send.isPending && (
+          {chat.messages?.length === 0 && !send.isPending && !failed && (
             <EmptyGuide
               message="아직 나눈 대화가 없어요"
               hint="궁금한 걸 아래에 적어 보세요. 매뉴얼에 없으면 사장님께 물어봐 드려요"
@@ -102,6 +117,13 @@ export default function ChatPage() {
             />
           ))}
           {send.isPending && <TypingBubble />}
+          {failed && !send.isPending && (
+            <FailedAnswer
+              text={failed.text}
+              reason={failed.reason}
+              onRetry={() => submit(failed.text)}
+            />
+          )}
         </div>
       )}
 
