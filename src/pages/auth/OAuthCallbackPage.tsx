@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { completeLogin, takeRedirect } from '@/lib/auth'
+import { completeLogin, takeRedirect, WithdrawnAccountError } from '@/lib/auth'
 import { getHomePath, useAuthStore } from '@/lib/authStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { Spinner } from '@/ui/Spinner'
@@ -28,9 +28,16 @@ export default function OAuthCallbackPage() {
           if (next?.startsWith('/staff/join')) setPendingRole('staff')
           navigate(next ?? getHomePath(me), { replace: true })
         })
-        .catch(() => {
+        .catch((error) => {
+          if (cancelled) return
+          // 탈퇴한 계정 → 로그아웃됐으니 로그인 화면으로
+          if (error instanceof WithdrawnAccountError) {
+            toast.error('탈퇴한 계정이에요. 다른 계정으로 로그인해 주세요')
+            navigate('/login', { replace: true })
+            return
+          }
           // me 를 못 불러옴 (BE 꺼짐 · 계속 401 등) → 이 화면에 머물며 다시 시도
-          if (!cancelled) toast.error('정보를 불러오지 못했어요. 다시 시도해 주세요', { onRetry: run })
+          toast.error('정보를 불러오지 못했어요. 다시 시도해 주세요', { onRetry: run })
         })
     run()
     return () => {
