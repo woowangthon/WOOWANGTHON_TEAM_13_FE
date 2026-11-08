@@ -282,6 +282,8 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 
 > 가짜 데이터는 재료를 `["딸기청", "3스푼"]` 배열로 갖고 있는데, API는 `{ name, amount }` 객체를 제안해요.
 
+> **11/9 BE 실제 응답과 비교**: 모양은 같아요. 다른 점 — `temp` · `size`는 `null`일 수 있고(FE가 빈 배지를 숨김), `defaultCategory`는 항상 `null`(첫 카테고리), 카테고리 순서는 레시피 등록 순서, 메뉴 사진 칸(`imageUrl`)은 아직 없어요 → FE가 메뉴 이름으로 시연 사진을 채워요 (`lib/api/recipes.ts` `withPhoto`, 질문 17).
+
 ### 3-2. `GET /stores/{storeId}/recipes/{recipeId}`
 응답 `200` — 목록 항목 + 순서 · 메모
 ```json
@@ -950,4 +952,5 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 14. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
 15. **에러 코드는 초대코드만 꼭 필요해요**: `INVITE_INVALID` · `INVITE_ALREADY_JOINED`(detail에 매장 ID · 이름) · `INVITE_LOCKED`. 나머지 API는 FastAPI 기본 `{detail}`이어도 FE가 읽어요. (11/6 BE main 확인: 이미 이 모양이에요 — 그대로 유지해 주세요)
 16. **`GET /users/me/stores`에 매장 정보를 더 넣어 주세요** ([1-3](#1-3-get-usersmestores)): 지금은 `storeId · storeName · role`뿐이고, 알바는 `GET /stores/{id}`(사장님 전용)도 못 불러요. 알바 화면에 `ownerName` · `staffName` · `address` · `photoUrl`(+ `memberId` · `joinedAt`)이 필요해요
+17. **레시피 응답(목록 · 상세)에 메뉴 사진 `imageUrl`(없으면 `null`)을 넣어 주세요.** 사장님이 사진을 올리면(레시피 등록 multipart `images`) 그 주소를 주면 돼요. 지금은 FE가 메뉴 이름으로 시연 사진을 찾아요
 
