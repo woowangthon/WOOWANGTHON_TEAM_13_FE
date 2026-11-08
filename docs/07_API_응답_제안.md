@@ -453,6 +453,8 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 ### 5-2. 메시지 전송 · 내역
 
 #### `POST /stores/{storeId}/assistant-chats/{chatId}/messages` (전송 · 답변)
+
+> 11/9 BE 실제: 질문 1~1000자, AI를 못 쓰면(Gemini 키 없음 · 실패) `503`이고 질문도 저장하지 않아요 → FE는 채팅 안에 보낸 질문(흐리게) + "AI 답변을 지금 못 받아요" + [다시 시도]를 보여 줘요
 요청
 ```json
 { "text": "딸기라떼 딸기청 몇 스푼이야?" }
@@ -555,6 +557,8 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 
 ### 5-3. 사장님께 물어보기
 #### 질문 보내기 — P0 (제안: `POST /stores/{storeId}/assistant-chats/{chatId}/messages/{messageId}/owner-questions`)
+
+> ✅ 11/9 BE main에 들어갔어요 (연서). 본문 없이 `201 { ownerQuestionId, status, question, createdAt, systemMessage }`. 메시지의 `canAskOwner`는 `not_found`이고 아직 안 물어봤을 때 `true`, `ownerQuestion`은 `{ ownerQuestionId, status: "asked" | "answered" }`. 사장님이 답하면 채팅에 `sender: "owner"` 메시지가 생겨요. 에러: `409 OWNER_QUESTION_ALREADY_SENT` · `422 OWNER_QUESTION_NOT_ALLOWED` (FE는 내역을 다시 불러와 맞추고 문장만 알려요). FE는 답을 기다리는 동안만 5초마다 내역을 다시 불러요. 답변의 `addToManual: true`는 아직 501
 > **BE 표에 없는 API예요.** [질문 6](#9-be에-확인하고-싶은-것)에 적었어요. 경로는 BE가 정해 주세요.
 
 `not_found` 답변의 [사장님께 물어보기]를 누르면 불러요. `messageId`는 그 AI 답변 ID예요. 원래 질문은 BE가 그 답변 바로 앞 `staff` 메시지에서 찾아요.
@@ -940,7 +944,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 3. **인수인계 확인 완료가 P2인데, FE 홈은 항목별 체크가 P0예요.** 항목별 체크를 P0로 할 수 있을까요? ([6-7](#6-7-post-storesstoreidhandover-notesnoteidconfirmations-확인) 제안 모양)
 4. **시급을 사장님이 정하면**, 알바 화면의 '매장별 시급 입력'(`/staff/stores/:storeId`)은 **보기 전용**으로 바꿀게요. 맞나요? (급여일 · 공제 방식도 사장님이 정하나요?)
 5. **초대 코드 목록 조회가 P2인데**, 사장님 직원 · 코드 화면이 P0라 **P0로 부탁해요**
-6. **사장님께 물어보기 API가 표에 없어요.** 질문 보내기는 P0라 필요해요 ([5-3](#5-3-사장님께-물어보기) 제안 모양). 사장님 답변 · 매뉴얼 추가(P1) API도 사장님 화면과 함께 정해 주세요
+6. ✅ (11/9 BE main에 들어감, [5-3](#5-3-사장님께-물어보기)) **사장님께 물어보기 API가 표에 없어요.** 질문 보내기는 P0라 필요해요 ([5-3](#5-3-사장님께-물어보기) 제안 모양). 사장님 답변 · 매뉴얼 추가(P1) API도 사장님 화면과 함께 정해 주세요
 
 **응답 모양 질문**
 7. 필드 이름 **camelCase**로 줄 수 있나요? (snake_case면 FE가 변환 계층을 추가해야 해요)

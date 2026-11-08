@@ -1,10 +1,11 @@
-import { Sparkles } from 'lucide-react'
+import { RotateCw, Sparkles } from 'lucide-react'
 import type { ChatMessage } from '@/lib/api/types'
 import { formatOwner } from '@/lib/format'
 import { AskOwnerButton } from '@/pages/staff/chat/components/AskOwnerButton'
 import { SourceCard } from '@/pages/staff/chat/components/SourceCard'
+import { Button } from '@/ui/Button'
 
-// 채팅 부품: 말풍선 (나 / AI / 사장님 / 안내) · 입력 중(TypingBubble)
+// 채팅 부품: 말풍선 (나 / AI / 사장님 / 안내) · 입력 중(TypingBubble) · 답을 못 받음(FailedAnswer)
 interface ChatBubbleProps {
   message: ChatMessage
   ownerName: string
@@ -36,7 +37,9 @@ export function ChatBubble({ message, ownerName, onAskOwner }: ChatBubbleProps) 
     case 'owner':
       return (
         <div className="flex max-w-[88%] flex-col gap-1.5 self-start">
-          <span className="text-xs font-bold text-warm-foreground">{formatOwner(ownerName)} 답변</span>
+          <span className="text-xs font-bold text-warm-foreground">
+            {formatOwner(ownerName)} 답변
+          </span>
           <div className="rounded-[6px_22px_22px_22px] bg-warm px-4 py-3.5 text-[15px] leading-[1.65] text-[#3A2A1E]">
             {message.text}
           </div>
@@ -60,5 +63,34 @@ export function TypingBubble() {
     >
       ···
     </div>
+  )
+}
+
+/** 답을 못 받았을 때: 보낸 질문(흐리게) + 이유 + 다시 시도. BE 는 실패한 질문을 저장하지 않는다 */
+export function FailedAnswer({
+  text,
+  reason,
+  onRetry,
+}: {
+  text: string
+  reason: string
+  onRetry: () => void
+}) {
+  return (
+    <>
+      <div className="max-w-[80%] self-end rounded-[22px_22px_6px_22px] bg-brand/60 px-4 py-3 text-[15px] leading-normal text-white">
+        {text}
+      </div>
+      <div
+        role="alert"
+        className="flex max-w-[88%] flex-col gap-2.5 self-start rounded-[6px_22px_22px_22px] bg-warm px-4 py-3.5 text-[15px] leading-relaxed break-keep text-warm-foreground"
+      >
+        <span>{reason}</span>
+        <Button variant="white" size="sm" className="self-start" onClick={onRetry}>
+          <RotateCw className="size-4" />
+          다시 시도
+        </Button>
+      </div>
+    </>
   )
 }

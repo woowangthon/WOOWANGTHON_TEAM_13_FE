@@ -8,7 +8,7 @@ import {
   sendMessage,
 } from '@/api/mocks/staff/api/assistantChat'
 import { http, isRealApi } from '@/lib/api/source'
-import { toastApiError } from '@/lib/api/errors'
+import { errorMessage, toastApiError } from '@/lib/api/errors'
 import type {
   AssistantChatList,
   ChatMessage,
@@ -17,6 +17,8 @@ import type {
   OwnerQuestion,
   SentChatMessage,
 } from '@/lib/api/types'
+import { ApiError } from '@/lib/apiClient'
+import { toast } from '@/ui/toastStore'
 
 /*
  * AI 사수 채팅 훅 — 담당: 민지
@@ -52,8 +54,11 @@ const postOwnerQuestion = (storeId: string, chatId: string, messageId: string) =
     ? http.post<OwnerQuestion>(`${messagesPath(storeId, chatId)}/${messageId}/owner-questions`)
     : askOwner(chatId, messageId)
 
-/** 사장님 답변을 기다리는 중인 메시지가 있으면 1초마다 내역을 다시 불러온다 (답이 오면 멈춤) */
-const OWNER_POLL_MS = 1000
+/**
+ * 사장님 답변을 기다리는 중인 메시지가 있을 때만 내역을 다시 불러온다 (답이 오면 멈춤, 다른 탭이면 쉼).
+ * 진짜 API 는 사람이 답하는 거라 5초마다, 가짜 서버는 시연(2.6초 뒤 답)이라 1초마다
+ */
+const OWNER_POLL_MS = () => (real() ? 5000 : 1000)
 const isWaitingOwner = (data?: ChatMessageList) =>
   !!data?.messages.some((m) => m.ownerQuestion?.status === 'asked')
 
@@ -100,7 +105,7 @@ export function useAssistantChat(storeId: string) {
     queryKey: chatKeys.messages(storeId, chatId ?? ''),
     queryFn: () => fetchMessages(storeId, chatId!),
     enabled: !!chatId,
-    refetchInterval: (query) => (isWaitingOwner(query.state.data) ? OWNER_POLL_MS : false),
+    refetchInterval: (query) => (isWaitingOwner(query.state.data) ? OWNER_POLL_MS() : false),
   })
 
   const isError = listQuery.isError || create.isError || messagesQuery.isError
@@ -120,7 +125,10 @@ export function useAssistantChat(storeId: string) {
   }
 }
 
-/** 질문 보내기: 내 질문은 바로 보이고, 답이 오면 이어 붙인다 */
+/**
+ * 질문 보내기: 내 질문은 바로 보이고, 답이 오면 이어 붙인다.
+ * 실패하면(AI 503 · 연결 끊김 등) BE 는 질문도 저장하지 않아서 임시 질문을 빼고, 안내 · 다시 시도는 화면이 보여 준다 (ChatPage FailedAnswer)
+ */
 export function useSendMessage(storeId: string, chatId: string | undefined) {
   const queryClient = useQueryClient()
   const key = chatKeys.messages(storeId, chatId ?? '')
@@ -153,9 +161,8 @@ export function useSendMessage(storeId: string, chatId: string | undefined) {
       const drop = new Set([context.tempId, question.messageId, answer.messageId])
       patch((list) => [...list.filter((m) => !drop.has(m.messageId)), question, answer])
     },
-    onError: (error, text, context) => {
+    onError: (_error, _text, context) => {
       patch((list) => list.filter((m) => m.messageId !== context?.tempId))
-      toastApiError(error, '답변을 받지 못했어요. 다시 시도해 주세요', () => send.mutate(text))
     },
   })
   return send
@@ -194,10 +201,17 @@ export function useAskOwner(storeId: string, chatId: string | undefined) {
           : old,
       )
     },
-    onError: (error, messageId) =>
+    onError: (error, messageId) => {
+      // 이미 물어봤거나(409) 물어볼 수 없는 답변(422)이면 다시 해도 같다 → 최신 내역으로 맞추고 BE 문장만 알린다
+      if (error instanceof ApiError && (error.status === 409 || error.status === 422)) {
+        void queryClient.invalidateQueries({ queryKey: key })
+        toast.error(errorMessage(error, '사장님께 전달하지 못했어요'))
+        return
+      }
       toastApiError(error, '사장님께 전달하지 못했어요. 다시 시도해 주세요', () =>
         ask.mutate(messageId),
-      ),
+      )
+    },
   })
   return ask
 }
