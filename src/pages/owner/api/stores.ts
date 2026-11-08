@@ -34,7 +34,7 @@ const toOwnerStore = (store: StoreResponse): OwnerStore => ({
   staffCount: 0,
 })
 
-const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {
+export const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {
   if (!isRealApi('stores')) return getOwnerStores()
   const { stores } = await http.get<{ stores: StoreResponse[] }>('/stores')
   return { stores: stores.map(toOwnerStore) }

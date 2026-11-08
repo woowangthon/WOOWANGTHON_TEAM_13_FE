@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { formatTime } from '@/lib/format'
-import { useAnswerQuestion } from '@/pages/owner/api/home'
+import { canAddAnswerToManual, useAnswerQuestion } from '@/pages/owner/api/home'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -12,6 +12,7 @@ import { toast } from '@/ui/toastStore'
 
 // 확인 필요 (docs/03 S5): 알바생 질문에 답하기 → 매뉴얼에 추가할지 고르기
 // 답은 알바생 채팅에 "사장님 답변"으로 가고, 추가하면 다음부터 AI 사수가 그 매뉴얼로 답한다
+// 진짜 API 는 매뉴얼 추가를 아직 지원하지 않아서 [답하기]가 바로 답변만 보낸다
 export function QuestionSheet({
   question,
   onClose,
@@ -23,6 +24,7 @@ export function QuestionSheet({
   const [stage, setStage] = useState<'ask' | 'suggest'>('ask')
   const [manualTitle, setManualTitle] = useState(question.title.replace(/ 문의$/, ''))
   const send = useAnswerQuestion(question.storeId)
+  const canAddToManual = canAddAnswerToManual()
 
   const submit = (addToManual: boolean) =>
     send.mutate(
@@ -63,8 +65,8 @@ export function QuestionSheet({
             />
             <Button
               className="h-[54px]"
-              disabled={!answer.trim()}
-              onClick={() => setStage('suggest')}
+              disabled={!answer.trim() || send.isPending}
+              onClick={() => (canAddToManual ? setStage('suggest') : submit(false))}
             >
               답하기
             </Button>
