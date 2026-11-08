@@ -27,6 +27,10 @@ export const handoverKeys = {
 
 /** 인수인계 줄글 최대 글자 수 (BE 검증: 정리하기 text · 남기기 rawText 2000자) */
 export const HANDOVER_TEXT_MAX = 2000
+/** 항목 하나 최대 글자 수 · 요약 최대 글자 수 · 항목 최대 개수 (BE 검증) */
+export const HANDOVER_ITEM_MAX = 500
+export const HANDOVER_SUMMARY_MAX = 1000
+export const HANDOVER_ITEMS_MAX = 50
 
 const real = () => isRealApi('handover')
 const notesPath = (storeId: string) => `/stores/${storeId}/handover-notes`
