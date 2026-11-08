@@ -24,6 +24,8 @@ export interface RecipeSummary {
   /** 정하지 않았으면 null */
   size: string | null
   ingredients: Ingredient[]
+  /** 메뉴 사진. BE 가 아직 안 줘서 FE 가 시연 사진(menuPhotoUrl)으로 채운다 — 없으면 null (아이콘) */
+  imageUrl: string | null
   isNew: boolean
   updatedAt: string
 }

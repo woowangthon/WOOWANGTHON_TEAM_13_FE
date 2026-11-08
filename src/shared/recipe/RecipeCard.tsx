@@ -2,6 +2,7 @@ import { StickyNote } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Recipe } from '@/lib/api/types'
 import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/icons'
+import { RecipePhoto } from '@/shared/recipe/RecipePhoto'
 
 // 공용 보기 부품: 레시피 카드 (재료 · 양 · 순서 · 메모) · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 맨 아래 버튼(알바: AI 사수에게 묻기 · 사장: 수정)은 footer 로 받는다
@@ -20,15 +21,20 @@ export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
   return (
     <div className="flex flex-col gap-[18px]">
       <div
-        className="relative flex h-24 items-center justify-center rounded-[24px]"
+        className="relative flex h-24 items-center justify-center overflow-hidden rounded-[24px]"
         style={{ background: tint }}
       >
-        <span
-          className="flex size-14 items-center justify-center rounded-full bg-white/60"
-          style={{ color: ink }}
-        >
-          <Icon className="size-7" />
-        </span>
+        <RecipePhoto
+          imageUrl={recipe.imageUrl}
+          fallback={
+            <span
+              className="flex size-14 items-center justify-center rounded-full bg-white/60"
+              style={{ color: ink }}
+            >
+              <Icon className="size-7" />
+            </span>
+          }
+        />
         {tempSize && (
           <span
             className="absolute top-3.5 left-3.5 rounded-full bg-white/70 px-[9px] py-1 text-[11px] font-extrabold"
