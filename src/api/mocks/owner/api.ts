@@ -22,6 +22,7 @@ import {
   type Recipe as StaffRecipe,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
+import { menuPhotoUrl } from '@/api/mocks/owner/menuPhotos'
 import { ApiError } from '@/lib/apiClient'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
@@ -333,12 +334,33 @@ function checkRecipe(input: RecipeInput) {
   if (!input.name.trim()) fail(422, 'VALIDATION_ERROR', '메뉴 이름을 입력해 주세요')
 }
 
+/** 사장님이 넣거나 뺀 메뉴 사진 (recipeId → 주소, null 은 뺌). 없으면 메뉴 이름으로 시연 사진 */
+const recipePhotos = new Map<string, string | null>()
+
+function savePhoto(recipeId: string, photo: File | null | undefined) {
+  if (photo === undefined) return
+  const before = recipePhotos.get(recipeId)
+  if (before?.startsWith('blob:')) URL.revokeObjectURL(before)
+  recipePhotos.set(recipeId, photo ? URL.createObjectURL(photo) : null)
+}
+
+/** 레시피 사진 (BE 제안: 레시피 응답의 imageUrl) — recipeId → 사진 주소 */
+export async function getRecipePhotos(storeId: string): Promise<Record<string, string | null>> {
+  await wait(100)
+  return Object.fromEntries(
+    staffRecipes
+      .filter((r) => r.storeId === storeId)
+      .map((r) => [r.id, recipePhotos.has(r.id) ? recipePhotos.get(r.id)! : menuPhotoUrl(r.name)]),
+  )
+}
+
 /** POST /stores/{storeId}/recipes (제안) */
 export async function createRecipe(storeId: string, input: RecipeInput) {
   await wait(400)
   checkRecipe(input)
   const recipe = toStaffRecipe(storeId, `rcp_${Date.now()}`, input)
   staffRecipes.push(recipe)
+  savePhoto(recipe.id, input.photo)
   return { recipeId: recipe.id }
 }
 
@@ -354,6 +376,7 @@ export async function updateRecipe(storeId: string, recipeId: string, input: Rec
   checkRecipe(input)
   const index = recipeIndex(storeId, recipeId)
   staffRecipes[index] = toStaffRecipe(storeId, recipeId, input)
+  savePhoto(recipeId, input.photo)
   return { recipeId }
 }
 

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { Recipe } from '@/lib/api/types'
-import { useDeleteRecipe } from '@/pages/owner/api/content'
+import { useDeleteRecipe, useRecipePhotos } from '@/pages/owner/api/content'
 import { RecipeCard } from '@/shared/recipe/RecipeCard'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 레시피 상세 (사장님): 카드(shared/recipe/RecipeCard) + 삭제 · 수정
+// 레시피 상세 (사장님): 메뉴 사진 + 카드(shared/recipe/RecipeCard) + 삭제 · 수정
 interface RecipeDetailSheetProps {
   storeId: string
   storeName: string
@@ -28,6 +28,7 @@ export function RecipeDetailSheet({
 }: RecipeDetailSheetProps) {
   const [askDelete, setAskDelete] = useState(false)
   const remove = useDeleteRecipe(storeId)
+  const photo = useRecipePhotos(storeId).data?.[recipe.recipeId] ?? null
 
   const doDelete = () =>
     remove.mutate(recipe.recipeId, {
@@ -40,6 +41,13 @@ export function RecipeDetailSheet({
 
   return (
     <BottomSheet open onClose={onClose} label={recipe.name} closeButton>
+      {photo && (
+        <img
+          src={photo}
+          alt={`${recipe.name} 사진`}
+          className="mb-3 aspect-[4/3] w-full rounded-[24px] object-cover"
+        />
+      )}
       <RecipeCard
         recipe={recipe}
         storeName={storeName}

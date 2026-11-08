@@ -3,8 +3,14 @@ import { useState, type ReactNode } from 'react'
 import { OWNER_CATEGORIES, RECIPE_TEMPLATES } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
 import type { Recipe, RecipeTemp } from '@/lib/api/types'
-import { useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
+import {
+  canSaveRecipePhoto,
+  useCreateRecipe,
+  useRecipePhotos,
+  useUpdateRecipe,
+} from '@/pages/owner/api/content'
 import type { RecipeInput } from '@/pages/owner/api/types'
+import { RecipePhotoField } from '@/pages/owner/recipe/components/RecipePhotoField'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
@@ -13,7 +19,7 @@ import { Textarea } from '@/ui/Textarea'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 레시피 추가 · 수정 (docs/03 S3): 템플릿 → 메뉴 이름 · 카테고리 · 재료와 양 · 순서 · 메모
+// 레시피 추가 · 수정 (docs/03 S3): 템플릿 → 메뉴 사진 · 이름 · 카테고리 · 재료와 양 · 순서 · 메모
 
 type Row = { name: string; amount: string }
 
@@ -51,6 +57,9 @@ export function RecipeFormSheet({
   )
   const [steps, setSteps] = useState(recipe?.steps.join('\n') ?? '')
   const [memo, setMemo] = useState(recipe?.memo ?? '')
+  const [photo, setPhoto] = useState<File | null | undefined>(undefined)
+  const photos = useRecipePhotos(storeId)
+  const currentPhoto = recipe ? (photos.data?.[recipe.recipeId] ?? null) : null
   const create = useCreateRecipe(storeId)
   const update = useUpdateRecipe(storeId)
   const pending = create.isPending || update.isPending
@@ -75,6 +84,7 @@ export function RecipeFormSheet({
       ingredients: rows.filter((r) => r.name.trim()),
       steps: steps.split('\n'),
       memo: memo.trim() || null,
+      photo,
     }
     const done = (recipeId: string) => {
       toast('저장했어요')
@@ -117,6 +127,10 @@ export function RecipeFormSheet({
               ))}
             </div>
           </Field>
+        )}
+
+        {canSaveRecipePhoto() && (
+          <RecipePhotoField currentUrl={currentPhoto} value={photo} onChange={setPhoto} />
         )}
 
         <Input
