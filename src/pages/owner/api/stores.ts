@@ -8,13 +8,12 @@ import {
   updateStore,
   verifyBizNo,
 } from '@/api/mocks/owner/api'
-import { http } from '@/lib/api/source'
-import { isOwnerRealApi } from '@/pages/owner/api/source'
+import { http, isRealApi } from '@/lib/api/source'
 import type { NewStore, OwnerStore, StoreResponse, StoreUpdate } from '@/pages/owner/api/types'
 
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
- * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — pages/owner/api/source.
+ * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — lib/api/source.
  * 프로필 · 사업자 확인은 아직 가짜 서버만 (BE 미구현).
  */
 
@@ -36,13 +35,13 @@ const toOwnerStore = (store: StoreResponse): OwnerStore => ({
 })
 
 const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {
-  if (!isOwnerRealApi('stores')) return getOwnerStores()
+  if (!isRealApi('stores')) return getOwnerStores()
   const { stores } = await http.get<{ stores: StoreResponse[] }>('/stores')
   return { stores: stores.map(toOwnerStore) }
 }
 
 const postStore = async (input: NewStore): Promise<OwnerStore> => {
-  if (!isOwnerRealApi('stores')) return createStore(input)
+  if (!isRealApi('stores')) return createStore(input)
   const store = await http.post<StoreResponse>('/stores', {
     name: input.name,
     address: input.address,
@@ -52,13 +51,13 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
 
 // BE 는 이름 · 주소 · 사진만 바꿀 수 있다. 급여일 · 규모는 BE 에 칸이 생기면 같이 보낸다
 const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerStore> => {
-  if (!isOwnerRealApi('stores')) return updateStore(storeId, patch)
+  if (!isRealApi('stores')) return updateStore(storeId, patch)
   const store = await http.patch<StoreResponse>(`/stores/${storeId}`, { name: patch.name })
   return toOwnerStore(store)
 }
 
 const removeStore = (storeId: string): Promise<void> =>
-  isOwnerRealApi('stores') ? http.delete<void>(`/stores/${storeId}`) : deleteStore(storeId)
+  isRealApi('stores') ? http.delete<void>(`/stores/${storeId}`) : deleteStore(storeId)
 
 export const ownerKeys = {
   all: ['owner'] as const,
