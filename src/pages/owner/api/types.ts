@@ -55,6 +55,25 @@ export interface InvitationResponse {
   createdAt: string
 }
 
+/** BE 초대코드 목록 한 줄 (GET /stores/{storeId}/invitations) */
+export interface InvitationSummary extends InvitationResponse {
+  status: 'AVAILABLE' | 'USED' | 'REVOKED'
+  acceptedAt: string | null
+  revokedAt: string | null
+}
+
+/** BE 직원 (GET /stores/{storeId}/members) — 퇴사하면 LEFT */
+export interface MemberResponse {
+  memberId: string
+  userId: string
+  staffName: string
+  role: string
+  hourlyWage: number
+  status: 'ACTIVE' | 'LEFT'
+  joinedAt: string
+  leftAt: string | null
+}
+
 export interface OwnerProfile {
   name: string
 }
@@ -63,7 +82,10 @@ export interface OwnerProfile {
 export type MemberStatus = 'active' | 'invited' | 'removed'
 
 export interface Member {
+  /** 입장한 직원은 BE memberId, 입장 전이면 invitationId */
   memberId: string
+  /** 입장 전(코드만 발급)일 때 코드 취소에 쓰는 ID. 가짜 서버 · 입장한 직원은 없음 */
+  invitationId?: string | null
   storeId: string
   name: string
   hourlyWage: number

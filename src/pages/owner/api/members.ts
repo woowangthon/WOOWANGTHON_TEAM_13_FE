@@ -1,38 +1,121 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createMember, getMembers, removeMember, updateHourlyWage } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
+import { ApiError } from '@/lib/apiClient'
 import { ownerKeys } from '@/pages/owner/api/stores'
-import type { InvitationResponse, Member, NewMember } from '@/pages/owner/api/types'
+import type {
+  InvitationResponse,
+  InvitationSummary,
+  Member,
+  MemberResponse,
+  NewMember,
+} from '@/pages/owner/api/types'
 
 /*
  * 직원 · 초대코드 훅 — 담당: 나현
- * 초대코드 만들기는 .env VITE_REAL_API 에 'invitations'(+ 'stores')를 넣으면 진짜 API, 아니면 가짜 서버(api/mocks/owner).
- * 직원 목록 · 시급 · 퇴사는 아직 가짜 서버만 (BE 미구현). 시급 API 모양은 docs/07 8-2
+ * .env VITE_REAL_API 에 'members'를 넣으면 직원 목록 · 퇴사가, 'invitations'를 넣으면 초대코드 만들기가 진짜 API.
+ * 둘 다 진짜 매장 ID 가 필요해서 'stores'도 같이 켠다. 아니면 가짜 서버(api/mocks/owner).
+ * 시급 바꾸기는 BE 미구현이라 진짜 모드에서는 안내만 한다. 시급 API 모양은 docs/07 8-2
  */
 
-// BE 초대코드 응답 → 직원(입장 전). 직원 목록 API 가 나오기 전이라 invitationId 를 memberId 로 쓴다
-const postInvitation = async (storeId: string, input: NewMember): Promise<Member> => {
-  if (!isRealApi('invitations')) return createMember(storeId, input)
-  const invitation = await http.post<InvitationResponse>(`/stores/${storeId}/invitations`, {
-    staffName: input.name,
-    hourlyWage: input.hourlyWage,
-  })
-  return {
-    memberId: invitation.invitationId,
-    storeId: invitation.storeId,
-    name: invitation.staffName,
-    hourlyWage: invitation.hourlyWage,
-    status: 'invited',
-    inviteCode: invitation.code,
-    shiftLabel: '새 알바생',
+/** 초대코드 만들기 결과. existing 이면 같은 이름으로 이미 쓸 수 있는 코드가 있어서 그 코드를 돌려준 것 (409) */
+export interface CreatedMember {
+  member: Member
+  existing: boolean
+}
+
+const invitedMember = (
+  storeId: string,
+  invitation: Pick<InvitationResponse, 'invitationId' | 'code' | 'staffName' | 'hourlyWage'>,
+): Member => ({
+  memberId: invitation.invitationId,
+  invitationId: invitation.invitationId,
+  storeId,
+  name: invitation.staffName,
+  hourlyWage: invitation.hourlyWage,
+  status: 'invited',
+  inviteCode: invitation.code,
+  shiftLabel: '입장 전',
+})
+
+/*
+ * 화면의 직원 목록 = 입장한 직원(members, 퇴사 빼고) + 아직 입장 안 한 코드(invitations AVAILABLE).
+ * 입장한 직원의 코드는 같은 이름으로 쓰인(USED) 코드를 찾아 보여 준다 (BE 가 직원 ↔ 코드를 이어 주지 않아서).
+ */
+const fetchMembers = async (storeId: string): Promise<{ members: Member[] }> => {
+  if (!isRealApi('members')) return getMembers(storeId)
+  const [{ members }, { invitations }] = await Promise.all([
+    http.get<{ members: MemberResponse[] }>(`/stores/${storeId}/members`),
+    http.get<{ invitations: InvitationSummary[] }>(`/stores/${storeId}/invitations`),
+  ])
+  const joined = members
+    .filter((m) => m.status === 'ACTIVE' && m.role !== 'owner')
+    .map<Member>((m) => ({
+      memberId: m.memberId,
+      invitationId: null,
+      storeId,
+      name: m.staffName,
+      hourlyWage: m.hourlyWage,
+      status: 'active',
+      inviteCode:
+        invitations.find((i) => i.status === 'USED' && i.staffName === m.staffName)?.code ?? '',
+      shiftLabel: '알바생',
+    }))
+  const waiting = invitations
+    .filter((i) => i.status === 'AVAILABLE')
+    .map((i) => invitedMember(storeId, i))
+  return { members: [...joined, ...waiting] }
+}
+
+const postInvitation = async (storeId: string, input: NewMember): Promise<CreatedMember> => {
+  if (!isRealApi('invitations')) {
+    return { member: await createMember(storeId, input), existing: false }
+  }
+  try {
+    const invitation = await http.post<InvitationResponse>(`/stores/${storeId}/invitations`, {
+      staffName: input.name,
+      hourlyWage: input.hourlyWage,
+    })
+    return { member: invitedMember(storeId, invitation), existing: false }
+  } catch (error) {
+    // 같은 이름으로 쓸 수 있는 코드가 이미 있으면 새로 만들지 않고 그 코드를 다시 보여 준다
+    if (error instanceof ApiError && error.code === 'INVITE_ALREADY_AVAILABLE') {
+      const { invitationId, code } = error.detail as { invitationId: string; code: string }
+      const member = invitedMember(storeId, {
+        invitationId,
+        code,
+        staffName: input.name,
+        hourlyWage: input.hourlyWage,
+      })
+      return { member, existing: true }
+    }
+    throw error
   }
 }
 
-/** 직원 목록 (퇴사한 직원 빼고) */
+const putHourlyWage = async (memberId: string, hourlyWage: number) => {
+  if (!isRealApi('members')) return updateHourlyWage(memberId, hourlyWage)
+  throw new ApiError(400, {
+    code: 'NOT_SUPPORTED',
+    message: '시급 바꾸기는 아직 준비 중이에요',
+    detail: null,
+  })
+}
+
+// 입장한 직원은 퇴사(기록은 남김), 입장 전이면 초대코드 취소
+const deleteMember = async (member: Member): Promise<void> => {
+  if (!isRealApi('members')) return removeMember(member.memberId)
+  if (member.status === 'invited' && member.invitationId) {
+    return http.delete<void>(`/stores/${member.storeId}/invitations/${member.invitationId}`)
+  }
+  return http.delete<void>(`/stores/${member.storeId}/members/${member.memberId}`)
+}
+
+/** 직원 목록 (퇴사한 직원 빼고, 입장 전 코드 포함) */
 export function useMembers(storeId: string) {
   return useQuery({
     queryKey: ownerKeys.members(storeId),
-    queryFn: () => getMembers(storeId),
+    queryFn: () => fetchMembers(storeId),
     enabled: !!storeId,
   })
 }
@@ -54,7 +137,7 @@ export function useUpdateHourlyWage(storeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ memberId, hourlyWage }: { memberId: string; hourlyWage: number }) =>
-      updateHourlyWage(memberId, hourlyWage),
+      putHourlyWage(memberId, hourlyWage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ownerKeys.members(storeId) })
       queryClient.invalidateQueries({ queryKey: ownerKeys.payroll(storeId) })
@@ -62,11 +145,11 @@ export function useUpdateHourlyWage(storeId: string) {
   })
 }
 
-/** 퇴사 처리: 초대코드 삭제 → 접근 바로 차단, 기록은 남김 */
+/** 퇴사 처리: 입장한 직원은 퇴사(접근 바로 차단, 기록은 남김) · 입장 전이면 초대코드 취소 */
 export function useRemoveMember() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: removeMember,
+    mutationFn: deleteMember,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.all }),
   })
 }
