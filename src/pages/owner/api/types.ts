@@ -141,7 +141,7 @@ export interface OwnerNotification {
   questionId: string | null
 }
 
-/** 사장님 답변 (POST …/owner-questions/{id}/answer 제안). addToManual 이면 매뉴얼도 만든다 */
+/** 사장님 답변 (POST /stores/{storeId}/owner-questions/{questionId}/answer). addToManual 이면 매뉴얼도 만든다 (BE 는 아직 501) */
 export interface OwnerAnswer {
   answer: string
   addToManual: boolean

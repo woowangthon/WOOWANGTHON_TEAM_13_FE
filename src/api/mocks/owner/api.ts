@@ -250,7 +250,7 @@ export async function getOnDuty(storeId: string): Promise<{ onDuty: OnDuty | nul
   }
 }
 
-/** GET /stores/{storeId}/owner-questions?status=asked (제안) */
+/** GET /stores/{storeId}/owner-questions?status=asked */
 export async function getOwnerQuestions(
   storeId: string,
 ): Promise<{ questions: OwnerQuestionItem[] }> {
@@ -262,13 +262,14 @@ export async function getOwnerQuestions(
   }
 }
 
-/** POST /owner-questions/{questionId}/answer (제안) — 알바생 채팅에 답이 가고, 고르면 매뉴얼에 추가 */
+/** POST /stores/{storeId}/owner-questions/{questionId}/answer — 알바생 채팅에 답이 가고, 고르면 매뉴얼에 추가 */
 export async function answerOwnerQuestion(
+  storeId: string,
   questionId: string,
   input: OwnerAnswer,
 ): Promise<OwnerQuestionItem> {
   await wait(400)
-  const question = db.questions.find((q) => q.questionId === questionId)
+  const question = db.questions.find((q) => q.storeId === storeId && q.questionId === questionId)
   if (!question) fail(404, 'NOT_FOUND', '질문을 찾지 못했어요')
   if (!input.answer.trim()) fail(422, 'VALIDATION_ERROR', '답변을 입력해 주세요')
   question.status = 'answered'
