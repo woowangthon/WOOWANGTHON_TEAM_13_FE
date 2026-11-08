@@ -7,7 +7,7 @@ import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 레시피 상세 (사장님): 카드(shared/recipe/RecipeCard) + 삭제 · 수정
+// 레시피 상세 (사장님): 카드(shared/recipe/RecipeCard, 메뉴 사진은 카드의 사진 자리에) + 삭제 · 수정
 interface RecipeDetailSheetProps {
   storeId: string
   storeName: string

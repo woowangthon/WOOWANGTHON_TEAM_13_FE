@@ -157,6 +157,8 @@ export interface RecipeInput {
   ingredients: { name: string; amount: string }[]
   steps: string[]
   memo: string | null
+  /** 메뉴 사진: 새 파일 · null 빼기 · undefined 그대로 (BE 사진 저장 전까지 가짜 서버에만) */
+  photo?: File | null
 }
 
 /** 사진 → AI 레시피 초안 (POST /stores/{storeId}/recipe-scans). 못 읽은 값은 null → 저장 전에 입력받는다 */

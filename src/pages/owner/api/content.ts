@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createManual,
   createRecipe,
   deleteManual,
   deleteRecipe,
+  getRecipePhotos,
   scanRecipePhoto,
   updateManual,
   updateRecipe,
@@ -28,18 +29,46 @@ const postForm = <T>(path: string, field: string, input: unknown) => {
   return apiFetch<T>(path, { method: 'POST', body: form })
 }
 
+// 사진은 BE 가 아직 저장하지 않아서(501) 진짜 API 에는 글만 보낸다
+const withoutPhoto = (input: RecipeInput): Omit<RecipeInput, 'photo'> => {
+  const rest = { ...input }
+  delete rest.photo
+  return rest
+}
+
 const postRecipe = (storeId: string, input: RecipeInput) =>
   isRealApi('recipes')
-    ? postForm<{ recipeId: string }>(`/stores/${storeId}/recipes`, 'recipe', input)
+    ? postForm<{ recipeId: string }>(`/stores/${storeId}/recipes`, 'recipe', withoutPhoto(input))
     : createRecipe(storeId, input)
 const patchRecipe = (storeId: string, recipeId: string, input: RecipeInput) =>
   isRealApi('recipes')
-    ? http.patch<{ recipeId: string }>(`/stores/${storeId}/recipes/${recipeId}`, input)
+    ? http.patch<{ recipeId: string }>(
+        `/stores/${storeId}/recipes/${recipeId}`,
+        withoutPhoto(input),
+      )
     : updateRecipe(storeId, recipeId, input)
 const removeRecipe = (storeId: string, recipeId: string) =>
   isRealApi('recipes')
     ? http.delete<void>(`/stores/${storeId}/recipes/${recipeId}`)
     : deleteRecipe(storeId, recipeId)
+
+/** 사진을 저장할 수 있는지 (BE 사진 저장 전까지 가짜 서버만) */
+export const canSaveRecipePhoto = () => !isRealApi('recipes')
+
+const recipePhotoKey = (storeId: string) => ['owner', 'stores', storeId, 'recipe-photos'] as const
+
+/**
+ * 메뉴 사진 (recipeId → 주소). 가짜 서버는 시연 사진 + 사장님이 넣은 사진,
+ * 진짜 API 는 BE 가 imageUrl 을 주기 전까지 비어 있다.
+ */
+export function useRecipePhotos(storeId: string) {
+  return useQuery({
+    queryKey: recipePhotoKey(storeId),
+    queryFn: async (): Promise<Record<string, string | null>> =>
+      isRealApi('recipes') ? {} : getRecipePhotos(storeId),
+    enabled: !!storeId,
+  })
+}
 
 const postManual = (storeId: string, input: ManualInput) =>
   isRealApi('manuals')
@@ -56,7 +85,10 @@ const removeManual = (storeId: string, manualId: string) =>
 
 function useInvalidateRecipes(storeId: string) {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: recipeKeys.list(storeId) })
+  return () => {
+    queryClient.invalidateQueries({ queryKey: recipeKeys.list(storeId) })
+    queryClient.invalidateQueries({ queryKey: recipePhotoKey(storeId) })
+  }
 }
 
 function useInvalidateManuals(storeId: string) {
