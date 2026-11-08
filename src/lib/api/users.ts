@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { getMe, getMyStores } from '@/api/mocks/staff/api/users'
 import { http, isRealApi } from '@/lib/api/source'
 import type { MyStoreDetail, MyStoreList } from '@/lib/api/types'
@@ -30,21 +30,19 @@ export function fetchMe(loginUser: Omit<Me, 'stores'>): Promise<Me> {
 export function toMyStoreList(data: MyStore[] | MyStoreList): MyStoreList {
   if (!Array.isArray(data)) return data
   return {
-    stores: data.map(
-      (store): MyStoreDetail => ({
-        storeId: store.storeId,
-        name: store.storeName,
-        role: store.role,
-        kind: '',
-        address: '',
-        ownerName: '',
-        memberId: '',
-        staffName: null,
-        photoUrl: null,
-        theme: null,
-        joinedAt: '',
-      }),
-    ),
+    stores: data.map((store): MyStoreDetail => ({
+      storeId: store.storeId,
+      name: store.storeName,
+      role: store.role,
+      kind: '',
+      address: '',
+      ownerName: '',
+      memberId: '',
+      staffName: null,
+      photoUrl: null,
+      theme: null,
+      joinedAt: '',
+    })),
   }
 }
 
@@ -52,6 +50,20 @@ const fetchMyStores = async () =>
   isRealApi('users')
     ? toMyStoreList(await http.get<MyStore[] | MyStoreList>('/users/me/stores'))
     : getMyStores()
+
+/** 이름(닉네임) 최대 글자 수 (BE 검증: 1~50자) */
+export const NICKNAME_MAX = 50
+
+/**
+ * 이름 바꾸기 — PATCH /users/me { nickname } → GET /users/me 와 같은 모양 (docs/07 1-2).
+ * 저장 뒤 me 를 다시 불러오는 건 화면이 auth.ts refreshMe 로 한다. 가짜 서버는 저장할 곳이 없어 바꾼 이름만 돌려준다
+ */
+export function useUpdateNickname() {
+  return useMutation({
+    mutationFn: async (nickname: string) =>
+      isRealApi('users') ? http.patch<Me>('/users/me', { nickname }) : { nickname },
+  })
+}
 
 /** 내 매장 (알바 화면 매장 전환 · 홈 · 마이페이지) */
 export function useMyStores() {

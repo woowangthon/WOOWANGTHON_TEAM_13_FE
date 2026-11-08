@@ -1,6 +1,7 @@
 import { createClient, type Session } from '@supabase/supabase-js'
 import { useAuthStore, type LoginProvider, type Me } from '@/lib/authStore'
 import { fetchMe as getMe } from '@/lib/api/users'
+import { http, isRealApi } from '@/lib/api/source'
 import { env } from '@/lib/env'
 
 /*
@@ -83,7 +84,22 @@ export async function fetchMe(): Promise<Me> {
   })
 }
 
-/** me 를 다시 불러온다 (매장 입장 · 생성 뒤) */
+/** 탈퇴한 계정: BE 는 탈퇴 뒤에도 같은 로그인으로 오면 GET /users/me 를 403 으로 막는다 */
+const isWithdrawnError = (error: unknown) => (error as { status?: unknown }).status === 403
+
+export class WithdrawnAccountError extends Error {
+  constructor() {
+    super('탈퇴한 계정이에요')
+  }
+}
+
+/** 회원 탈퇴 — DELETE /users/me (204) 뒤 로그아웃. 가짜 서버면 로그아웃만 */
+export async function withdrawAccount() {
+  if (isRealApi('users')) await http.delete<void>('/users/me')
+  await signOut()
+}
+
+/** me 를 다시 불러온다 (매장 입장 · 생성 · 이름 바꾸기 뒤) */
 export async function refreshMe() {
   useAuthStore.getState().setMe(await fetchMe())
 }
@@ -94,7 +110,13 @@ export async function restoreSession() {
   const session = await getSession()
   setLoggedIn(Boolean(session))
   if (!session) return setMe(null)
-  setMe(await fetchMe())
+  try {
+    setMe(await fetchMe())
+  } catch (error) {
+    // 탈퇴한 계정이면 Supabase 세션도 끊어서 로그인 화면으로
+    if (isWithdrawnError(error)) await signOut()
+    throw error
+  }
 }
 
 /** 로그인 처리 화면(/auth/callback)인지 — 이 화면에서는 401 이 나도 로그아웃하지 않는다 */
@@ -163,9 +185,17 @@ export function completeLogin(): Promise<Me | null> {
       setMe(null)
       return null
     }
-    const me = await fetchMeAfterLogin()
-    setMe(me)
-    return me
+    try {
+      const me = await fetchMeAfterLogin()
+      setMe(me)
+      return me
+    } catch (error) {
+      if (isWithdrawnError(error)) {
+        await signOut()
+        throw new WithdrawnAccountError()
+      }
+      throw error
+    }
   })().finally(() => {
     loginInFlight = null
   })
