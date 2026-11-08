@@ -512,6 +512,8 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 > FE는 답변을 기다리는 동안 "입력 중(···)" 말풍선을 보여 줘요. 응답이 10초 넘게 걸리면 알려 주세요 (스트리밍 여부 논의).
 
 #### `GET /stores/{storeId}/assistant-chats/{chatId}/messages` (내역)
+
+> ✅ 11/9 BE 실제: `?before=<messageId>&limit=1~100`(기본 50) → `before` 메시지보다 앞(만든 시각 기준)의 최근 `limit`개를 **오래된 순**으로 + `hasMore`. FE는 처음에 최근 50개, 채팅 맨 위로 올리면(또는 [이전 대화 더 보기]) 가장 오래된 메시지를 `before`로 다음 50개를 불러요. `hasMore: false`면 더 안 불러요. 개발 중 확인용: `localStorage['chat-page-size']`(예: 5)로 한 번에 불러오는 개수를 줄일 수 있어요 (npm run dev에서만)
 채팅 탭에 다시 들어오거나 새로고침했을 때.
 
 쿼리 (제안): `?before=msg_101&limit=50` — `before` 메시지보다 이전 것을 `limit`개. 없으면 최신 50개

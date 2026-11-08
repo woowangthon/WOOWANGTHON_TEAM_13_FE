@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { useAskOwner, useAssistantChat, useSendMessage } from '@/lib/api/assistantChat'
 import { isNetworkError } from '@/lib/api/errors'
@@ -36,24 +36,49 @@ export default function ChatPage() {
   // 답을 못 받은 질문 (채팅 안에 안내 + 다시 시도)
   const [failed, setFailed] = useState<{ text: string; reason: string } | null>(null)
 
-  // 메시지가 바뀌거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로
-  // 조금이라도 스크롤하면 헤더를 작게
+  // 조금이라도 스크롤하면 헤더를 작게 · 맨 위 가까이 올리면 이전 대화를 더 불러온다
   const [compact, setCompact] = useState(false)
+  // 처음 맨 아래로 내려간 뒤에만 이전 대화 자동 불러오기 (열자마자 맨 위라서 불러오는 것을 막음)
+  const scrolledToBottom = useRef(false)
+  // 이전 대화를 붙이기 전 "맨 아래에서의 거리" — 붙인 뒤 같은 자리로 되돌린다 (화면이 튀지 않게)
+  const keepFromBottom = useRef<number | null>(null)
+  const { hasOlder, loadingOlder, loadOlder } = chat
+  const loadOlderKeepingPlace = () => {
+    if (!hasOlder || loadingOlder) return
+    keepFromBottom.current = document.documentElement.scrollHeight - window.scrollY
+    void loadOlder()
+  }
+  const onNearTop = useEffectEvent(loadOlderKeepingPlace)
   useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 24)
+    const onScroll = () => {
+      setCompact(window.scrollY > 24)
+      if (scrolledToBottom.current && window.scrollY < 120) onNearTop()
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // 이전 대화가 앞에 붙으면 보던 자리 그대로 (그리기 전에 맞춘다)
+  const firstId = chat.messages?.[0]?.messageId
+  useLayoutEffect(() => {
+    if (keepFromBottom.current === null || loadingOlder) return
+    window.scrollTo({ top: document.documentElement.scrollHeight - keepFromBottom.current })
+    keepFromBottom.current = null
+  }, [firstId, loadingOlder])
+
+  // 새 메시지가 끝에 붙거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로. 이전 대화가 앞에 붙을 때는 그대로
+  const lastId = chat.messages?.at(-1)?.messageId
   const first = useRef(true)
   useEffect(() => {
+    if (lastId === undefined && !send.isPending && !failed) return
     window.scrollTo({
       top: document.body.scrollHeight,
       behavior: first.current ? 'auto' : 'smooth',
     })
+    if (first.current) setTimeout(() => (scrolledToBottom.current = true), 300)
     first.current = false
-  }, [chat.messages, send.isPending, failed])
+  }, [lastId, send.isPending, failed])
 
   const submit = (text: string) => {
     const question = text.trim()
@@ -102,6 +127,19 @@ export default function ChatPage() {
         <LoadError error={chat.error} onRetry={chat.retry} />
       ) : (
         <div className="flex flex-col gap-3.5" aria-live="polite">
+          {/* 이전 대화: 불러오는 동안 작은 Spinner, 화면이 짧아 스크롤이 안 되면 버튼으로 */}
+          {hasOlder &&
+            (loadingOlder ? (
+              <Spinner className="py-1" label="이전 대화를 불러오는 중" />
+            ) : (
+              <button
+                type="button"
+                onClick={loadOlderKeepingPlace}
+                className="self-center rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+              >
+                이전 대화 더 보기
+              </button>
+            ))}
           {chat.messages?.length === 0 && !send.isPending && !failed && (
             <EmptyGuide
               message="아직 나눈 대화가 없어요"
