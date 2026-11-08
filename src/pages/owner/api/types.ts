@@ -62,6 +62,13 @@ export interface InvitationSummary extends InvitationResponse {
   revokedAt: string | null
 }
 
+/** BE 카톡 공유 정보 (GET /stores/{storeId}/invitations/{invitationId}/share-info) — deepLink 는 /staff/join?code=… */
+export interface InviteShareInfo {
+  invitationId: string
+  code: string
+  deepLink: string
+}
+
 /** BE 직원 (GET /stores/{storeId}/members) — 퇴사하면 LEFT */
 export interface MemberResponse {
   memberId: string

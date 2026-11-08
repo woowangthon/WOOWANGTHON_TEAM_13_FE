@@ -93,6 +93,8 @@ function MemberSheet({
             code={member.inviteCode}
             storeName={storeName}
             name={member.name}
+            storeId={member.storeId}
+            invitationId={member.invitationId}
           />
         )}
 
