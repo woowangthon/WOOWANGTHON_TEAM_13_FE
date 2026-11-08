@@ -40,6 +40,7 @@ import type {
   OwnerQuestionItem,
   OwnerStore,
   RecipeInput,
+  RecipeScanDraft,
   ScheduleDraft,
   WorkShift,
 } from '@/pages/owner/api/types'
@@ -362,8 +363,8 @@ export async function deleteRecipe(storeId: string, recipeId: string): Promise<v
   staffRecipes.splice(recipeIndex(storeId, recipeId), 1)
 }
 
-/** POST /stores/{storeId}/recipe-scans (제안, P1 비전 LLM) — 사진 → AI 초안 (저장 안 함) */
-export async function scanRecipePhoto() {
+/** POST /stores/{storeId}/recipe-scans (P1 비전 LLM) — 사진 → AI 초안 (저장 안 함). 시연: 늘 같은 초안 */
+export async function scanRecipePhoto(): Promise<RecipeScanDraft> {
   await wait(1800)
   return structuredClone(SCAN_DRAFT)
 }

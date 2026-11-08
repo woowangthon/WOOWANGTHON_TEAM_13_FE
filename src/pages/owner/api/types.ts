@@ -159,6 +159,16 @@ export interface RecipeInput {
   memo: string | null
 }
 
+/** 사진 → AI 레시피 초안 (POST /stores/{storeId}/recipe-scans). 못 읽은 값은 null → 저장 전에 입력받는다 */
+export interface RecipeScanDraft {
+  name: string
+  category: string | null
+  temp: RecipeTemp | null
+  size: string | null
+  ingredients: { name: string; amount: string | null }[]
+  steps: string[]
+}
+
 /** 매뉴얼 등록 · 수정 요청 */
 export interface ManualInput {
   title: string

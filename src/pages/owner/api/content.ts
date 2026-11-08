@@ -12,13 +12,13 @@ import { manualKeys } from '@/lib/api/manuals'
 import { recipeKeys } from '@/lib/api/recipes'
 import { http, isRealApi } from '@/lib/api/source'
 import { apiFetch } from '@/lib/apiClient'
-import type { ManualInput, RecipeInput } from '@/pages/owner/api/types'
+import type { ManualInput, RecipeInput, RecipeScanDraft } from '@/pages/owner/api/types'
 
 /*
  * 레시피 · 매뉴얼 등록 · 수정 · 삭제 훅 — 담당: 나현
  * 보기는 민지의 lib/api 훅(useRecipes · useManuals)을 그대로 쓰고, 바꾼 뒤 그 캐시를 다시 불러온다.
  * .env VITE_REAL_API 에 'recipes' · 'manuals'를 넣으면 진짜 API, 아니면 가짜 서버(api/mocks/owner).
- * 사진 스캔은 아직 가짜 서버만. 알바생은 이 훅을 쓰지 않는다 (보기만).
+ * 사진 스캔도 'recipes'를 따른다 (사진은 저장하지 않고 초안만 받는다). 알바생은 이 훅을 쓰지 않는다 (보기만).
  */
 
 // 등록은 multipart: JSON 은 recipe · manual 칸에 문자열로 (사진 · 파일 칸은 BE 저장소가 정해지면)
@@ -89,9 +89,19 @@ export function useDeleteRecipe(storeId: string) {
   })
 }
 
+const postScan = async (storeId: string, image: File): Promise<RecipeScanDraft> => {
+  if (!isRealApi('recipes')) return scanRecipePhoto()
+  const form = new FormData()
+  form.append('image', image)
+  return apiFetch<RecipeScanDraft>(`/stores/${storeId}/recipe-scans`, {
+    method: 'POST',
+    body: form,
+  })
+}
+
 /** 사진 → AI 초안 (P1). 저장하지 않는다 */
-export function useScanRecipe() {
-  return useMutation({ mutationFn: scanRecipePhoto })
+export function useScanRecipe(storeId: string) {
+  return useMutation({ mutationFn: (image: File) => postScan(storeId, image) })
 }
 
 export function useCreateManual(storeId: string) {
