@@ -1,5 +1,6 @@
-import { toastApiError } from '@/lib/api/errors'
-import { useMyAvailability, useSubmitAvailability } from '@/lib/api/schedule'
+import { errorMessage, toastApiError } from '@/lib/api/errors'
+import { AVAILABILITY_MEMO_MAX, useMyAvailability, useSubmitAvailability } from '@/lib/api/schedule'
+import { ApiError } from '@/lib/apiClient'
 import type { AvailabilityDay, MyAvailability } from '@/lib/api/types'
 import {
   useStaffStore,
@@ -86,7 +87,14 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
           onClose()
           toast('제출했어요')
         },
-        onError: (error) => toastApiError(error, '제출하지 못했어요. 다시 시도해 주세요', submit),
+        onError: (error) => {
+          // 마감 · 이미 냄(409) · 알바생만 가능(403)은 다시 해도 같다 → BE 문장만 (409 는 훅이 서버 내용을 다시 불러옴)
+          if (error instanceof ApiError && (error.status === 409 || error.status === 403)) {
+            toast.error(errorMessage(error, '제출하지 못했어요'))
+            return
+          }
+          toastApiError(error, '제출하지 못했어요. 다시 시도해 주세요', submit)
+        },
       },
     )
 
@@ -138,6 +146,7 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
         </div>
 
         <Input
+          maxLength={AVAILABILITY_MEMO_MAX}
           value={memo}
           onChange={(event) => setMemo(event.target.value)}
           placeholder="메모 · 희망 횟수"

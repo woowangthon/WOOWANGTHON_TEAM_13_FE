@@ -846,6 +846,8 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 | `days` | `"available"` 가능 · `"unavailable"` 불가. 안 칠한 날은 빼요. 안 냈으면 `[]` |
 | `submittedAt` | 낸 시각, 안 냈으면 `null` (근무표: "제출 완료 · 확정 대기") |
 
+> ✅ 11/9 BE main 실제 응답과 같아요 (은교). 받는 달: 그달 25일까지는 다음 달, 지나면 다다음 달. 등록은 `{ month, days, memo }`, 수정(PATCH)은 `{ days, memo }` (통째로). 에러: `409 AVAILABILITY_EXISTS`(이미 냄) · `409 AVAILABILITY_CLOSED`(마감) · `403 FORBIDDEN`(알바생만) · `422`(달이 다른 날짜). 메모 최대 500자 · 날짜 31개. FE는 409면 서버 내용을 다시 불러오고 문장만 알려요. 스위치 이름은 `availability` (내 근무표 `schedule`과 따로)
+
 ### 7-3. `POST /stores/{storeId}/availabilities` (등록)
 처음 낼 때 (`availabilityId`가 `null`일 때). 요청
 ```json

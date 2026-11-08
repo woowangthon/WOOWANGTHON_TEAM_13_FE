@@ -12,12 +12,18 @@ import type {
   NewAvailability,
 } from '@/lib/api/types'
 import { http, isRealApi } from '@/lib/api/source'
+import { ApiError } from '@/lib/apiClient'
 import { fromDateKey } from '@/lib/date'
 
 /*
  * 근무 훅 (P1) — 담당: 민지
- * .env VITE_REAL_API 에 'schedule'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
+ * .env VITE_REAL_API 에 'schedule'를 넣으면 내 근무표(GET /schedules/me)를, 'availability'를 넣으면 근무 가능 시간을 진짜 API(apiFetch)로,
+ * 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
+ * 11/9: BE 에 근무 가능 시간만 있고 내 근무표는 아직 없다 → availability 만 켜고 schedule 은 가짜로 둔다
  */
+
+/** 근무 가능 시간 메모 최대 글자 수 (BE 검증) */
+export const AVAILABILITY_MEMO_MAX = 500
 
 export const scheduleKeys = {
   mine: (storeId: string) => ['stores', storeId, 'schedules', 'me'] as const,
@@ -25,20 +31,21 @@ export const scheduleKeys = {
 }
 
 const real = () => isRealApi('schedule')
+const realAvailability = () => isRealApi('availability')
 const availabilitiesPath = (storeId: string) => `/stores/${storeId}/availabilities`
 
 const fetchSchedule = (storeId: string) =>
   real() ? http.get<MySchedule>(`/stores/${storeId}/schedules/me`) : getMySchedule(storeId)
 const fetchAvailability = (storeId: string) =>
-  real()
+  realAvailability()
     ? http.get<MyAvailability>(`${availabilitiesPath(storeId)}/me`)
     : getMyAvailability(storeId)
 const postAvailability = (storeId: string, body: NewAvailability) =>
-  real()
+  realAvailability()
     ? http.post<MyAvailability>(availabilitiesPath(storeId), body)
     : createAvailability(storeId, body)
 const patchAvailability = (storeId: string, availabilityId: string, body: AvailabilityInput) =>
-  real()
+  realAvailability()
     ? http.patch<MyAvailability>(`${availabilitiesPath(storeId)}/${availabilityId}`, body)
     : updateAvailability(storeId, availabilityId, body)
 
@@ -92,7 +99,10 @@ export function useMyAvailability(storeId: string) {
   })
 }
 
-/** 근무 가능 시간 제출: 처음이면 등록(POST), 이미 냈으면 수정(PATCH) */
+/**
+ * 근무 가능 시간 제출: 처음이면 등록(POST), 이미 냈으면 수정(PATCH).
+ * 409(다른 기기에서 이미 냄 AVAILABILITY_EXISTS · 마감 AVAILABILITY_CLOSED)면 서버 내용을 다시 불러온다
+ */
 export function useSubmitAvailability(storeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -102,5 +112,10 @@ export function useSubmitAvailability(storeId: string) {
         : postAvailability(storeId, { ...body, month: saved.month }),
     onSuccess: (result) =>
       queryClient.setQueryData<MyAvailability>(scheduleKeys.availability(storeId), result),
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        void queryClient.invalidateQueries({ queryKey: scheduleKeys.availability(storeId) })
+      }
+    },
   })
 }
