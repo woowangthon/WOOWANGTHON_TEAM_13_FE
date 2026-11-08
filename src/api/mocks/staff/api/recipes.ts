@@ -20,6 +20,7 @@ function toSummary(r: MockRecipe): RecipeSummary {
     temp: r.temp,
     size: r.size,
     ingredients: r.ingredients.map(([name, amount]) => ({ name, amount })),
+    imageUrl: r.imageUrl ?? null,
     isNew: !!r.isNew,
     updatedAt: r.isNew ? NEW_UPDATED_AT : UPDATED_AT,
   }

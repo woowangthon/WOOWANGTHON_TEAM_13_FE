@@ -13,6 +13,8 @@ export interface Recipe {
   steps: string[]
   memo?: string
   isNew?: boolean
+  /** 메뉴 사진 주소 (없으면 훅이 메뉴 이름으로 시연 사진을 찾는다) */
+  imageUrl?: string | null
 }
 
 export const recipeCategories: Record<string, RecipeCategory[]> = {
