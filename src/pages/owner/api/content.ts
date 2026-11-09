@@ -1,10 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createManual,
   createRecipe,
   deleteManual,
   deleteRecipe,
-  getRecipePhotos,
   scanRecipePhoto,
   updateManual,
   updateRecipe,
@@ -55,21 +54,6 @@ const removeRecipe = (storeId: string, recipeId: string) =>
 /** 사진을 저장할 수 있는지 (BE 사진 저장 전까지 가짜 서버만) */
 export const canSaveRecipePhoto = () => !isRealApi('recipes')
 
-const recipePhotoKey = (storeId: string) => ['owner', 'stores', storeId, 'recipe-photos'] as const
-
-/**
- * 메뉴 사진 (recipeId → 주소). 가짜 서버는 시연 사진 + 사장님이 넣은 사진,
- * 진짜 API 는 BE 가 imageUrl 을 주기 전까지 비어 있다.
- */
-export function useRecipePhotos(storeId: string) {
-  return useQuery({
-    queryKey: recipePhotoKey(storeId),
-    queryFn: async (): Promise<Record<string, string | null>> =>
-      isRealApi('recipes') ? {} : getRecipePhotos(storeId),
-    enabled: !!storeId,
-  })
-}
-
 const postManual = (storeId: string, input: ManualInput) =>
   isRealApi('manuals')
     ? postForm<{ manualId: string }>(`/stores/${storeId}/manuals`, 'manual', input)
@@ -87,7 +71,6 @@ function useInvalidateRecipes(storeId: string) {
   const queryClient = useQueryClient()
   return () => {
     queryClient.invalidateQueries({ queryKey: recipeKeys.list(storeId) })
-    queryClient.invalidateQueries({ queryKey: recipePhotoKey(storeId) })
   }
 }
 
