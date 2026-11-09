@@ -1,4 +1,4 @@
-import { Camera, Sparkles } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { RecipeTemp } from '@/lib/api/types'
@@ -11,7 +11,8 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 사진으로 레시피 추가 (P1, docs/03 S3): 사진 → AI 초안 → 읽지 못한 칸(노란색)을 채우고 공개
-// 사장님이 [공개]해야 알바생 화면에 보인다. 메뉴 · 카테고리 · 온도도 못 읽으면 노란 칸으로 받는다
+// 메뉴마다 사진을 찍어 초안을 쌓고(다음 메뉴 찍기), 넘겨 가며 고친 뒤 한 번에 공개한다
+// BE 는 사진에서 맨 위 레시피 하나만 읽는다 (여러 개면 hasMoreRecipes) → 다음 메뉴만 보이게 다시 찍는다
 
 const TEMPS: { value: RecipeTemp; label: string }[] = [
   { value: 'ICE', label: 'ICE' },
@@ -35,6 +36,26 @@ interface Blanks {
   ingredients: number[]
 }
 
+/** 찍은 메뉴 하나 */
+interface ScanItem {
+  key: number
+  draft: RecipeScanDraft
+  blanks: Blanks
+}
+
+const blanksOf = (draft: RecipeScanDraft): Blanks => ({
+  name: !draft.name.trim(),
+  category: !draft.category?.trim(),
+  temp: !draft.temp,
+  ingredients: draft.ingredients.flatMap((ing, i) => (ing.amount?.trim() ? [] : [i])),
+})
+
+const isComplete = (d: RecipeScanDraft) =>
+  !!d.name.trim() &&
+  !!d.category?.trim() &&
+  !!d.temp &&
+  d.ingredients.every((i) => i.amount?.trim())
+
 export function ScanSheet({
   storeId,
   onClose,
@@ -45,24 +66,27 @@ export function ScanSheet({
   onSaved: (recipeId: string, category: string) => void
 }) {
   const [photo, setPhoto] = useState<string | null>(null)
-  const [draft, setDraft] = useState<RecipeScanDraft | null>(null)
-  const [blanks, setBlanks] = useState<Blanks | null>(null)
+  const [items, setItems] = useState<ScanItem[]>([])
+  const [page, setPage] = useState(0)
+  /** 메뉴가 있어도 사진 찍는 칸을 보여 줄지 (다음 메뉴 찍기) */
+  const [adding, setAdding] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const scan = useScanRecipe(storeId)
   const create = useCreateRecipe(storeId)
 
   useEffect(() => () => void (photo && URL.revokeObjectURL(photo)), [photo])
 
+  const current = items[Math.min(page, items.length - 1)]
+  const picking = items.length === 0 || adding
+
   const read = (file: File) => {
     setPhoto(URL.createObjectURL(file))
     scan.mutate(file, {
-      onSuccess: (result) => {
-        setDraft(result)
-        setBlanks({
-          name: !result.name.trim(),
-          category: !result.category?.trim(),
-          temp: !result.temp,
-          ingredients: result.ingredients.flatMap((ing, i) => (ing.amount?.trim() ? [] : [i])),
-        })
+      onSuccess: (draft) => {
+        setItems((list) => [...list, { key: Date.now(), draft, blanks: blanksOf(draft) }])
+        setPage(items.length)
+        setAdding(false)
+        setPhoto(null)
       },
       onError: (error) => {
         setPhoto(null)
@@ -73,43 +97,80 @@ export function ScanSheet({
     })
   }
 
-  const missing =
-    !draft ||
-    !draft.name.trim() ||
-    !draft.category?.trim() ||
-    !draft.temp ||
-    draft.ingredients.some((i) => !i.amount?.trim())
+  const setDraft = (draft: RecipeScanDraft) =>
+    setItems((list) => list.map((item) => (item.key === current.key ? { ...item, draft } : item)))
 
-  const publish = () => {
-    if (!draft?.category || !draft.temp) return
-    const category = draft.category.trim()
-    create.mutate(
-      {
-        name: draft.name.trim(),
-        category,
-        temp: draft.temp,
-        size: draft.size ?? '',
-        ingredients: draft.ingredients.map((i) => ({ name: i.name, amount: i.amount ?? '' })),
-        steps: draft.steps,
-        memo: null,
-      },
-      {
-        onSuccess: ({ recipeId }) => {
-          toast('공개했어요. 알바생 화면에 보여요')
-          onSaved(recipeId, category)
-        },
-        onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', publish),
-      },
-    )
+  const removeCurrent = () => {
+    setItems((list) => list.filter((item) => item.key !== current.key))
+    setPage((p) => Math.max(0, Math.min(p, items.length - 2)))
+  }
+
+  // 차례로 등록한다. 성공한 메뉴는 목록에서 빼고, 실패하면 남은 메뉴로 다시 시도할 수 있다
+  const publishAll = async () => {
+    const incomplete = items.findIndex((item) => !isComplete(item.draft))
+    if (incomplete >= 0) {
+      setPage(incomplete)
+      toast.error(`${incomplete + 1}번째 메뉴의 노란 칸을 채워 주세요`)
+      return
+    }
+    setPublishing(true)
+    const done: { recipeId: string; category: string }[] = []
+    let failed: unknown = null
+    const left: ScanItem[] = []
+    for (const item of items) {
+      const { draft } = item
+      const category = draft.category!.trim()
+      if (failed) {
+        left.push(item)
+        continue
+      }
+      try {
+        const { recipeId } = await create.mutateAsync({
+          name: draft.name.trim(),
+          category,
+          temp: draft.temp!,
+          size: draft.size ?? '',
+          ingredients: draft.ingredients.map((i) => ({ name: i.name, amount: i.amount ?? '' })),
+          steps: draft.steps,
+          memo: null,
+        })
+        done.push({ recipeId, category })
+      } catch (error) {
+        failed = error
+        left.push(item)
+      }
+    }
+    setPublishing(false)
+    if (failed) {
+      setItems(left)
+      setPage(0)
+      if (done.length) toast(`${done.length}개는 공개했어요`)
+      toastApiError(failed, '공개하지 못했어요. 다시 시도해 주세요', publishAll)
+      return
+    }
+    toast(`${done.length}개를 공개했어요. 알바생 화면에 보여요`)
+    onSaved(done[0].recipeId, done[0].category)
   }
 
   return (
     <BottomSheet open onClose={onClose} label="사진으로 추가" closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">사진으로 추가</h2>
+        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+          사진으로 추가
+          {items.length > 0 && (
+            <span className="ml-2 text-base font-bold text-muted-foreground">
+              메뉴 {items.length}개
+            </span>
+          )}
+        </h2>
 
-        {!draft && (
+        {picking && (
           <div className="flex flex-col gap-3.5">
+            {items.length > 0 && (
+              <span className="text-[13px] text-[#6B7068]">
+                다음 메뉴만 보이게 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)
+              </span>
+            )}
             <label className="relative flex h-[190px] cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-[#6B7068]">
               {photo ? (
                 <img
@@ -120,7 +181,9 @@ export function ScanSheet({
               ) : (
                 <>
                   <Camera className="size-7" />
-                  <span className="text-sm font-semibold">레시피 사진 찍기 · 고르기</span>
+                  <span className="text-sm font-semibold">
+                    {items.length > 0 ? '다음 메뉴 찍기 · 고르기' : '레시피 사진 찍기 · 고르기'}
+                  </span>
                 </>
               )}
               <input
@@ -131,6 +194,7 @@ export function ScanSheet({
                 disabled={scan.isPending}
                 onChange={(event) => {
                   const file = event.target.files?.[0]
+                  event.target.value = ''
                   if (file) read(file)
                 }}
               />
@@ -141,87 +205,159 @@ export function ScanSheet({
                 읽고 있어요…
               </div>
             )}
+            {items.length > 0 && !scan.isPending && (
+              <Button variant="soft" onClick={() => setAdding(false)}>
+                취소
+              </Button>
+            )}
           </div>
         )}
 
-        {draft && blanks && (
+        {!picking && current && (
           <div className="flex flex-col gap-3">
-            <span className="text-[13px] text-[#6B7068]">
-              AI 초안 · 노란 칸은 직접 입력해 주세요
-            </span>
-            <dl className="m-0 flex flex-col rounded-[22px] bg-white px-[18px] py-1">
-              <Row
-                label="메뉴"
-                value={draft.name}
-                blank={blanks.name}
-                onChange={(name) => setDraft({ ...draft, name })}
-              />
-              <Row
-                label="카테고리"
-                value={draft.category ?? ''}
-                blank={blanks.category}
-                onChange={(category) => setDraft({ ...draft, category })}
-              />
-              {blanks.temp && (
-                <div className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px]">
-                  <dt className="text-[#6B7068]">온도</dt>
-                  <dd className="m-0 flex gap-1" role="radiogroup" aria-label="온도">
-                    {TEMPS.map((t) => (
-                      <button
-                        key={t.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={draft.temp === t.value}
-                        onClick={() => setDraft({ ...draft, temp: t.value })}
-                        className={cn(
-                          'h-[38px] rounded-xl px-3 text-[13px] font-bold',
-                          draft.temp === t.value
-                            ? 'bg-brand text-white'
-                            : 'border-[1.5px] border-[#E8C66A] bg-[#FFF6D9]',
-                        )}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </dd>
-                </div>
-              )}
-              {draft.ingredients.map((ing, i) => (
-                <div
-                  key={ing.name}
-                  className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px] last:border-b-0"
+            {items.length > 1 && (
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  aria-label="이전 메뉴"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                  className="flex size-9 items-center justify-center rounded-full bg-white disabled:opacity-40"
                 >
-                  <dt className="text-[#6B7068]">{ing.name}</dt>
-                  <dd className="m-0">
-                    {blanks.ingredients.includes(i) ? (
-                      <input
-                        value={ing.amount ?? ''}
-                        onChange={(event) =>
-                          setDraft({
-                            ...draft,
-                            ingredients: draft.ingredients.map((x, j) =>
-                              j === i ? { ...x, amount: event.target.value } : x,
-                            ),
-                          })
-                        }
-                        placeholder="입력"
-                        aria-label={`${ing.name} 양`}
-                        className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#E8C66A] bg-[#FFF6D9] px-2.5 text-sm"
-                      />
-                    ) : (
-                      <span className="font-bold">{ing.amount}</span>
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <Button className="h-[54px]" disabled={missing || create.isPending} onClick={publish}>
-              공개
-            </Button>
+                  <ChevronLeft className="size-5" />
+                </button>
+                <span className="text-sm font-bold">
+                  {page + 1} / {items.length}
+                </span>
+                <button
+                  type="button"
+                  aria-label="다음 메뉴"
+                  disabled={page === items.length - 1}
+                  onClick={() => setPage(page + 1)}
+                  className="flex size-9 items-center justify-center rounded-full bg-white disabled:opacity-40"
+                >
+                  <ChevronRight className="size-5" />
+                </button>
+              </div>
+            )}
+
+            {current.draft.hasMoreRecipes && (
+              <div className="rounded-[18px] bg-warm px-4 py-3 text-[13px] font-semibold text-warm-foreground">
+                사진에 레시피가 여러 개 있어서 맨 위 메뉴만 읽었어요. 나머지는 [다음 메뉴 찍기]로 한
+                메뉴씩 찍어 주세요
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-[#6B7068]">
+                AI 초안 · 노란 칸은 직접 입력해 주세요
+              </span>
+              <button
+                type="button"
+                onClick={removeCurrent}
+                className="p-0 text-[13px] font-semibold text-destructive-foreground"
+              >
+                빼기
+              </button>
+            </div>
+            <DraftFields key={current.key} item={current} onChange={setDraft} />
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="soft"
+                className="h-[54px]"
+                disabled={publishing}
+                onClick={() => setAdding(true)}
+              >
+                다음 메뉴 찍기
+              </Button>
+              <Button className="h-[54px]" disabled={publishing} onClick={publishAll}>
+                {items.length > 1 ? `모두 공개 (${items.length})` : '공개'}
+              </Button>
+            </div>
           </div>
         )}
       </div>
     </BottomSheet>
+  )
+}
+
+/** 초안 한 개: 메뉴 · 카테고리 · 온도 · 재료 (못 읽은 칸은 노란 입력) */
+function DraftFields({
+  item,
+  onChange,
+}: {
+  item: ScanItem
+  onChange: (draft: RecipeScanDraft) => void
+}) {
+  const { draft, blanks } = item
+  return (
+    <dl className="m-0 flex flex-col rounded-[22px] bg-white px-[18px] py-1">
+      <Row
+        label="메뉴"
+        value={draft.name}
+        blank={blanks.name}
+        onChange={(name) => onChange({ ...draft, name })}
+      />
+      <Row
+        label="카테고리"
+        value={draft.category ?? ''}
+        blank={blanks.category}
+        onChange={(category) => onChange({ ...draft, category })}
+      />
+      {blanks.temp && (
+        <div className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px]">
+          <dt className="text-[#6B7068]">온도</dt>
+          <dd className="m-0 flex gap-1" role="radiogroup" aria-label="온도">
+            {TEMPS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                role="radio"
+                aria-checked={draft.temp === t.value}
+                onClick={() => onChange({ ...draft, temp: t.value })}
+                className={cn(
+                  'h-[38px] rounded-xl px-3 text-[13px] font-bold',
+                  draft.temp === t.value
+                    ? 'bg-brand text-white'
+                    : 'border-[1.5px] border-[#E8C66A] bg-[#FFF6D9]',
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </dd>
+        </div>
+      )}
+      {draft.ingredients.map((ing, i) => (
+        <div
+          key={`${ing.name}-${i}`}
+          className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px] last:border-b-0"
+        >
+          <dt className="text-[#6B7068]">{ing.name}</dt>
+          <dd className="m-0">
+            {blanks.ingredients.includes(i) ? (
+              <input
+                value={ing.amount ?? ''}
+                onChange={(event) =>
+                  onChange({
+                    ...draft,
+                    ingredients: draft.ingredients.map((x, j) =>
+                      j === i ? { ...x, amount: event.target.value } : x,
+                    ),
+                  })
+                }
+                placeholder="입력"
+                aria-label={`${ing.name} 양`}
+                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#E8C66A] bg-[#FFF6D9] px-2.5 text-sm"
+              />
+            ) : (
+              <span className="font-bold">{ing.amount}</span>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
