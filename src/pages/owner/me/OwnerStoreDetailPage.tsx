@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { MIN_WAGE } from '@/api/mocks/owner/data'
@@ -106,12 +107,29 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
   return (
     <OwnerFrame colors={store} className="gap-[22px] pb-10">
       <Header title="매장 상세" onBack={close} />
-      <input
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        aria-label="매장 이름"
-        className="w-full border-none bg-transparent px-1 text-[28px] font-extrabold tracking-[-0.03em]"
-      />
+      {/* 이름 옆 연필 · 점선 밑줄로 고칠 수 있다는 힌트 (알바 마이페이지와 같은 모양) */}
+      <label className="group flex min-w-0 items-center gap-2 px-1">
+        <span className="inline-grid min-w-0 max-w-full">
+          <span
+            aria-hidden="true"
+            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[28px] font-extrabold tracking-[-0.03em] whitespace-pre"
+          >
+            {name || ' '}
+          </span>
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
+            size={1}
+            aria-label="매장 이름"
+            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-[28px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+          />
+        </span>
+        <Pencil
+          aria-hidden="true"
+          className="size-[18px] shrink-0 text-subtle group-focus-within:text-brand"
+        />
+      </label>
 
       <Section label="급여일">
         <div className="relative overflow-hidden rounded-[22px] bg-card shadow-soft">
