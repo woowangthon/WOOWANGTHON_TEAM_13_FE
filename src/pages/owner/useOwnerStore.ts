@@ -72,7 +72,7 @@ export function useOwnerStore() {
     isPending: query.isPending,
     error: query.error,
     retry: () => query.refetch(),
-    /** 오늘: 진짜 인수인계(handover)면 실제 오늘(KST), 가짜 데이터면 시연 날짜 (알바 홈과 같은 규칙) */
-    today: isRealApi('handover') ? todayInKst() : ownerToday(),
+    /** 오늘: 진짜 인수인계 · 급여(handover · payroll)면 실제 오늘(KST), 가짜 데이터면 시연 날짜 (알바 홈과 같은 규칙) */
+    today: isRealApi('handover') || isRealApi('payroll') ? todayInKst() : ownerToday(),
   }
 }

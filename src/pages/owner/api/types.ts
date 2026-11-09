@@ -223,6 +223,37 @@ export interface ScheduleDraft {
   rows: DraftRow[]
 }
 
+/** BE 직원별 예상 급여 한 줄 (GET /stores/{storeId}/payroll/estimates?month=) — 화면 모양은 MemberPay */
+export interface PayrollEstimateSummary {
+  estimateId: string
+  memberId: string
+  staffName: string
+  hourlyWage: number
+  taxType: 'none' | '3.3' | 'ins'
+  hours: number
+  basePay: number
+  weeklyAllowance: number
+  /** 세전 (화면의 total) */
+  grossPay: number
+  deduction: number
+  /** 공제 후 실수령 */
+  netPay: number
+  weeks: {
+    weekStart: string
+    hours: number
+    weeklyAllowanceEligible: boolean
+    weeklyAllowance: number
+  }[]
+}
+
+export interface PayrollEstimateList {
+  storeId: string
+  month: string
+  payday: number | null
+  members: PayrollEstimateSummary[]
+  isEstimate: boolean
+}
+
 /** 직원 한 명의 이번 달 급여 (참고용, 계산은 코드) */
 export interface MemberPay {
   memberId: string

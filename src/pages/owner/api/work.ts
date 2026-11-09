@@ -11,10 +11,47 @@ import {
   getStorePayroll,
   saveDayMemo,
 } from '@/api/mocks/owner/api'
+import { http, isRealApi } from '@/lib/api/source'
+import { toDateKey, todayInKst } from '@/lib/date'
 import { ownerKeys } from '@/pages/owner/api/stores'
-import type { ScheduleDraft } from '@/pages/owner/api/types'
+import type { MemberPay, PayrollEstimateList, ScheduleDraft } from '@/pages/owner/api/types'
 
-// 근무(달력 · 추천 스케줄) · 급여 훅 (임시, 담당: 나현) — 가짜 서버(api/mocks/owner)
+/*
+ * 근무(달력 · 추천 스케줄) · 급여 훅 — 담당: 나현
+ * 급여는 .env VITE_REAL_API 에 'payroll'(+ 'stores')을 넣으면 진짜 API (알바 예상 급여와 같은 스위치).
+ * 근무 달력 · 추천 스케줄은 아직 가짜 서버(api/mocks/owner).
+ */
+
+/*
+ * 직원별 이번 달 급여. BE 이름을 화면 모양(MemberPay)으로 바꾼다 (연서 공유):
+ * staffName → name · grossPay → total (공제 후는 netPay) · weeklyAllowanceEligible → eligible · today 는 BE 에 없다
+ */
+const fetchStorePayroll = async (
+  storeId: string,
+): Promise<{ month: string; members: MemberPay[] }> => {
+  if (!isRealApi('payroll')) return getStorePayroll(storeId)
+  const month = toDateKey(todayInKst()).slice(0, 7)
+  const data = await http.get<PayrollEstimateList>(
+    `/stores/${storeId}/payroll/estimates?month=${month}`,
+  )
+  return {
+    month: data.month,
+    members: data.members.map((m) => ({
+      memberId: m.memberId,
+      storeId,
+      name: m.staffName,
+      hours: m.hours,
+      basePay: m.basePay,
+      weeklyAllowance: m.weeklyAllowance,
+      total: m.grossPay,
+      weeks: m.weeks.map((w) => ({
+        weekStart: w.weekStart,
+        hours: w.hours,
+        eligible: w.weeklyAllowanceEligible,
+      })),
+    })),
+  }
+}
 
 /** 매장 전체 근무 (한 달) */
 export function useMonthShifts(storeId: string, month: string) {
@@ -100,7 +137,7 @@ export function useConfirmDraft(storeId: string) {
 export function useStorePayroll(storeId: string) {
   return useQuery({
     queryKey: ownerKeys.payroll(storeId),
-    queryFn: () => getStorePayroll(storeId),
+    queryFn: () => fetchStorePayroll(storeId),
     enabled: !!storeId,
   })
 }
@@ -110,7 +147,7 @@ export function useStorePayrolls(storeIds: string[]) {
   return useQueries({
     queries: storeIds.map((storeId) => ({
       queryKey: ownerKeys.payroll(storeId),
-      queryFn: () => getStorePayroll(storeId),
+      queryFn: () => fetchStorePayroll(storeId),
     })),
   })
 }
