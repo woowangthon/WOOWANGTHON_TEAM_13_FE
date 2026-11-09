@@ -9,7 +9,14 @@ import {
   verifyBizNo,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
-import type { NewStore, OwnerStore, StoreResponse, StoreUpdate } from '@/pages/owner/api/types'
+import type {
+  BusinessSize,
+  NewStore,
+  OwnerStore,
+  StoreResponse,
+  StoreSize,
+  StoreUpdate,
+} from '@/pages/owner/api/types'
 
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
@@ -17,8 +24,15 @@ import type { NewStore, OwnerStore, StoreResponse, StoreUpdate } from '@/pages/o
  * 프로필 · 사업자 확인은 아직 가짜 서버만 (BE 미구현).
  */
 
+/** 사업장 규모: 화면 under5 · over5 ↔ BE UNDER_FIVE · FIVE_OR_MORE */
+const toBusinessSize = (size: StoreSize): BusinessSize =>
+  size === 'over5' ? 'FIVE_OR_MORE' : 'UNDER_FIVE'
+
+/** 급여일을 안 정한 매장(null)은 화면에서 10일로 보여 준다 (저장하면 그 값이 들어간다) */
+const DEFAULT_PAYDAY = 10
+
 /*
- * BE 매장 응답 → 화면 모양. BE 에 아직 없는 값(종류 · 급여일 · 규모 · 직원 수)은 기본값으로 채운다.
+ * BE 매장 응답 → 화면 모양. BE 에 없는 값(종류 · 직원 수 · 사업자번호)은 기본값으로 채운다.
  * 테마는 null 이면 화면(useOwnerStore)이 매장 순서대로 색을 고른다.
  */
 const toOwnerStore = (store: StoreResponse): OwnerStore => ({
@@ -28,8 +42,8 @@ const toOwnerStore = (store: StoreResponse): OwnerStore => ({
   address: store.address,
   theme: null,
   photoUrl: store.photoUrl,
-  payday: 10,
-  size: 'under5',
+  payday: store.payday ?? DEFAULT_PAYDAY,
+  size: store.businessSize === 'FIVE_OR_MORE' ? 'over5' : 'under5',
   bizNo: null,
   staffCount: 0,
 })
@@ -45,14 +59,19 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
   const store = await http.post<StoreResponse>('/stores', {
     name: input.name,
     address: input.address,
+    businessSize: toBusinessSize(input.size),
   })
   return toOwnerStore(store)
 }
 
-// BE 는 이름 · 주소 · 사진만 바꿀 수 있다. 급여일 · 규모는 BE 에 칸이 생기면 같이 보낸다
+// 이름 · 급여일 · 사업장 규모 (BE #27). 급여일은 1~28 · 31(말일)만 받는다
 const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerStore> => {
   if (!isRealApi('stores')) return updateStore(storeId, patch)
-  const store = await http.patch<StoreResponse>(`/stores/${storeId}`, { name: patch.name })
+  const store = await http.patch<StoreResponse>(`/stores/${storeId}`, {
+    name: patch.name,
+    payday: patch.payday,
+    businessSize: patch.size && toBusinessSize(patch.size),
+  })
   return toOwnerStore(store)
 }
 

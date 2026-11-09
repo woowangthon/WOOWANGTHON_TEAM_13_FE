@@ -20,7 +20,8 @@ import { cn } from '@/ui/utils'
 
 // 매장 상세 (마이페이지 › 내 매장): 매장 이름 · 급여일 · 사업장 규모 · 직원별 시급 → 저장
 
-const DAYS = Array.from({ length: 31 }, (_, i) => i + 1)
+// 급여일: 1~28일 · 말일(31) — BE 가 받는 값만 (29 · 30일은 11/10 회의에서 정하기)
+const DAYS = [...Array.from({ length: 28 }, (_, i) => i + 1), 31]
 const ROW = 44
 
 export default function OwnerStoreDetailPage() {
@@ -56,12 +57,12 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
 
   // 처음 열 때 저장된 급여일로 휠을 맞춘다
   useEffect(() => {
-    wheel.current?.scrollTo({ top: (store.payday - 1) * ROW })
+    wheel.current?.scrollTo({ top: Math.max(0, DAYS.indexOf(store.payday)) * ROW })
   }, [store.payday])
 
   const onWheel = () => {
     if (!wheel.current) return
-    const index = Math.max(0, Math.min(30, Math.round(wheel.current.scrollTop / ROW)))
+    const index = Math.max(0, Math.min(DAYS.length - 1, Math.round(wheel.current.scrollTop / ROW)))
     if (DAYS[index] !== payday) setPayday(DAYS[index])
   }
 
