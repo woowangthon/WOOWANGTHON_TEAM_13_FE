@@ -15,10 +15,10 @@ import { cn } from '@/ui/utils'
 // 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): 매장 이름 · 주소 · 직원 수 → 등록 완료
 // 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new)
 
+// 사업장 규모는 5인 미만 · 이상 두 가지 (BE businessSize, 매장 상세와 같은 기준)
 const SIZES: { label: string; size: StoreSize }[] = [
-  { label: '1~4명', size: 'under5' },
-  { label: '5~9명', size: 'over5' },
-  { label: '10명+', size: 'over5' },
+  { label: '5인 미만', size: 'under5' },
+  { label: '5인 이상', size: 'over5' },
 ]
 
 export default function StoreCreatePage() {
@@ -87,8 +87,12 @@ export default function StoreCreatePage() {
           />
         </label>
         <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-          <span className="text-xs font-bold text-muted-foreground">직원 수</span>
-          <div className="mt-0.5 grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="직원 수">
+          <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
+          <div
+            className="mt-0.5 grid grid-cols-2 gap-1.5"
+            role="radiogroup"
+            aria-label="사업장 규모"
+          >
             {SIZES.map((s) => (
               <button
                 key={s.label}
@@ -107,7 +111,7 @@ export default function StoreCreatePage() {
           </div>
         </div>
         <span className="px-2 text-xs text-muted-foreground">
-          {size === 'under5' ? '5인 미만' : '5인 이상'} 사업장 · 급여 계산에 반영돼요
+          직원 수 기준 · 주휴 · 가산 수당 계산에 반영돼요
         </span>
       </div>
 

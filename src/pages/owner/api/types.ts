@@ -32,10 +32,13 @@ export interface NewStore {
   bizNo?: string | null
 }
 
-/** 매장 수정 요청 (PATCH /stores/{storeId}) — 급여일 · 규모는 아직 가짜 서버에만 저장 */
+/** 매장 수정 요청 (PATCH /stores/{storeId}) — 이름 · 급여일 · 사업장 규모 */
 export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size'>>
 
-/** BE 매장 응답 (GET · POST · PATCH /stores) */
+/** BE 사업장 규모 (화면 StoreSize: under5 · over5) */
+export type BusinessSize = 'UNDER_FIVE' | 'FIVE_OR_MORE'
+
+/** BE 매장 응답 (GET · POST · PATCH /stores). 급여일은 1~28 · 31(말일), 안 정했으면 null */
 export interface StoreResponse {
   storeId: string
   name: string
@@ -43,6 +46,8 @@ export interface StoreResponse {
   ownerName: string
   businessVerificationId: number | null
   photoUrl: string | null
+  payday: number | null
+  businessSize: BusinessSize | null
 }
 
 /** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */
