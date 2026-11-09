@@ -1,5 +1,6 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { fromDateKey } from '@/lib/date'
+import { fromDateKey, toDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import type { MemberPay } from '@/pages/owner/api/types'
 import { useStorePayrolls } from '@/pages/owner/api/work'
@@ -14,17 +15,26 @@ import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 직원별 급여 (P1, docs/03 S7): 매장별 · 전체 합계 → 직원 → 주별 근거. 주휴 포함 · 공휴일 가산 없음 · 참고용
+// ◀ ▶ 로 지난달 · 다음 달(확정 근무표 기준 예상)까지 넘겨 본다
 export default function OwnerPayrollPage() {
   const { store, stores, today } = useOwnerStore()
   // 처음에는 지금 매장. 'all' 이면 모든 매장
   const [picked, setScope] = useState<string | null>(null)
   const scope = picked ?? store.storeId
   const [openId, setOpenId] = useState<string | null>(null)
+  // 0 = 이번 달 · -1 = 지난달 · 1 = 다음 달 (다음 달까지만)
+  const [offset, setOffset] = useState(0)
+  const base = new Date(today.getFullYear(), today.getMonth() + offset, 1)
+  const month = toDateKey(base).slice(0, 7)
+  const monthLabel = `${base.getFullYear() !== today.getFullYear() ? `${base.getFullYear()}년 ` : ''}${base.getMonth() + 1}월`
   const targets = scope === 'all' ? stores : stores.filter((s) => s.storeId === scope)
   const effective = targets.length ? targets : [store]
 
   // 매장마다 급여를 불러온다 (전체면 모든 매장)
-  const results = useStorePayrolls(effective.map((s) => s.storeId))
+  const results = useStorePayrolls(
+    effective.map((s) => s.storeId),
+    month,
+  )
   const pending = results.some((r) => r.isPending)
   const members = results.flatMap((r) => r.data?.members ?? [])
   const total = members.reduce((sum, m) => sum + m.total, 0)
@@ -51,7 +61,28 @@ export default function OwnerPayrollPage() {
       )}
 
       <Card variant="dark" className="gap-2 p-6">
-        <span className="text-[13px] opacity-80">{today.getMonth() + 1}월 급여 합계 · 참고용</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[13px] opacity-80">{monthLabel} 급여 합계 · 참고용</span>
+          <span className="flex gap-1.5">
+            <button
+              type="button"
+              aria-label="지난달"
+              onClick={() => setOffset(offset - 1)}
+              className="flex size-8 items-center justify-center rounded-full bg-white/15"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="다음 달"
+              disabled={offset >= 1}
+              onClick={() => setOffset(offset + 1)}
+              className="flex size-8 items-center justify-center rounded-full bg-white/15 disabled:opacity-30"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </span>
+        </div>
         <span className="text-[38px] font-extrabold tracking-[-0.03em]">
           {pending ? '—' : formatWon(total)}
         </span>
@@ -62,7 +93,7 @@ export default function OwnerPayrollPage() {
         <Spinner />
       ) : members.length === 0 ? (
         <EmptyGuide
-          message="아직 급여를 계산할 근무가 없어요"
+          message={`${monthLabel}에는 급여를 계산할 근무가 없어요`}
           hint="알바생이 근무하면 직원별 급여가 여기에 보여요"
         />
       ) : (
@@ -97,7 +128,7 @@ export default function OwnerPayrollPage() {
         </ul>
       )}
 
-      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} month={today.getMonth() + 1} />}
+      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} month={base.getMonth() + 1} />}
     </div>
   )
 }

@@ -12,7 +12,6 @@ import {
   saveDayMemo,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
-import { toDateKey, todayInKst } from '@/lib/date'
 import * as real from '@/pages/owner/api/schedule'
 import { ownerKeys } from '@/pages/owner/api/stores'
 import type { MemberPay, PayrollEstimateList, ScheduleDraft } from '@/pages/owner/api/types'
@@ -32,9 +31,9 @@ export const canOwnerTakeShift = () => !isRealApi('schedule')
  */
 const fetchStorePayroll = async (
   storeId: string,
+  month: string,
 ): Promise<{ month: string; members: MemberPay[] }> => {
-  if (!isRealApi('payroll')) return getStorePayroll(storeId)
-  const month = toDateKey(todayInKst()).slice(0, 7)
+  if (!isRealApi('payroll')) return getStorePayroll(storeId, month)
   const data = await http.get<PayrollEstimateList>(
     `/stores/${storeId}/payroll/estimates?month=${month}`,
   )
@@ -161,20 +160,20 @@ export function useConfirmDraft(storeId: string) {
 }
 
 /** 직원별 이번 달 급여 (참고용) */
-export function useStorePayroll(storeId: string) {
+export function useStorePayroll(storeId: string, month: string) {
   return useQuery({
-    queryKey: ownerKeys.payroll(storeId),
-    queryFn: () => fetchStorePayroll(storeId),
+    queryKey: [...ownerKeys.payroll(storeId), month],
+    queryFn: () => fetchStorePayroll(storeId, month),
     enabled: !!storeId,
   })
 }
 
 /** 여러 매장 급여를 한 번에 (급여 탭 '전체') */
-export function useStorePayrolls(storeIds: string[]) {
+export function useStorePayrolls(storeIds: string[], month: string) {
   return useQueries({
     queries: storeIds.map((storeId) => ({
-      queryKey: ownerKeys.payroll(storeId),
-      queryFn: () => fetchStorePayroll(storeId),
+      queryKey: [...ownerKeys.payroll(storeId), month],
+      queryFn: () => fetchStorePayroll(storeId, month),
     })),
   })
 }

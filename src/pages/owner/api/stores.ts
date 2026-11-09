@@ -9,6 +9,7 @@ import {
   verifyBizNo,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
+import { useAuthStore, type Me } from '@/lib/authStore'
 import type {
   BusinessSize,
   NewStore,
@@ -97,15 +98,32 @@ export function useOwnerStores() {
   return useQuery({ queryKey: ownerKeys.stores, queryFn: fetchStores })
 }
 
+/*
+ * 사장님 이름: 로그인한 사용자 이름(me.nickname, auth.ts 가 GET /users/me 로 채움)을 쓴다.
+ * 로그인 없이 보는 시연(VITE_SKIP_AUTH)일 때만 가짜 프로필.
+ */
 export function useOwnerProfile() {
-  return useQuery({ queryKey: ownerKeys.profile, queryFn: getProfile })
+  const nickname = useAuthStore((state) => state.me?.nickname)
+  return useQuery({
+    queryKey: [...ownerKeys.profile, nickname ?? null],
+    queryFn: async () => (nickname ? { name: nickname } : getProfile()),
+  })
 }
 
+/** 이름 바꾸기: 진짜 API 면 PATCH /users/me { nickname } (알바 마이페이지와 같은 API) → 로그인 정보도 바꾼다 */
 export function useUpdateOwnerProfile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (profile) => queryClient.setQueryData(ownerKeys.profile, profile),
+    mutationFn: async (name: string) => {
+      if (!isRealApi('users')) return updateProfile(name)
+      const me = await http.patch<Me>('/users/me', { nickname: name.trim() })
+      return { name: me.nickname }
+    },
+    onSuccess: ({ name }) => {
+      const { me, setMe } = useAuthStore.getState()
+      if (me) setMe({ ...me, nickname: name })
+      queryClient.invalidateQueries({ queryKey: ownerKeys.profile })
+    },
   })
 }
 

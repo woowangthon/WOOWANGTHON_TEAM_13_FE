@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { toDateKey } from '@/lib/date'
 import { formatDate, formatTime, formatWon } from '@/lib/format'
 import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
@@ -186,7 +187,7 @@ function QuestionCard({ question, onOpen }: { question: OwnerQuestionItem; onOpe
 }
 
 function PayrollCard({ storeId, today }: { storeId: string; today: Date }) {
-  const payroll = useStorePayroll(storeId)
+  const payroll = useStorePayroll(storeId, toDateKey(today).slice(0, 7))
   const total = (payroll.data?.members ?? []).reduce((sum, m) => sum + m.total, 0)
   return (
     <Link
