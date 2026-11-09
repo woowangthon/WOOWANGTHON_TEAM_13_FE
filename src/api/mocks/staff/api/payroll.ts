@@ -1,17 +1,18 @@
 import { calcPay, initialPaySettings, payMonth, storePayrolls } from '@/api/mocks/staff/payroll'
 import { findStaffStore, shiftHours } from '@/api/mocks/staff/stores'
-import type { PayrollEstimate, PaySettingsInput, PayWorkDay } from '@/lib/api/types'
+import type { PayrollEstimate, PayWorkDay, TaxType } from '@/lib/api/types'
 
 /*
  * 가짜 서버: 급여 API (docs/07 8) — 계산은 지금처럼 규칙(payroll.ts calcPay), AI 는 설명만.
- * 급여 설정(시급 · 급여일 · 공제 · 주휴수당)은 서버가 기억한다고 보고 메모리에 둔다.
+ * 급여 설정(시급 · 급여일 · 공제 · 주휴수당)은 사장님이 정한 값(가짜 데이터)을 그대로 쓴다. 알바는 바꿀 수 없다.
  */
 
-const settings = new Map<string, PaySettingsInput>() // storeId → 급여 설정
-
-function settingsOf(storeId: string): PaySettingsInput {
-  const saved = settings.get(storeId)
-  if (saved) return saved
+function settingsOf(storeId: string): {
+  hourlyWage: number
+  payday: number
+  taxType: TaxType
+  weeklyAllowanceEnabled: boolean
+} {
   const { wage, payday, tax, weeklyAllowance } =
     initialPaySettings[storeId] ?? initialPaySettings.dalbit
   return { hourlyWage: wage, payday, taxType: tax, weeklyAllowanceEnabled: weeklyAllowance }
@@ -63,9 +64,4 @@ export async function getMyPayrollEstimate(storeId: string): Promise<PayrollEsti
     aiNote: payroll.aiNote,
     isEstimate: payroll.planned.length > 0,
   }
-}
-
-/** 임시: 알바 화면 급여 설정 저장 — 실제 API 없음 (BE 답 전까지, docs/07 질문 4) */
-export async function saveMyPaySettings(storeId: string, input: PaySettingsInput) {
-  settings.set(storeId, input)
 }

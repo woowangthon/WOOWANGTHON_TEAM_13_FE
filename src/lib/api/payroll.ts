@@ -1,12 +1,12 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getMyPayrollEstimate, saveMyPaySettings } from '@/api/mocks/staff/api/payroll'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import { getMyPayrollEstimate } from '@/api/mocks/staff/api/payroll'
 import { http, isRealApi } from '@/lib/api/source'
-import type { PayrollEstimate, PaySettingsInput } from '@/lib/api/types'
+import type { PayrollEstimate } from '@/lib/api/types'
 
 /*
  * 급여 훅 (P1) — 담당: 민지
  * .env VITE_REAL_API 에 'payroll'를 넣으면 진짜 API(apiFetch), 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 8
- * 시급 설정은 사장님 기능(PUT /stores/{storeId}/members/{memberId}/hourly-wage, 사장님 화면).
+ * 급여 설정(시급 · 급여일 · 공제 · 주휴수당)은 사장님이 정한다 → 알바는 예상 급여 응답으로 보기만 한다 (docs/07 질문 4).
  */
 
 /** 2026년 최저시급 (docs/03 S4) */
@@ -67,21 +67,5 @@ export function useMyPayrollEstimates(storeIds: string[], month: string | null =
       error: results.find((result) => result.error)?.error ?? null,
       retry: () => results.forEach((result) => result.isError && result.refetch()),
     }),
-  })
-}
-
-/**
- * 임시: 알바 화면 급여 설정 저장 — BE 에 알바용 API 가 없어 가짜 서버에만 저장한다.
- * BE 답(docs/07 질문 4: 알바 화면은 보기 전용?)이 오면 지우거나 바꾼다.
- */
-export function useSaveMyPaySettings(storeId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    // 진짜 API 에는 알바용 저장이 없어서, payroll 을 켜면 저장은 실패로 알린다 (토스트)
-    mutationFn: (input: PaySettingsInput) =>
-      isRealApi('payroll')
-        ? Promise.reject(new Error('급여 설정 저장 API 가 아직 없어요'))
-        : saveMyPaySettings(storeId, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: payrollKeys.estimate(storeId) }),
   })
 }

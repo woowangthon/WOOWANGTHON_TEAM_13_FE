@@ -372,11 +372,3 @@ export interface PayrollEstimate {
   aiNote: string | null
   isEstimate: boolean
 }
-
-/** 임시: 알바 화면 급여 설정 저장 (BE 답 전까지 가짜 서버만, docs/07 질문 4) */
-export interface PaySettingsInput {
-  hourlyWage: number
-  payday: number
-  taxType: TaxType
-  weeklyAllowanceEnabled: boolean
-}
