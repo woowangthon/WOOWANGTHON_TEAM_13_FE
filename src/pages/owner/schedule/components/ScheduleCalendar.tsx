@@ -5,7 +5,13 @@ import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { useMembers } from '@/pages/owner/api/members'
 import type { WorkShift } from '@/pages/owner/api/types'
-import { useAddShift, useDeleteShift, useMonthShifts, useSaveDayMemo } from '@/pages/owner/api/work'
+import {
+  canOwnerTakeShift,
+  useAddShift,
+  useDeleteShift,
+  useMonthShifts,
+  useSaveDayMemo,
+} from '@/pages/owner/api/work'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { LoadError } from '@/shared/LoadError'
 import { Button } from '@/ui/Button'
@@ -47,9 +53,19 @@ export function ScheduleCalendar({ storeId, today }: { storeId: string; today: D
         const [bg, fg] = avatarColors(i)
         return { memberId: m.memberId, name: m.name, bg, fg }
       }),
-    { memberId: OWNER, name: '사장님', bg: 'var(--brand)', fg: '#F1ECE3' },
+    // 진짜 API 는 사장님 근무를 아직 저장하지 못해서 고를 수 없게 뺀다
+    ...(canOwnerTakeShift()
+      ? [{ memberId: OWNER, name: '사장님', bg: 'var(--brand)', fg: '#F1ECE3' }]
+      : []),
   ]
-  const colorOf = (id: string) => people.find((p) => p.memberId === id) ?? people[people.length - 1]
+  // 목록에 없는 사람(퇴사 등)은 회색
+  const colorOf = (id: string) =>
+    people.find((p) => p.memberId === id) ?? {
+      memberId: id,
+      name: '',
+      bg: '#E4E1DA',
+      fg: '#6B7068',
+    }
 
   const all = shiftsQuery.data?.shifts ?? []
   const shown = person === 'all' ? all : all.filter((s) => s.memberId === person)

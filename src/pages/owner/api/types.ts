@@ -215,12 +215,75 @@ export interface DraftRow {
   close: string[]
   /** 마감 부족 인원 */
   shortage: number
+  /** 오픈 부족 인원 (진짜 API 추천은 오픈도 모자랄 수 있다) */
+  openShortage?: number
 }
 
 export interface ScheduleDraft {
   weekLabel: string
   status: 'none' | 'draft' | 'confirmed'
   rows: DraftRow[]
+  /** 진짜 API: 확정할 추천 ID */
+  recommendationId?: string
+}
+
+/** BE 근무 칸에 배정된 직원 */
+export interface ScheduleAssignment {
+  memberId: string
+  staffName: string
+}
+
+/** BE 추천 스케줄 요약 (GET /stores/{storeId}/schedule-recommendations) */
+export interface RecommendationSummary {
+  recommendationId: string
+  batchId: string
+  candidateNo: number
+  startDate: string
+  endDate: string
+  unfilledSlots: number
+  createdAt: string
+}
+
+/** BE 추천 스케줄 상세 */
+export interface RecommendationDetail extends RecommendationSummary {
+  shifts: {
+    shiftId: string
+    date: string
+    start: string
+    end: string
+    role: string
+    requiredStaff: number
+    assignments: ScheduleAssignment[]
+  }[]
+  warnings: string[]
+}
+
+/** BE 확정 스케줄 (GET · POST · PATCH /stores/{storeId}/schedules) */
+export interface ScheduleResponse {
+  scheduleId: string
+  recommendationId: string | null
+  name: string
+  startDate: string
+  endDate: string
+  status: 'draft' | 'published'
+  publishedAt: string | null
+  shifts: {
+    shiftId: string
+    date: string
+    start: string
+    end: string
+    role: string
+    assignments: ScheduleAssignment[]
+  }[]
+}
+
+/** BE 근무 가능 시간 제출 현황 (GET /stores/{storeId}/availability-submissions?month=) */
+export interface AvailabilitySubmissions {
+  month: string
+  deadline: string
+  totalMembers: number
+  submittedCount: number
+  members: { memberId: string; staffName: string; submitted: boolean; submittedAt: string | null }[]
 }
 
 /** BE 직원별 예상 급여 한 줄 (GET /stores/{storeId}/payroll/estimates?month=) — 화면 모양은 MemberPay */
