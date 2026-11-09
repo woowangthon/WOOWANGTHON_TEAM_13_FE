@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, X } from 'lucide-react'
+import { ChevronRight, LogOut, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
@@ -128,13 +128,30 @@ function ProfileName({ name }: { name: string }) {
       <span className="flex size-24 items-center justify-center rounded-full bg-brand text-[40px] font-extrabold text-background">
         {(value || name).slice(0, 1)}
       </span>
-      <input
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onBlur={save}
-        aria-label="이름"
-        className="w-full border-none bg-transparent p-0 text-center text-[28px] font-extrabold tracking-[-0.03em]"
-      />
+      {/* 이름 옆 연필 · 점선 밑줄로 고칠 수 있다는 힌트 (알바 마이페이지와 같은 모양) */}
+      <label className="group flex w-full items-center justify-center gap-1.5">
+        <span className="inline-grid max-w-[calc(100%-2rem)]">
+          <span
+            aria-hidden="true"
+            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[28px] font-extrabold tracking-[-0.03em] whitespace-pre"
+          >
+            {value || ' '}
+          </span>
+          <input
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onBlur={save}
+            // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
+            size={1}
+            aria-label="이름"
+            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-center text-[28px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+          />
+        </span>
+        <Pencil
+          aria-hidden="true"
+          className="size-[18px] shrink-0 text-subtle group-focus-within:text-brand"
+        />
+      </label>
     </section>
   )
 }
