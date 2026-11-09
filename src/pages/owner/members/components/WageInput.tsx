@@ -5,13 +5,11 @@ import { cn } from '@/ui/utils'
 export function WageInput({
   value,
   onChange,
-  onBlur,
   className,
 }: {
   /** 숫자만 들어간 문자열 */
   value: string
   onChange: (digits: string) => void
-  onBlur?: () => void
   className?: string
 }) {
   const wage = Number(value) || 0
@@ -29,7 +27,6 @@ export function WageInput({
           inputMode="numeric"
           value={value ? Number(value).toLocaleString('ko-KR') : ''}
           onChange={(event) => onChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
-          onBlur={onBlur}
           aria-label="시급"
           aria-invalid={low}
           className="min-w-0 flex-1 border-none bg-transparent text-right text-base"
