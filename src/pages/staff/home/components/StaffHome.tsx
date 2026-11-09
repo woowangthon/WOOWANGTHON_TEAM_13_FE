@@ -12,6 +12,7 @@ import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
+import { PRESSABLE } from '@/shared/pressable'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
@@ -140,7 +141,14 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
   const showPhoto = store.photo && !photoFailed
 
   return (
-    <section className="relative isolate min-h-[240px] overflow-hidden rounded-[30px] bg-brand texture">
+    <Link
+      to="/staff/schedule"
+      aria-label={`오늘 근무 ${shift.start} – ${shift.end} · 근무 보기`}
+      className={cn(
+        'relative isolate block min-h-[240px] overflow-hidden rounded-[30px] bg-brand texture',
+        PRESSABLE,
+      )}
+    >
       {showPhoto && (
         <img
           src={store.photo}
@@ -166,16 +174,15 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
             </span>
             <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>
           </div>
-          <Link
-            to="/staff/schedule"
-            aria-label="근무 보기"
+          <span
+            aria-hidden="true"
             className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-white text-foreground"
           >
             <ChevronRight className="size-6" />
-          </Link>
+          </span>
         </div>
       </div>
-    </section>
+    </Link>
   )
 }
 

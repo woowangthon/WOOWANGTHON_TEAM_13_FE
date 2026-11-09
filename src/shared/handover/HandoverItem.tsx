@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import type { HandoverItem as HandoverItemData } from '@/lib/api/types'
 import { HANDOVER_TAG_COLOR } from '@/shared/icons'
+import { PRESSABLE_CARD_ENABLED } from '@/shared/pressable'
 import { cn } from '@/ui/utils'
 
 // 공용 보기 부품: 인수인계 항목 1개 · 체크 · 사장/알바 화면이 함께 사용 — 담당: 민지
@@ -33,6 +34,7 @@ export function HandoverItem({
       aria-pressed={done}
       className={cn(
         'flex items-center gap-3.5 rounded-[20px] bg-card p-4 text-left shadow-soft disabled:cursor-default',
+        PRESSABLE_CARD_ENABLED,
         faded && 'opacity-50',
       )}
     >

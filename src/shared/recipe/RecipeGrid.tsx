@@ -2,6 +2,8 @@ import { Link, type To } from 'react-router'
 import type { RecipeSummary } from '@/lib/api/types'
 import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/icons'
 import { RecipePhoto } from '@/shared/recipe/RecipePhoto'
+import { PRESSABLE_CARD } from '@/shared/pressable'
+import { cn } from '@/ui/utils'
 import { Badge } from '@/ui/Badge'
 
 // 공용 보기 부품: 포스기식 메뉴 버튼 격자 · 사장/알바 화면이 함께 사용 — 담당: 민지
@@ -22,7 +24,10 @@ export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
           <Link
             key={r.recipeId}
             to={getHref(r)}
-            className="flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft"
+            className={cn(
+              'flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft',
+              PRESSABLE_CARD,
+            )}
           >
             <span
               className="relative flex aspect-[2.4] w-full items-center justify-center overflow-hidden rounded-[18px]"

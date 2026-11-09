@@ -178,12 +178,16 @@ export default function MyPage() {
           return (
             <div
               key={s.id}
-              className="flex items-center gap-3 rounded-[22px] bg-card py-3 pr-3 pl-3.5 shadow-soft"
+              className={cn(
+                'flex items-center gap-3 rounded-[22px] bg-card py-3 pr-3 pl-3.5 shadow-soft',
+                // 매장 줄을 눌렀을 때만 줄 전체가 눌림 (삭제 버튼은 따로)
+                'transition-[transform,box-shadow] duration-150 ease-out has-[button.store-row:active]:scale-[0.98] has-[button.store-row:active]:shadow-[0_3px_10px_rgba(40,46,36,0.05)] motion-reduce:transition-none',
+              )}
             >
               <button
                 type="button"
                 onClick={() => navigate(`/staff/stores/${s.id}`)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                className="store-row flex min-w-0 flex-1 items-center gap-3 text-left"
               >
                 <StoreAvatar color={s.color}>
                   <Icon className="size-5" fill="currentColor" />
