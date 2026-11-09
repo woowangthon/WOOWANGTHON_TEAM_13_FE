@@ -2,7 +2,7 @@ import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
-import { useMySchedule } from '@/lib/api/schedule'
+import { shiftLabel, useMySchedule } from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
 import type { Shift } from '@/lib/api/types'
 import { addDays, fromDateKey, isSameDay, todayInKst, toDateKey } from '@/lib/date'
@@ -157,7 +157,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
           <span className="flex size-7 items-center justify-center rounded-full bg-white text-brand">
             <Clock className="size-4" strokeWidth={2.4} />
           </span>
-          오늘 근무 · {shift.role}
+          오늘 근무 · {shiftLabel(shift)}
         </span>
         <div className="flex items-end justify-between gap-3.5">
           <div className="flex min-w-0 flex-col gap-1.5">

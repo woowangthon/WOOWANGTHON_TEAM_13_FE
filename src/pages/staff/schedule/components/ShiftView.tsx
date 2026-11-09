@@ -1,6 +1,6 @@
 import { ArrowRight, Check } from 'lucide-react'
 import { Link } from 'react-router'
-import { useMyAvailability, useMySchedule } from '@/lib/api/schedule'
+import { shiftLabel, useMyAvailability, useMySchedule } from '@/lib/api/schedule'
 import { fromDateKey, isSameDay } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
@@ -107,7 +107,7 @@ export function ShiftView() {
                   </span>
                   <span className="flex items-center justify-between gap-2.5">
                     <span className="min-w-0 flex-1 text-[13px] break-keep opacity-70">
-                      {people ? `${shift.role} · ${people}` : shift.role}
+                      {people ? `${shiftLabel(shift)} · ${people}` : shiftLabel(shift)}
                     </span>
                     {isToday && (
                       <Badge variant="white" size="md">
