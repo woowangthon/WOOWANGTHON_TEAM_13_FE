@@ -1,10 +1,10 @@
-import { Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useMyPayrollEstimates } from '@/lib/api/payroll'
 import { useMySchedule } from '@/lib/api/schedule'
 import type { PayrollEstimate, TaxType } from '@/lib/api/types'
-import { fromDateKey } from '@/lib/date'
+import { fromDateKey, toDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
@@ -35,9 +35,14 @@ export default function PayrollPage() {
   const { store, stores, setCurrentStoreId } = useCurrentStore()
   const [showAll, setShowAll] = useState(false)
   const [pickedDay, setPickedDay] = useState<number | null>(null)
+  // 보는 달 (null = 서버 기준 이번 달). ‹ › 로 지난달 · 다음 달
+  const [viewMonth, setViewMonth] = useState<string | null>(null)
 
   const targetStores = showAll ? stores : [store]
-  const estimatesResult = useMyPayrollEstimates(targetStores.map((s) => s.id))
+  const estimatesResult = useMyPayrollEstimates(
+    targetStores.map((s) => s.id),
+    viewMonth,
+  )
   const estimates = estimatesResult.data
   const scheduleQuery = useMySchedule(store.id)
   const schedule = scheduleQuery.data
@@ -74,24 +79,66 @@ export default function PayrollPage() {
   const [year, month] = current.month.split('-').map(Number)
   const payMonth = { year, month }
   const today = fromDateKey(schedule.today)
-  const selectedDay = pickedDay ?? today.getDate()
+  const isThisMonth = today.getFullYear() === year && today.getMonth() + 1 === month
+  // 고른 날이 없으면 이번 달은 오늘, 다른 달은 1일
+  const selectedDay = pickedDay ?? (isThisMonth ? today.getDate() : 1)
+  const moveMonth = (step: number) => {
+    const next = new Date(year, month - 1 + step, 1)
+    setViewMonth(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`)
+    setPickedDay(null)
+  }
   // 보고 있는 매장 모두 근무가 없으면 (새 매장) 0원 카드 · 빈 달력 대신 안내
   const noWork = estimates.every((e) => e.workDays.length === 0)
   const setSelectedDay = setPickedDay
 
-  // 급여일: 다음 달 n일 (31 = 말일)
-  const payDate = new Date(
-    payMonth.year,
-    payMonth.month,
-    settings.payday === 31
-      ? new Date(payMonth.year, payMonth.month + 1, 0).getDate()
-      : settings.payday,
+  // 급여일: 다음 달 n일 (31 = 말일). 사장님이 아직 안 정했으면(null) 입금일 대신 달만 보여 준다
+  const payDate =
+    settings.payday === null
+      ? null
+      : new Date(
+          payMonth.year,
+          payMonth.month,
+          settings.payday === 31
+            ? new Date(payMonth.year, payMonth.month + 1, 0).getDate()
+            : settings.payday,
+        )
+  const dDay = payDate ? Math.round((payDate.getTime() - today.getTime()) / DAY_MS) : null
+  const payDateText =
+    payDate === null || dDay === null
+      ? `${payMonth.month}월 예상 급여 · 급여일 미정`
+      : dDay >= 0
+        ? `${formatDate(payDate)} 입금 예정 · D-${dDay}`
+        : `${formatDate(payDate)} 입금`
+
+  // 달 넘기기 (근무가 없는 달이어도 보이게 맨 위에)
+  const monthSwitcher = (
+    <div className="flex items-center justify-center gap-1.5">
+      <button
+        type="button"
+        aria-label="지난달"
+        onClick={() => moveMonth(-1)}
+        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
+      >
+        <ChevronLeft className="size-5" />
+      </button>
+      <span className="min-w-[96px] text-center text-[15px] font-bold tabular-nums">
+        {payMonth.year}년 {payMonth.month}월
+      </span>
+      <button
+        type="button"
+        aria-label="다음 달"
+        onClick={() => moveMonth(1)}
+        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
+      >
+        <ChevronRight className="size-5" />
+      </button>
+    </div>
   )
-  const dDay = Math.round((payDate.getTime() - today.getTime()) / DAY_MS)
 
   return (
     <div className="flex flex-col gap-4">
       <WorkHeader segment="pay" />
+      {monthSwitcher}
 
       <div className="flex flex-col gap-3.5">
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pt-0.5 pb-1">
@@ -136,7 +183,7 @@ export default function PayrollPage() {
             <Card variant="dark" className="gap-1.5 px-[18px] pt-[22px] pb-[18px]">
               <div className="flex items-center justify-between gap-2.5 px-1">
                 <span className="text-sm font-semibold whitespace-nowrap opacity-85">
-                  {formatDate(payDate)} 입금 예정 · D-{dDay}
+                  {payDateText}
                 </span>
                 <Link
                   to={`/staff/stores/${store.id}`}
@@ -168,7 +215,7 @@ export default function PayrollPage() {
               targets={targets}
               payMonth={payMonth}
               showAll={showAll}
-              today={today}
+              todayKey={toDateKey(today)}
               selectedDay={selectedDay}
               onSelect={setSelectedDay}
             />
@@ -206,7 +253,8 @@ interface PayCalendarProps {
   targets: Target[]
   payMonth: { year: number; month: number }
   showAll: boolean
-  today: Date
+  /** 오늘 "2026-11-20" — 지난날 · 앞으로의 날 색 구분 */
+  todayKey: string
   selectedDay: number
   onSelect: (day: number) => void
 }
@@ -215,12 +263,11 @@ function PayCalendar({
   targets,
   payMonth,
   showAll,
-  today,
+  todayKey,
   selectedDay,
   onSelect,
 }: PayCalendarProps) {
   const lastDay = new Date(payMonth.year, payMonth.month, 0).getDate()
-  const todayDate = today.getDate()
   const stores = targets.map((t) => t.store)
   const keyOf = (day: number) =>
     `${payMonth.year}-${String(payMonth.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -278,7 +325,7 @@ function PayCalendar({
             ? '#fff'
             : info.length
               ? info[0].store.color
-              : day > todayDate
+              : keyOf(day) > todayKey
                 ? '#A3A69E'
                 : '#1F2A24'
           return (

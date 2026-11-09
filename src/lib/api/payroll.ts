@@ -13,28 +13,52 @@ import type { PayrollEstimate, PaySettingsInput } from '@/lib/api/types'
 export const MIN_HOURLY_WAGE = 10320
 
 export const payrollKeys = {
+  /** 모든 달 (저장 뒤 다시 불러오기용) */
   estimate: (storeId: string) => ['stores', storeId, 'payroll', 'estimates', 'me'] as const,
+  /** 한 달. month 가 null 이면 서버 기준 이번 달 */
+  month: (storeId: string, month: string | null) =>
+    [...payrollKeys.estimate(storeId), month ?? 'current'] as const,
 }
 
-const fetchEstimate = (storeId: string) =>
-  isRealApi('payroll')
-    ? http.get<PayrollEstimate>(`/stores/${storeId}/payroll/estimates/me`)
-    : getMyPayrollEstimate(storeId)
+/** 근무가 없는 달 (가짜 서버는 시연 달만 데이터가 있어서 다른 달은 이렇게 보여 준다) */
+const emptyMonth = (estimate: PayrollEstimate, month: string): PayrollEstimate => ({
+  ...estimate,
+  month,
+  workDays: [],
+  hours: 0,
+  basePay: 0,
+  weeklyAllowance: 0,
+  grossPay: 0,
+  deduction: 0,
+  netPay: 0,
+  weeks: [],
+  aiNote: null,
+})
 
-/** 내 예상 급여 (참고용) */
-export function useMyPayrollEstimate(storeId: string) {
+/** GET /stores/{storeId}/payroll/estimates/me?month=2026-11 (month 를 빼면 서버 기준 이번 달, docs/07 8-1) */
+async function fetchEstimate(storeId: string, month: string | null): Promise<PayrollEstimate> {
+  if (isRealApi('payroll')) {
+    const query = month ? `?month=${month}` : ''
+    return http.get<PayrollEstimate>(`/stores/${storeId}/payroll/estimates/me${query}`)
+  }
+  const estimate = await getMyPayrollEstimate(storeId)
+  return month && month !== estimate.month ? emptyMonth(estimate, month) : estimate
+}
+
+/** 내 예상 급여 (참고용). month 를 안 주면 이번 달 */
+export function useMyPayrollEstimate(storeId: string, month: string | null = null) {
   return useQuery({
-    queryKey: payrollKeys.estimate(storeId),
-    queryFn: () => fetchEstimate(storeId),
+    queryKey: payrollKeys.month(storeId, month),
+    queryFn: () => fetchEstimate(storeId, month),
   })
 }
 
 /** 여러 매장의 예상 급여 ("전체" 보기). 모두 받으면 data, 하나라도 실패하면 error · retry */
-export function useMyPayrollEstimates(storeIds: string[]) {
+export function useMyPayrollEstimates(storeIds: string[], month: string | null = null) {
   return useQueries({
     queries: storeIds.map((storeId) => ({
-      queryKey: payrollKeys.estimate(storeId),
-      queryFn: () => fetchEstimate(storeId),
+      queryKey: payrollKeys.month(storeId, month),
+      queryFn: () => fetchEstimate(storeId, month),
     })),
     combine: (results) => ({
       data: results.every((result) => result.data)
