@@ -85,8 +85,8 @@ function RecipeSection({ storeId }: { storeId: string }) {
   if (recipesQuery.isSuccess && all.length === 0) {
     return (
       <EmptyGuide
-        message="아직 등록된 레시피가 없어요"
-        hint="사장님이 레시피를 등록하면 여기에 보여요"
+        message="아직 레시피가 없어요"
+        hint="메뉴가 올라오면 바로 여기서 볼 수 있어요"
         action={
           <Button size="md" className="h-[46px] px-5" onClick={() => askAi('')}>
             AI 사수에게 묻기
@@ -112,7 +112,11 @@ function RecipeSection({ storeId }: { storeId: string }) {
       {recipesQuery.isPending ? (
         <Spinner />
       ) : recipesQuery.isError ? (
-        <LoadError error={recipesQuery.error} onRetry={() => recipesQuery.refetch()} />
+        <LoadError
+          what="레시피를"
+          error={recipesQuery.error}
+          onRetry={() => recipesQuery.refetch()}
+        />
       ) : (
         <>
           <CategoryTabs
@@ -155,7 +159,13 @@ function ManualCards({ storeId }: { storeId: string }) {
 
   if (manualsQuery.isPending) return <Spinner />
   if (manualsQuery.isError) {
-    return <LoadError error={manualsQuery.error} onRetry={() => manualsQuery.refetch()} />
+    return (
+      <LoadError
+        what="매뉴얼을"
+        error={manualsQuery.error}
+        onRetry={() => manualsQuery.refetch()}
+      />
+    )
   }
   return (
     <ManualGrid
@@ -163,8 +173,8 @@ function ManualCards({ storeId }: { storeId: string }) {
       getHref={(m) => `/staff/manuals/${m.manualId}`}
       empty={
         <EmptyGuide
-          message="아직 등록된 매뉴얼이 없어요"
-          hint="사장님이 매뉴얼을 등록하면 여기에 보여요"
+          message="아직 매뉴얼이 없어요"
+          hint="와이파이 · 오픈 순서 같은 매장 안내가 여기 모여요"
           action={
             <Button
               size="md"

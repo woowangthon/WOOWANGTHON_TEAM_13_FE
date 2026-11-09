@@ -28,7 +28,11 @@ export function ShiftView() {
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="shift" />
-        {failed ? <LoadError error={failed.error} onRetry={() => failed.refetch()} /> : <Spinner />}
+        {failed ? (
+          <LoadError what="근무표를" error={failed.error} onRetry={() => failed.refetch()} />
+        ) : (
+          <Spinner />
+        )}
       </div>
     )
   }
@@ -122,8 +126,8 @@ export function ShiftView() {
         </ol>
       ) : (
         <EmptyGuide
-          message="아직 확정된 근무가 없어요"
-          hint="아래에서 근무 가능 시간을 내면 사장님이 근무표를 짜요"
+          message="아직 정해진 근무가 없어요"
+          hint="가능 시간을 내면 사장님이 근무를 정해 줘요"
         />
       )}
 

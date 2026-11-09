@@ -51,7 +51,7 @@ export default function PayrollPage() {
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="pay" />
-        {error ? <LoadError error={error} onRetry={retry} /> : <Spinner />}
+        {error ? <LoadError what="예상 급여를" error={error} onRetry={retry} /> : <Spinner />}
       </div>
     )
   }
@@ -120,7 +120,7 @@ export default function PayrollPage() {
         {noWork ? (
           <EmptyGuide
             message="아직 계산할 근무가 없어요"
-            hint="근무가 확정되면 예상 급여가 보여요"
+            hint="근무가 정해지면 바로 계산해 드려요"
             action={
               <Button
                 size="md"

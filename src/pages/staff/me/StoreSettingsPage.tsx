@@ -53,7 +53,7 @@ export default function StoreSettingsPage() {
     return (
       <StaffFrame store={current.store}>
         {current.error ? (
-          <LoadError error={current.error} onRetry={() => current.retry()} />
+          <LoadError what="매장 정보를" error={current.error} onRetry={() => current.retry()} />
         ) : (
           <Spinner />
         )}
@@ -66,7 +66,11 @@ export default function StoreSettingsPage() {
     return (
       <StaffFrame store={store}>
         {estimateQuery.isError ? (
-          <LoadError error={estimateQuery.error} onRetry={() => estimateQuery.refetch()} />
+          <LoadError
+            what="급여 설정을"
+            error={estimateQuery.error}
+            onRetry={() => estimateQuery.refetch()}
+          />
         ) : (
           <Spinner />
         )}

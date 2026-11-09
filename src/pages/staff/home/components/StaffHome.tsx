@@ -29,7 +29,13 @@ export function StaffHome() {
   const scheduleQuery = useMySchedule(store.id)
   const schedule = scheduleQuery.data
   if (scheduleQuery.isError) {
-    return <LoadError error={scheduleQuery.error} onRetry={() => scheduleQuery.refetch()} />
+    return (
+      <LoadError
+        what="근무를"
+        error={scheduleQuery.error}
+        onRetry={() => scheduleQuery.refetch()}
+      />
+    )
   }
   if (!schedule) return <Spinner />
 
@@ -117,8 +123,7 @@ function HomeBody({
         />
       ) : (
         <EmptyGuide
-          message="아직 확정된 근무가 없어요"
-          hint="근무 가능 시간을 내면 사장님이 근무표를 짜요"
+          message="아직 정해진 근무가 없어요"
           action={
             <Button
               size="md"
@@ -230,7 +235,11 @@ function HandoverSection({
       {notesQuery.isPending ? (
         <Spinner />
       ) : notesQuery.isError ? (
-        <LoadError error={notesQuery.error} onRetry={() => notesQuery.refetch()} />
+        <LoadError
+          what="인수인계를"
+          error={notesQuery.error}
+          onRetry={() => notesQuery.refetch()}
+        />
       ) : withItems.length > 0 ? (
         withItems.map((note) => (
           <div key={note.noteId} className="flex flex-col gap-2.5">
@@ -251,7 +260,7 @@ function HandoverSection({
         ))
       ) : live && notes.length === 0 ? (
         <EmptyGuide
-          message="아직 오늘 인수인계가 없어요"
+          message="오늘 남긴 인수인계가 없어요"
           action={
             <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/handover')}>
               인수인계 남기기

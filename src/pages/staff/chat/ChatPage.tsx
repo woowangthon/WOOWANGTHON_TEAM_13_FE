@@ -124,7 +124,7 @@ export default function ChatPage() {
       {chat.isPending ? (
         <Spinner />
       ) : chat.isError ? (
-        <LoadError error={chat.error} onRetry={chat.retry} />
+        <LoadError what="대화를" error={chat.error} onRetry={chat.retry} />
       ) : (
         <div className="flex flex-col gap-3.5" aria-live="polite">
           {/* 이전 대화: 불러오는 동안 작은 Spinner, 화면이 짧아 스크롤이 안 되면 버튼으로 */}
