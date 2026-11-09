@@ -618,7 +618,7 @@ const round10 = (n: number) => Math.round(n / 10) * 10
 /** GET /stores/{storeId}/payroll/estimates?month=2026-11 (제안) — 직원별 이번 달 급여 */
 export async function getStorePayroll(
   storeId: string,
-): Promise<{ month: string; today: string; members: MemberPay[] }> {
+): Promise<{ month: string; members: MemberPay[] }> {
   await wait(200)
   const members = db.members
     .filter((m) => m.storeId === storeId && m.status === 'active' && monthHours[m.memberId])
@@ -645,7 +645,7 @@ export async function getStorePayroll(
         weeks,
       }
     })
-  return { month: OWNER_TODAY.slice(0, 7), today: OWNER_TODAY, members }
+  return { month: OWNER_TODAY.slice(0, 7), members }
 }
 
 /** 시연 기준 오늘 (서버 시간) */
