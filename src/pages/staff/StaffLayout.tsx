@@ -1,5 +1,5 @@
 import { CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
@@ -12,6 +12,7 @@ import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
 import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
+import { cn } from '@/ui/utils'
 
 // 알바 화면 공통 틀 (상단 매장 전환 · 하단 탭: 홈 · 레시피 · + 인수인계 · AI 사수 · 근무)
 
@@ -34,10 +35,24 @@ export default function StaffLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const StoreIcon = STORE_ICON[store.icon]
+  // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <StaffFrame store={store}>
-      <header className="flex items-center justify-between gap-2.5 px-0.5 py-1">
+      <header
+        className={cn(
+          'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 flex items-center justify-between gap-2.5 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
+          scrolled &&
+            'bg-background/80 shadow-[0_1px_0_rgba(40,46,36,0.06)] backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-background',
+        )}
+      >
         <button
           type="button"
           onClick={() => setStoreSheetOpen(true)}
@@ -70,7 +85,12 @@ export default function StaffLayout() {
       <BottomNav
         items={NAV_ITEMS}
         pathname={pathname}
-        fab={{ label: '인수인계 남기기', icon: Plus, onClick: () => navigate('/staff/handover') }}
+        fab={{
+          label: '인수인계 남기기',
+          icon: Plus,
+          // 홈에서 누르면 홈 위에 시트가 뜨니 홈 스크롤 자리 유지, 다른 탭에서는 홈 맨 위로
+          onClick: () => navigate('/staff/handover', { preventScrollReset: pathname === '/staff' }),
+        }}
       />
       <Toaster />
 

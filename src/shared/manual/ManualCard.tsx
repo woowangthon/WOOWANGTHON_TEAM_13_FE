@@ -16,6 +16,8 @@ export function ManualCard({ manual, href }: { manual: Manual; href: To }) {
   return (
     <Link
       to={href}
+      // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
+      preventScrollReset
       className={cn(
         'flex flex-col gap-[9px] rounded-[26px] bg-card p-4 text-foreground shadow-soft',
         PRESSABLE_CARD,

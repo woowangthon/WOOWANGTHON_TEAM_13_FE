@@ -23,7 +23,9 @@ export function EmptyGuide({
         hint || action ? (
           <>
             {hint && (
-              <span className="text-[13px] leading-normal text-balance break-keep text-subtle">{hint}</span>
+              <span className="text-[13px] leading-normal text-balance break-keep text-subtle">
+                {hint}
+              </span>
             )}
             {action}
           </>

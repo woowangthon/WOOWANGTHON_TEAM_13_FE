@@ -24,6 +24,8 @@ export function RecipeGrid({ recipes, getHref }: RecipeGridProps) {
           <Link
             key={r.recipeId}
             to={getHref(r)}
+            // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
+            preventScrollReset
             className={cn(
               'flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft',
               PRESSABLE_CARD,

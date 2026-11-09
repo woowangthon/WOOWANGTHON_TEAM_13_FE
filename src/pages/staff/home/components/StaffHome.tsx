@@ -177,7 +177,9 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
             <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
               {shift.start} – {shift.end}
             </span>
-            <span className="text-[13px] text-balance break-keep opacity-85">{shift.crew.join(' · ')}</span>
+            <span className="text-[13px] text-balance break-keep opacity-85">
+              {shift.crew.join(' · ')}
+            </span>
           </div>
           <span
             aria-hidden="true"
@@ -262,7 +264,11 @@ function HandoverSection({
         <EmptyGuide
           message="오늘 남긴 인수인계가 없어요"
           action={
-            <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/handover')}>
+            <Button
+              size="md"
+              className="h-[46px] px-5"
+              onClick={() => navigate('/staff/handover', { preventScrollReset: true })}
+            >
               인수인계 남기기
             </Button>
           }

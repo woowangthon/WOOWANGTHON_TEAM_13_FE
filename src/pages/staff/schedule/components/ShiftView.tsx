@@ -136,6 +136,7 @@ export function ShiftView() {
 
       <Link
         to="/staff/availability"
+        preventScrollReset
         className={cn(
           'flex items-center justify-between gap-3 rounded-[28px] p-5 text-left',
           submitted ? 'bg-card text-foreground' : 'bg-ink texture text-white',
