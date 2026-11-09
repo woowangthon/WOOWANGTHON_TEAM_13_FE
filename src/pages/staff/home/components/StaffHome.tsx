@@ -177,7 +177,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
             <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
               {shift.start} – {shift.end}
             </span>
-            <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>
+            <span className="text-[13px] text-balance break-keep opacity-85">{shift.crew.join(' · ')}</span>
           </div>
           <span
             aria-hidden="true"
