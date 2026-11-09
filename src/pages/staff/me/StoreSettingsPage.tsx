@@ -127,7 +127,7 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
   }
 
   return (
-    <StaffFrame store={store} className="gap-5 pb-[120px]">
+    <StaffFrame store={store} className="gap-5 pb-[140px]">
       <Header onBack={close} />
 
       <Card variant="dark" className="gap-[18px] rounded-[30px] p-[22px]">
@@ -229,7 +229,7 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
         </Card>
       </div>
 
-      <div className="fixed bottom-0 left-1/2 w-full max-w-[460px] -translate-x-1/2 bg-[linear-gradient(rgba(241,236,227,0),#F1ECE3_40%)] px-4 pt-3.5 pb-5">
+      <div className="fixed bottom-0 left-1/2 w-full max-w-[460px] -translate-x-1/2 bg-[linear-gradient(rgba(241,236,227,0),#F1ECE3_55%)] px-4 pt-8 pb-[max(20px,env(safe-area-inset-bottom))]">
         <Button size="xl" className="w-full" onClick={save}>
           저장
         </Button>
