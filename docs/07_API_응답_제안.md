@@ -170,6 +170,8 @@ AI 답변의 **출처 카드**(`📄 출처: 레시피 › 딸기라떼`)에 쓰
 | `theme` | 매장 색 · 아이콘 묶음 키: `"moon"`(초록) · `"sunset"`(갈색). 색 값(#2A4536 등)은 FE 디자인 토큰에서 정해요. 저장할 곳이 없으면 `null`이어도 돼요 (FE가 내 매장 순서대로 초록 → 갈색 … 정해요). 매장 목록 한 줄 "주 3회 마감 · 박 사장님"의 "주 3회 마감"은 FE가 [7-1](#7-1-get-storesstoreidschedulesme-내-스케줄) 근무 목록에서 계산해요 |
 
 > **11/7 BE 실제 응답**: 감싸지 않은 배열 `[{ "storeId", "storeName", "role" }]` (1-1의 `stores`와 같은 3칸). FE는 `src/lib/api/users.ts` `toMyStoreList`로 위 모양에 맞추고 없는 칸은 빈 값으로 둬요 → 알바 화면의 사장님 이름 · 내 이름 · 매장 사진 · 주소가 비어 보여요 (질문 16).
+>
+> ✅ **11/9 BE #25(은교)로 위 모양 그대로 들어왔어요**: `{ stores: [{ storeId, name, kind(null 가능), address, ownerName, role, memberId(사장님 매장이면 null), staffName, photoUrl, theme(null), joinedAt }] }`. FE `toMyStoreList`는 이 모양을 그대로 써요
 
 > 가짜 데이터의 `shift` · `week` · `weekHours`(근무)는 [7. 근무](#7-근무-p1), `chips`(자주 묻는 질문)는 [5-1 채팅방](#5-1-ai-채팅방-생성--목록)의 `suggestions`로 옮겼어요.
 
@@ -929,6 +931,8 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 > 숫자는 FE 가짜 데이터(`calcPay`)와 같은 규칙이에요: 기본급 = 시간 × 시급, 공제 = (기본급 + 주휴수당) × 공제율 (10원 단위 반올림). 공휴일 가산은 없어요 (docs/03 S7).
 
+> 11/9 BE PR #28(연서, 아직 main 아님) 확인: 위 모양과 같아요. `?month=YYYY-MM`(빼면 한국 시간 이번 달), **사장님이 공개한 스케줄 기준**이라 `isEstimate`는 항상 `true`, `aiNote`는 지금 `null`(FE는 설명 카드를 숨김), `payday`는 사장님이 안 정하면 `null`(FE는 "○월 예상 급여 · 급여일 미정"), 근무 시각 `"HH:MM"`, `hours`는 소수 둘째 자리, 근무가 끝난 시각이 지나면 `worked` 아니면 `planned`. 구성원이 아닌 사장님이 부르면 `403`. FE는 ‹ › 로 달을 넘기며 `?month=`를 보내요
+
 ### 8-2. `PUT /stores/{storeId}/members/{memberId}/hourly-wage` (시급 설정 — 사장님 기능)
 사장님 화면(나현)에서 써요. 알바 화면은 보기만 해요 ([질문 4](#9-be에-확인하고-싶은-것)).
 
@@ -951,7 +955,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 1. **`POST /auth/bootstrap`이 표에 없어요.** 처음 로그인 시 사용자 생성은 어디서 하나요? (`GET /users/me`에서 없으면 자동 생성도 OK)
 2. OAuth URL · 콜백 · 토큰 재발급 · 로그아웃(`/auth/...`)은 **Supabase가 해서 BE에서 안 만들어도 돼요**
 3. **인수인계 확인 완료가 P2인데, FE 홈은 항목별 체크가 P0예요.** 항목별 체크를 P0로 할 수 있을까요? ([6-7](#6-7-post-storesstoreidhandover-notesnoteidconfirmations-확인) 제안 모양)
-4. **시급을 사장님이 정하면**, 알바 화면의 '매장별 시급 입력'(`/staff/stores/:storeId`)은 **보기 전용**으로 바꿀게요. 맞나요? (급여일 · 공제 방식도 사장님이 정하나요?)
+4. ✅ **사장님이 정함, 알바는 보기 전용** (11/9 BE #27 · #28 확인) 시급은 사장님(`PUT …/members/{memberId}/hourly-wage`), 급여일은 사장님 매장 설정(`PATCH /stores/{id}` `payday`), 공제 방식을 바꾸는 API는 없음, 주휴수당은 항상 켜짐 → 알바 화면 `/staff/stores/:storeId`는 값만 보여 줘요 (11/9 FE 반영). 원래 질문: **시급을 사장님이 정하면**, 알바 화면의 '매장별 시급 입력'(`/staff/stores/:storeId`)은 **보기 전용**으로 바꿀게요. 맞나요? (급여일 · 공제 방식도 사장님이 정하나요?)
 5. **초대 코드 목록 조회가 P2인데**, 사장님 직원 · 코드 화면이 P0라 **P0로 부탁해요**
 6. ✅ (11/9 BE main에 들어감, [5-3](#5-3-사장님께-물어보기)) **사장님께 물어보기 API가 표에 없어요.** 질문 보내기는 P0라 필요해요 ([5-3](#5-3-사장님께-물어보기) 제안 모양). 사장님 답변 · 매뉴얼 추가(P1) API도 사장님 화면과 함께 정해 주세요
 
@@ -965,6 +969,6 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 13. AI 답변이 몇 초 걸리나요? 길면 스트리밍 여부 논의
 14. Swagger(`/openapi.json`) 주소가 생기면 공유해 주세요 → FE가 `npm run api`로 타입 · 훅을 자동 생성해요 (`docs/05`)
 15. **에러 코드는 초대코드만 꼭 필요해요**: `INVITE_INVALID` · `INVITE_ALREADY_JOINED`(detail에 매장 ID · 이름) · `INVITE_LOCKED`. 나머지 API는 FastAPI 기본 `{detail}`이어도 FE가 읽어요. (11/6 BE main 확인: 이미 이 모양이에요 — 그대로 유지해 주세요)
-16. **`GET /users/me/stores`에 매장 정보를 더 넣어 주세요** ([1-3](#1-3-get-usersmestores)): 지금은 `storeId · storeName · role`뿐이고, 알바는 `GET /stores/{id}`(사장님 전용)도 못 불러요. 알바 화면에 `ownerName` · `staffName` · `address` · `photoUrl`(+ `memberId` · `joinedAt`)이 필요해요
+16. ✅ (11/9 BE #25로 들어옴) **`GET /users/me/stores`에 매장 정보를 더 넣어 주세요** ([1-3](#1-3-get-usersmestores)): 지금은 `storeId · storeName · role`뿐이고, 알바는 `GET /stores/{id}`(사장님 전용)도 못 불러요. 알바 화면에 `ownerName` · `staffName` · `address` · `photoUrl`(+ `memberId` · `joinedAt`)이 필요해요
 17. **레시피 응답(목록 · 상세)에 메뉴 사진 `imageUrl`(없으면 `null`)을 넣어 주세요.** 사장님이 사진을 올리면(레시피 등록 multipart `images`) 그 주소를 주면 돼요. 지금은 FE가 메뉴 이름으로 시연 사진을 찾아요
 

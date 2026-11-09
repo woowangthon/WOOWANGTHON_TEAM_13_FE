@@ -35,11 +35,11 @@ function toView(store: MyStoreDetail, index: number, workSummary: string | null)
   return {
     id: store.storeId,
     name: store.name,
-    kind: store.kind,
+    kind: store.kind ?? '',
     address: store.address,
     ownerName: store.ownerName,
     staffName: store.staffName,
-    memberId: store.memberId,
+    memberId: store.memberId ?? '',
     icon,
     ...STORE_THEME[icon],
     photo: store.photoUrl ?? undefined,

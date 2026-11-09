@@ -212,15 +212,17 @@ export interface HandoverConfirmation {
 /** 매장 색 · 아이콘 묶음 키 (색 값은 FE: shared/storeTheme). 저장 안 하면 null */
 export type StoreTheme = 'moon' | 'sunset'
 
-/** GET /users/me/stores 항목. ownerName · staffName · memberId · photoUrl 은 은교님께 요청 중 */
+/** GET /users/me/stores 항목 (11/9 BE #25로 들어옴: ownerName · staffName · memberId · photoUrl · address · joinedAt) */
 export interface MyStoreDetail {
   storeId: string
   name: string
-  kind: string
+  /** 업종. BE 가 아직 안 주면 null */
+  kind: string | null
   address: string
   ownerName: string
   role: 'owner' | 'staff'
-  memberId: string
+  /** 이 매장에서의 내 구성원 ID (사장님 매장이면 null) */
+  memberId: string | null
   /** 사장님이 알바생 추가 때 적은 이름 (사장님 매장이면 null) */
   staffName: string | null
   photoUrl: string | null
@@ -354,8 +356,8 @@ export interface PayrollEstimate {
   /** "2026-11" */
   month: string
   hourlyWage: number
-  /** 급여일 1~28, 말일은 31 */
-  payday: number
+  /** 급여일 1~28, 말일은 31. 사장님이 아직 안 정했으면 null */
+  payday: number | null
   taxType: TaxType
   weeklyAllowanceEnabled: boolean
   workDays: PayWorkDay[]
@@ -366,15 +368,7 @@ export interface PayrollEstimate {
   deduction: number
   netPay: number
   weeks: PayWeek[]
-  /** AI 쉬운 설명 (계산에는 안 씀) */
-  aiNote: string
+  /** AI 쉬운 설명 (계산에는 안 씀). 없으면 null → 설명 카드를 숨긴다 */
+  aiNote: string | null
   isEstimate: boolean
-}
-
-/** 임시: 알바 화면 급여 설정 저장 (BE 답 전까지 가짜 서버만, docs/07 질문 4) */
-export interface PaySettingsInput {
-  hourlyWage: number
-  payday: number
-  taxType: TaxType
-  weeklyAllowanceEnabled: boolean
 }
