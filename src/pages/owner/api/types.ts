@@ -72,6 +72,8 @@ export interface InviteShareInfo {
 /** BE 직원 (GET /stores/{storeId}/members) — 퇴사하면 LEFT */
 export interface MemberResponse {
   memberId: string
+  /** 입장할 때 쓴 초대코드 (BE #23) */
+  invitationId: string | null
   userId: string
   staffName: string
   role: string
