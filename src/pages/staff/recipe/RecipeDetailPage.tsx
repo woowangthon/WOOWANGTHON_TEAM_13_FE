@@ -13,7 +13,7 @@ export default function RecipeDetailPage() {
   const { search } = useLocation()
   const navigate = useNavigate()
   const close = useCloseTo(`/staff/recipes${search}`)
-  const recipeQuery = useRecipe(store.id, recipeId)
+  const recipeQuery = useRecipe(store.id, recipeId, { fromList: true })
 
   // 다른 매장 레시피 · 삭제된 레시피면 (매장을 바꾼 경우 등) 목록으로 돌아간다
   if (isNotFound(recipeQuery.error)) return <Navigate to="/staff/recipes" replace />
@@ -25,6 +25,7 @@ export default function RecipeDetailPage() {
       {recipe && (
         <RecipeSheet
           recipe={recipe}
+          stepsPending={recipeQuery.isPlaceholderData}
           storeName={store.name}
           onClose={close}
           onAsk={() => navigate('/staff/chat', { state: { draft: `${recipe.name} ` } })}
