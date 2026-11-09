@@ -176,6 +176,8 @@ export interface RecipeScanDraft {
   size: string | null
   ingredients: { name: string; amount: string | null }[]
   steps: string[]
+  /** 사진에 레시피가 더 있어서 맨 위 하나만 읽었는지 (BE #26) */
+  hasMoreRecipes?: boolean
 }
 
 /** 매뉴얼 등록 · 수정 요청 */
