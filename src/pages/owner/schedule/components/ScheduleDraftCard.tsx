@@ -1,4 +1,5 @@
-import { Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
@@ -10,6 +11,7 @@ import {
   useFillDraft,
   useScheduleDraft,
 } from '@/pages/owner/api/work'
+import type { DraftRow } from '@/pages/owner/api/types'
 import { Button } from '@/ui/Button'
 import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
@@ -27,6 +29,11 @@ export function ScheduleDraftCard({ storeId }: { storeId: string }) {
   const a = availability.data
   const shortage = draft?.rows.filter((r) => r.shortage > 0 || (r.openShortage ?? 0) > 0) ?? []
   const ownerFill = canOwnerTakeShift()
+  // 한 달 추천은 길어서 한 주(월~일)씩 넘겨 본다
+  const weeks = weeksOf(draft?.rows ?? [])
+  const [weekIndex, setWeekIndex] = useState(0)
+  const page = Math.min(weekIndex, Math.max(weeks.length - 1, 0))
+  const rows = weeks[page] ?? []
 
   const onError = (message: string) => (error: unknown) => toastApiError(error, message)
 
@@ -93,7 +100,33 @@ export function ScheduleDraftCard({ storeId }: { storeId: string }) {
             <span className="pl-1.5">오픈</span>
             <span className="pl-1.5">마감</span>
           </div>
-          {draft.rows.map((row) => {
+          {weeks.length > 1 && (
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <button
+                type="button"
+                aria-label="이전 주"
+                disabled={page === 0}
+                onClick={() => setWeekIndex(page - 1)}
+                className="flex size-8 items-center justify-center rounded-full bg-background disabled:opacity-40"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <span className="text-[13px] font-bold">
+                {formatDate(fromDateKey(rows[0].date))} ~{' '}
+                {formatDate(fromDateKey(rows[rows.length - 1].date))}
+              </span>
+              <button
+                type="button"
+                aria-label="다음 주"
+                disabled={page === weeks.length - 1}
+                onClick={() => setWeekIndex(page + 1)}
+                className="flex size-8 items-center justify-center rounded-full bg-background disabled:opacity-40"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+          )}
+          {rows.map((row) => {
             const short = row.shortage > 0
             return (
               <div
@@ -167,4 +200,14 @@ export function ScheduleDraftCard({ storeId }: { storeId: string }) {
       )}
     </div>
   )
+}
+
+/** 날짜 줄을 월요일 기준 주로 나눈다 */
+function weeksOf(rows: DraftRow[]): DraftRow[][] {
+  const weeks: DraftRow[][] = []
+  for (const row of rows) {
+    if (weeks.length === 0 || fromDateKey(row.date).getDay() === 1) weeks.push([])
+    weeks[weeks.length - 1].push(row)
+  }
+  return weeks
 }

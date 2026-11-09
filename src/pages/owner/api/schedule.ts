@@ -2,7 +2,6 @@ import { getDayMemos } from '@/api/mocks/owner/api'
 import { http } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
 import { addDays, fromDateKey, toDateKey, todayInKst } from '@/lib/date'
-import { formatDate } from '@/lib/format'
 import type {
   AvailabilityStatus,
   AvailabilitySubmissions,
@@ -18,9 +17,11 @@ import type {
 /*
  * 사장님 근무 · 추천 스케줄 진짜 API (BE #24 · #22) — 담당: 나현
  * work.ts 훅이 .env VITE_REAL_API 에 'schedule' · 'availability'가 있을 때 여기를 부른다. 화면 모양은 가짜 서버와 같다.
- * - 추천: 다음 주(월~일) 매일 기본 근무 칸(DEFAULT_SLOTS)을 보내고, 후보 중 못 채운 칸이 가장 적은 것을 보여 준다
+ * - 추천: 다음 달(알바생이 근무 가능 시간을 내는 달) 매일 기본 근무 칸(DEFAULT_SLOTS)을 보내고,
+ *   후보 중 못 채운 칸이 가장 적은 것을 보여 준다. BE 는 그 날 "가능"을 낸 직원만 배정한다
  * - 확정: 그 추천으로 근무표를 만들고 바로 공개 (POST /schedules)
  * - 달력: 그 달에 겹치는 근무표의 칸 · 배정을 한 사람씩 펼친다. 추가 · 삭제는 근무표 칸 전체를 다시 보낸다 (PATCH)
+ *   근무표가 없는 달에 추가하면 그 달 "추가 근무" 근무표를 먼저 만든다 (BE 는 추천 없이 근무표를 못 만들어서 칸 1개짜리 추천으로)
  * - 사장님 배정 · 날짜 메모는 BE 가 없어서 각각 막음 · 이 브라우저에만 저장
  */
 
@@ -30,23 +31,30 @@ const DEFAULT_SLOTS = [
   { role: '마감', start: '15:00', end: '22:00', requiredStaff: 2 },
 ]
 
+/** 근무표가 없는 달에 근무를 넣을 때 자동으로 만드는 근무표 이름 끝 (추천 카드에서는 뺀다) */
+const EXTRA_SUFFIX = '추가 근무'
+
 const OWNER_NOT_SUPPORTED = new ApiError(400, {
   code: 'OWNER_SHIFT_NOT_SUPPORTED',
   message: '사장님 근무는 아직 저장할 수 없어요',
   detail: null,
 })
 
-/** 다음 주 월~일 */
-function nextWeek() {
-  const today = todayInKst()
-  const monday = addDays(today, 7 - ((today.getDay() + 6) % 7))
-  const sunday = addDays(monday, 6)
+/** 한 달 (1일 ~ 말일) */
+function monthRange(first: Date) {
+  const last = addDays(new Date(first.getFullYear(), first.getMonth() + 1, 1), -1)
   return {
-    start: toDateKey(monday),
-    end: toDateKey(sunday),
-    label: `${formatDate(monday)} ~ ${formatDate(sunday)}`,
-    days: Array.from({ length: 7 }, (_, i) => toDateKey(addDays(monday, i))),
+    start: toDateKey(first),
+    end: toDateKey(last),
+    label: `${first.getMonth() + 1}월`,
+    days: Array.from({ length: last.getDate() }, (_, i) => toDateKey(addDays(first, i))),
   }
+}
+
+/** 다음 달 = 근무 가능 시간 제출 · 추천 스케줄 대상 달 */
+function nextMonth() {
+  const today = todayInKst()
+  return monthRange(new Date(today.getFullYear(), today.getMonth() + 1, 1))
 }
 
 const minutes = (t: string) => {
@@ -89,14 +97,21 @@ const listSchedules = (storeId: string, startDate: string, endDate: string) =>
     )
     .then((data) => data.schedules)
 
-/** 다음 주 추천 스케줄 (없으면 none, 확정했으면 confirmed) */
+/** 다음 달 추천 스케줄 (없으면 none, 확정했으면 confirmed) */
 export async function fetchDraft(storeId: string): Promise<ScheduleDraft> {
-  const week = nextWeek()
-  const { recommendations } = await http.get<{ recommendations: RecommendationSummary[] }>(
-    `/stores/${storeId}/schedule-recommendations`,
+  const week = nextMonth()
+  const [{ recommendations }, schedules] = await Promise.all([
+    http.get<{ recommendations: RecommendationSummary[] }>(
+      `/stores/${storeId}/schedule-recommendations`,
+    ),
+    listSchedules(storeId, week.start, week.end),
+  ])
+  // "추가 근무" 근무표를 만들 때 쓴 칸 1개짜리 추천은 추천 카드에서 뺀다
+  const extraIds = new Set(
+    schedules.filter((s) => s.name.endsWith(EXTRA_SUFFIX)).map((s) => s.recommendationId),
   )
   const thisWeek = recommendations
-    .filter((r) => r.startDate === week.start)
+    .filter((r) => r.startDate === week.start && !extraIds.has(r.recommendationId))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   if (thisWeek.length === 0) return { weekLabel: week.label, status: 'none', rows: [] }
 
@@ -105,12 +120,9 @@ export async function fetchDraft(storeId: string): Promise<ScheduleDraft> {
   const best = [...batch].sort(
     (a, b) => a.unfilledSlots - b.unfilledSlots || a.candidateNo - b.candidateNo,
   )[0]
-  const [detail, schedules] = await Promise.all([
-    http.get<RecommendationDetail>(
-      `/stores/${storeId}/schedule-recommendations/${best.recommendationId}`,
-    ),
-    listSchedules(storeId, week.start, week.end),
-  ])
+  const detail = await http.get<RecommendationDetail>(
+    `/stores/${storeId}/schedule-recommendations/${best.recommendationId}`,
+  )
 
   const batchIds = new Set(batch.map((r) => r.recommendationId))
   const confirmed = schedules.find((s) => s.recommendationId && batchIds.has(s.recommendationId))
@@ -135,9 +147,9 @@ export async function fetchDraft(storeId: string): Promise<ScheduleDraft> {
   }
 }
 
-/** 추천 스케줄 만들기: 다음 주 매일 기본 근무 칸 → 후보 3개 */
+/** 추천 스케줄 만들기: 다음 달 매일 기본 근무 칸 → 후보 3개 */
 export async function createDraft(storeId: string): Promise<ScheduleDraft> {
-  const week = nextWeek()
+  const week = nextMonth()
   await http.post(`/stores/${storeId}/schedule-recommendations`, {
     startDate: week.start,
     endDate: week.end,
@@ -235,18 +247,43 @@ export async function addShift(
   }
   const schedules = await listSchedules(storeId, input.date, input.date)
   const schedule =
-    schedules.find((s) => s.status === 'published') ?? schedules.find((s) => s.status === 'draft')
-  if (!schedule) {
-    throw new ApiError(409, {
-      code: 'NO_SCHEDULE',
-      message: '근무표를 확정한 주에만 근무를 추가할 수 있어요. 추천 스케줄을 먼저 확정해 주세요',
-      detail: null,
-    })
-  }
+    schedules.find((s) => s.status === 'published') ??
+    schedules.find((s) => s.status === 'draft') ??
+    (await createExtraSchedule(storeId, input))
   await saveShifts(storeId, schedule.scheduleId, [
     ...toUpdates(schedule),
     { ...input, role: '', assignedMemberIds: [input.memberId] },
   ])
+}
+
+/**
+ * 근무표가 없는 달에 근무를 넣을 때: 그 달 전체를 덮는 "○월 추가 근무" 근무표를 만든다.
+ * BE 는 추천으로만 근무표를 만들 수 있어서 칸 1개짜리 추천을 만든 뒤 확정한다.
+ * 추천이 넣은 사람은 바로 다음 PATCH 에서 고른 사람으로 바뀐다.
+ */
+async function createExtraSchedule(
+  storeId: string,
+  input: { date: string; start: string; end: string },
+): Promise<ScheduleResponse> {
+  const month = monthRange(fromDateKey(`${input.date.slice(0, 7)}-01`))
+  const created = await http.post<{ recommendations: RecommendationDetail[] }>(
+    `/stores/${storeId}/schedule-recommendations`,
+    {
+      startDate: month.start,
+      endDate: month.end,
+      recommendationCount: 1,
+      shifts: [
+        { date: input.date, start: input.start, end: input.end, role: '', requiredStaff: 1 },
+      ],
+    },
+  )
+  const schedule = await http.post<ScheduleResponse>(`/stores/${storeId}/schedules`, {
+    recommendationId: created.recommendations[0].recommendationId,
+    name: `${month.label} ${EXTRA_SUFFIX}`,
+    publish: true,
+  })
+  // 추천이 만든 칸은 지우고 고른 사람으로 다시 넣는다 (addShift 가 이어서 PATCH)
+  return { ...schedule, shifts: [] }
 }
 
 /** 근무 삭제: 그 칸에서 이 사람만 빼고, 아무도 안 남으면 칸도 뺀다 */
