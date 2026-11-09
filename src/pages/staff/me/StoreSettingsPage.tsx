@@ -27,7 +27,8 @@ import { toast } from '@/ui/toastStore'
 /** 폼에서 쓰는 급여 설정 */
 interface PaySettings {
   wage: number
-  payday: number
+  /** 사장님이 아직 안 정했으면 null */
+  payday: number | null
   tax: TaxType
   weeklyAllowance: boolean
 }
@@ -91,7 +92,7 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
 
   // 처음 열 때 저장된 급여일로 휠을 맞춘다
   useEffect(() => {
-    wheel.current?.scrollTo({ top: PAYDAYS.indexOf(saved.payday) * ROW })
+    if (saved.payday !== null) wheel.current?.scrollTo({ top: PAYDAYS.indexOf(saved.payday) * ROW })
   }, [saved.payday])
 
   const onWheelScroll = () => {
@@ -112,7 +113,7 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
     savePaySettings.mutate(
       {
         hourlyWage: wage,
-        payday: draft.payday,
+        payday: draft.payday ?? PAYDAYS[0],
         taxType: draft.tax,
         weeklyAllowanceEnabled: draft.weeklyAllowance,
       },
@@ -166,7 +167,11 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
           <span className="flex items-baseline justify-between gap-2.5">
             <span className="text-base font-bold">급여일</span>
             <span className="text-base font-extrabold text-brand">
-              {draft.payday === 31 ? '매월 말일' : `매월 ${draft.payday}일`}
+              {draft.payday === null
+                ? '아직 안 정했어요'
+                : draft.payday === 31
+                  ? '매월 말일'
+                  : `매월 ${draft.payday}일`}
             </span>
           </span>
           <div className="relative h-[132px]">
