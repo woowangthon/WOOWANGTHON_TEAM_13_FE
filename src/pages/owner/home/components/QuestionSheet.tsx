@@ -4,6 +4,7 @@ import { toastApiError } from '@/lib/api/errors'
 import { formatTime } from '@/lib/format'
 import { canAddAnswerToManual, useAnswerQuestion } from '@/pages/owner/api/home'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Input } from '@/ui/Input'
@@ -24,6 +25,9 @@ export function QuestionSheet({
   const [stage, setStage] = useState<'ask' | 'suggest'>('ask')
   const [manualTitle, setManualTitle] = useState(question.title.replace(/ 문의$/, ''))
   const send = useAnswerQuestion(question.storeId)
+  // 여러 매장 알림에서 열 수 있어서 어느 카페 질문인지 보여 준다
+  const { stores } = useOwnerStore()
+  const storeName = stores.find((s) => s.storeId === question.storeId)?.name
   const canAddToManual = canAddAnswerToManual()
 
   const submit = (addToManual: boolean) =>
@@ -43,9 +47,16 @@ export function QuestionSheet({
     <BottomSheet open onClose={onClose} label="확인 필요" closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <span className="self-start rounded-full bg-destructive-soft px-2.5 py-[5px] text-xs font-bold text-destructive-foreground">
-            확인 필요
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-destructive-soft px-2.5 py-[5px] text-xs font-bold text-destructive-foreground">
+              확인 필요
+            </span>
+            {storeName && (
+              <span className="rounded-full bg-accent px-2.5 py-[5px] text-xs font-bold text-accent-foreground">
+                {storeName}
+              </span>
+            )}
+          </div>
           <h2 className="m-0 text-[22px] leading-[1.4] font-extrabold tracking-[-0.02em] break-keep">
             “{question.question}”
           </h2>
