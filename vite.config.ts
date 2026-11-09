@@ -18,8 +18,9 @@ export default defineConfig({
         lang: 'ko',
         start_url: '/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#ffffff',
+        // 앱 배경색(canvas)과 맞춰서 시작 화면 · 상태 바가 흰 띠로 보이지 않게
+        background_color: '#F1ECE3',
+        theme_color: '#F1ECE3',
         icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
       },
     }),
