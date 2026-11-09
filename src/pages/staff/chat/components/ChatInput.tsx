@@ -36,7 +36,8 @@ export function ChatInput({ value, onChange, onSend, chips }: ChatInputProps) {
           placeholder="질문 입력"
           aria-label="질문 입력"
           maxLength={CHAT_TEXT_MAX}
-          className="min-w-0 flex-1 border-none bg-transparent text-[15px] placeholder:text-subtle"
+          // 16px 이상이어야 아이폰이 입력할 때 화면을 확대하지 않는다
+          className="min-w-0 flex-1 border-none bg-transparent text-base placeholder:text-subtle"
         />
         <IconButton type="submit" aria-label="보내기" variant="brand" disabled={!value.trim()}>
           <ArrowUp />

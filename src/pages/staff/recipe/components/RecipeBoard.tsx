@@ -76,7 +76,8 @@ function RecipeSection({ storeId }: { storeId: string }) {
         )
         return merged
       },
-      { replace: true },
+      // 카테고리 · 검색어만 바뀌는 거라 스크롤을 맨 위로 돌리지 않는다
+      { replace: true, preventScrollReset: true },
     )
 
   const askAi = (draft: string) => navigate('/staff/chat', { state: { draft } })

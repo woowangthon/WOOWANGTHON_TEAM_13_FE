@@ -96,7 +96,7 @@ export default function ChatPage() {
       <Card
         variant="dark"
         className={cn(
-          'sticky top-2 z-10 flex-row items-center transition-[padding,gap] duration-200',
+          'sticky top-[calc(var(--offline-banner,0px)+max(14px,env(safe-area-inset-top))+52px)] z-10 flex-row items-center transition-[padding,gap] duration-200',
           compact ? 'gap-2.5 px-4 py-2.5' : 'gap-3.5 p-5',
         )}
       >
