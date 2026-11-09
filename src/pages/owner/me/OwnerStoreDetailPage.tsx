@@ -72,7 +72,11 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
       for (const m of members) {
         const next = Number(wages[m.memberId])
         if (next !== m.hourlyWage) {
-          await updateWage.mutateAsync({ memberId: m.memberId, hourlyWage: next })
+          await updateWage.mutateAsync({
+            memberId: m.memberId,
+            hourlyWage: next,
+            invited: m.status === 'invited',
+          })
         }
       }
       toast('저장했어요')

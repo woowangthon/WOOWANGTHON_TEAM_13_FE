@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createMember, getMembers, removeMember, updateHourlyWage } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
-import { ApiError } from '@/lib/apiClient'
+import { ApiError, apiFetch } from '@/lib/apiClient'
 import { ownerKeys } from '@/pages/owner/api/stores'
 import type {
   InvitationResponse,
@@ -16,7 +16,7 @@ import type {
  * 직원 · 초대코드 훅 — 담당: 나현
  * .env VITE_REAL_API 에 'members'를 넣으면 직원 목록 · 퇴사가, 'invitations'를 넣으면 초대코드 만들기가 진짜 API.
  * 둘 다 진짜 매장 ID 가 필요해서 'stores'도 같이 켠다. 아니면 가짜 서버(api/mocks/owner).
- * 시급 바꾸기는 BE 미구현이라 진짜 모드에서는 안내만 한다. 시급 API 모양은 docs/07 8-2
+ * 시급 바꾸기는 입장한 직원만 (PUT …/members/{memberId}/hourly-wage, BE #27). 입장 전 코드의 시급은 BE 에서 못 바꾼다.
  */
 
 /** 초대코드 만들기 결과. existing 이면 같은 이름으로 이미 쓸 수 있는 코드가 있어서 그 코드를 돌려준 것 (409) */
@@ -93,12 +93,30 @@ const postInvitation = async (storeId: string, input: NewMember): Promise<Create
   }
 }
 
-const putHourlyWage = async (memberId: string, hourlyWage: number) => {
-  if (!isRealApi('members')) return updateHourlyWage(memberId, hourlyWage)
-  throw new ApiError(400, {
-    code: 'NOT_SUPPORTED',
-    message: '시급 바꾸기는 아직 준비 중이에요',
-    detail: null,
+/** 시급 바꾸기 요청. invited(입장 전)면 BE 에 직원이 아직 없다 */
+export interface WageUpdate {
+  memberId: string
+  hourlyWage: number
+  invited?: boolean
+}
+
+const putHourlyWage = async (storeId: string, { memberId, hourlyWage, invited }: WageUpdate) => {
+  if (!isRealApi('members')) {
+    await updateHourlyWage(memberId, hourlyWage)
+    return
+  }
+  if (invited) {
+    throw new ApiError(400, {
+      code: 'MEMBER_NOT_JOINED',
+      message: '입장 전에는 시급을 바꿀 수 없어요. 입장한 뒤에 바꿔 주세요',
+      detail: null,
+    })
+  }
+  // 최저시급 미만 422 WAGE_BELOW_MINIMUM · 퇴사 409 MEMBER_ALREADY_LEFT 는 BE 문구 그대로
+  // lib/api/source 의 http 에는 put 이 없어서 apiFetch 로 (JSON 헤더는 apiFetch 가 붙인다)
+  await apiFetch(`/stores/${storeId}/members/${memberId}/hourly-wage`, {
+    method: 'PUT',
+    body: JSON.stringify({ hourlyWage }),
   })
 }
 
@@ -149,8 +167,7 @@ export function useCreateMember(storeId: string) {
 export function useUpdateHourlyWage(storeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ memberId, hourlyWage }: { memberId: string; hourlyWage: number }) =>
-      putHourlyWage(memberId, hourlyWage),
+    mutationFn: (input: WageUpdate) => putHourlyWage(storeId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ownerKeys.members(storeId) })
       queryClient.invalidateQueries({ queryKey: ownerKeys.payroll(storeId) })

@@ -55,7 +55,7 @@ function MemberSheet({
     const next = Number(wage)
     if (next === member.hourlyWage || next < MIN_WAGE) return
     updateWage.mutate(
-      { memberId: member.memberId, hourlyWage: next },
+      { memberId: member.memberId, hourlyWage: next, invited: member.status === 'invited' },
       {
         onSuccess: () => toast(`시급을 ${formatWon(next)}으로 바꿨어요`),
         onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', saveWage),
