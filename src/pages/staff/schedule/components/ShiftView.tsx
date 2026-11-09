@@ -66,7 +66,7 @@ export function ShiftView() {
         </div>
         <div className="flex flex-col gap-1.5 break-keep">
           <h2 className="m-0 text-lg font-bold">이번 주 근무</h2>
-          <span className="text-[13px] leading-relaxed text-[#4F554D]">
+          <span className="text-[13px] leading-relaxed text-balance text-foreground">
             {weekNote || '이번 주 근무가 없어요'}
           </span>
         </div>
@@ -105,7 +105,7 @@ export function ShiftView() {
                     <span className="text-[19px] font-extrabold tracking-[-0.02em]">
                       {formatDate(date)}
                     </span>
-                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums opacity-85">
+                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums">
                       {shift.start} – {shift.end}
                     </span>
                   </span>

@@ -225,7 +225,7 @@ function HandoverSection({
         {live && (
           <Link
             to="/staff/handover"
-            className="p-1 text-[13px] font-semibold whitespace-nowrap text-[#4F554D]"
+            className="p-1 text-[13px] font-semibold whitespace-nowrap text-foreground"
           >
             남기기
           </Link>

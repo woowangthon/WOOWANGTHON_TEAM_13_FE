@@ -211,7 +211,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
 
       {stage === 'done' && (
         <div className="flex flex-col gap-2.5">
-          <span className="text-[13px] text-[#6B7068]">
+          <span className="text-[13px] text-muted-foreground">
             {manual ? '직접 정리' : 'AI 정리 결과'} · 태그나 글자를 눌러 고쳐 주세요
           </span>
           {items.map((item, i) => {

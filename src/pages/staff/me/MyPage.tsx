@@ -148,7 +148,7 @@ export default function MyPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">연결된 계정</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">연결된 계정</h2>
         <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
           <span
             className={cn(
@@ -171,7 +171,7 @@ export default function MyPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">소속 매장</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">소속 매장</h2>
         {stores.map((s) => {
           const Icon = STORE_ICON[s.icon]
           const asking = askDeleteId === s.id
@@ -220,7 +220,7 @@ export default function MyPage() {
                     type="button"
                     aria-label={`${s.name} 삭제`}
                     onClick={() => setAskDeleteId(s.id)}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-[#6B7068]"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
                   >
                     <X className="size-5" />
                   </button>

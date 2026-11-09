@@ -47,7 +47,7 @@ export function ChatBubble({ message, ownerName, onAskOwner }: ChatBubbleProps) 
       )
     case 'system':
       return (
-        <div className="self-center rounded-full bg-muted px-[13px] py-[7px] text-xs text-[#6B7068]">
+        <div className="self-center rounded-full bg-muted px-[13px] py-[7px] text-xs text-muted-foreground">
           {message.text}
         </div>
       )
