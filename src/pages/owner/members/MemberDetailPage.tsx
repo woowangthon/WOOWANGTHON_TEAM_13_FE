@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { MIN_WAGE } from '@/api/mocks/owner/data'
 import { formatWon } from '@/lib/format'
 import { toastApiError } from '@/lib/api/errors'
+import { ApiError } from '@/lib/apiClient'
 import { useMembers, useRemoveMember, useUpdateHourlyWage } from '@/pages/owner/api/members'
 import type { Member } from '@/pages/owner/api/types'
 import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
@@ -60,7 +61,16 @@ function MemberSheet({
       { memberId: member.memberId, hourlyWage: next, invited: member.status === 'invited' },
       {
         onSuccess: () => toast(`시급을 ${formatWon(next)}으로 바꿨어요`),
-        onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', saveWage),
+        onError: (error) => {
+          // 입장 전은 다시 해도 같아서 원래 시급으로 되돌리고 [다시 시도] 없이 안내만
+          const notJoined = error instanceof ApiError && error.code === 'MEMBER_NOT_JOINED'
+          if (notJoined) setWage(String(member.hourlyWage))
+          toastApiError(
+            error,
+            '저장하지 못했어요. 다시 시도해 주세요',
+            notJoined ? undefined : saveWage,
+          )
+        },
       },
     )
   }

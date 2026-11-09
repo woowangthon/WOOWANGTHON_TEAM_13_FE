@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { MIN_WAGE } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
+import { ApiError } from '@/lib/apiClient'
 import { useMembers, useUpdateHourlyWage } from '@/pages/owner/api/members'
 import { useUpdateStore } from '@/pages/owner/api/stores'
 import type { Member, StoreSize } from '@/pages/owner/api/types'
@@ -69,15 +70,28 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
     setSaving(true)
     try {
       await updateStore.mutateAsync({ name: name.trim(), payday, size })
+      // 시급은 직원마다 저장하고, 못 바꾼 직원(입장 전 등)은 칸을 원래 시급으로 되돌린다
+      let failed: unknown = null
       for (const m of members) {
         const next = Number(wages[m.memberId])
-        if (next !== m.hourlyWage) {
+        if (next === m.hourlyWage) continue
+        try {
           await updateWage.mutateAsync({
             memberId: m.memberId,
             hourlyWage: next,
             invited: m.status === 'invited',
           })
+        } catch (error) {
+          failed ??= error
+          setWages((w) => ({ ...w, [m.memberId]: String(m.hourlyWage) }))
         }
+      }
+      if (failed) {
+        // 입장 전은 다시 해도 같아서 [다시 시도] 없이 안내만
+        const retry =
+          failed instanceof ApiError && failed.code === 'MEMBER_NOT_JOINED' ? undefined : save
+        toastApiError(failed, '시급을 저장하지 못했어요. 다시 시도해 주세요', retry)
+        return
       }
       toast('저장했어요')
       close()
