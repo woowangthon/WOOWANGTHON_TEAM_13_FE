@@ -177,7 +177,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
             <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
               {shift.start} – {shift.end}
             </span>
-            <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>
+            <span className="text-[13px] text-balance break-keep opacity-85">{shift.crew.join(' · ')}</span>
           </div>
           <span
             aria-hidden="true"
@@ -225,7 +225,7 @@ function HandoverSection({
         {live && (
           <Link
             to="/staff/handover"
-            className="p-1 text-[13px] font-semibold whitespace-nowrap text-[#4F554D]"
+            className="p-1 text-[13px] font-semibold whitespace-nowrap text-foreground"
           >
             남기기
           </Link>

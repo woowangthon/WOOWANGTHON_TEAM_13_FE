@@ -60,7 +60,7 @@ export function RecipeCard({ recipe, storeName, footer, stepsPending }: RecipeCa
             key={name}
             className="flex justify-between gap-3 border-b border-[#F0EBE2] py-3.5 text-base last:border-b-0"
           >
-            <dt className="text-[#6B7068]">{name}</dt>
+            <dt className="text-muted-foreground">{name}</dt>
             <dd className="m-0 font-extrabold">{amount}</dd>
           </div>
         ))}

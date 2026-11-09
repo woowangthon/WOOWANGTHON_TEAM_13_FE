@@ -1,4 +1,4 @@
-import { LoaderCircle, LogOut, X } from 'lucide-react'
+import { LoaderCircle, LogOut, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
@@ -118,13 +118,31 @@ export default function MyPage() {
             saveName()
           }}
         >
-          <input
-            value={nameDraft}
-            onChange={(event) => setNameDraft(event.target.value)}
-            maxLength={NICKNAME_MAX}
-            aria-label="이름"
-            className="w-full border-none bg-transparent p-0 text-center text-[28px] font-extrabold tracking-[-0.03em]"
-          />
+          {/* 이름은 눌러서 고칠 수 있다는 힌트: 이름 바로 옆 연필 + 옅은 점선 밑줄.
+              입력칸 너비를 글자 길이에 맞추려고 같은 글자를 안 보이게 겹쳐 둔다 (grid 한 칸) */}
+          <label className="group flex w-full items-center justify-center gap-1.5">
+            <span className="inline-grid max-w-[calc(100%-2rem)]">
+              <span
+                aria-hidden="true"
+                className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[28px] font-extrabold tracking-[-0.03em] whitespace-pre"
+              >
+                {nameDraft || ' '}
+              </span>
+              <input
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                maxLength={NICKNAME_MAX}
+                // 기본 너비(약 20자)를 없애야 보이지 않는 글자 길이만큼만 넓어진다
+                size={1}
+                aria-label="이름"
+                className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-center text-[28px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+              />
+            </span>
+            <Pencil
+              aria-hidden="true"
+              className="size-[18px] shrink-0 text-subtle group-focus-within:text-brand"
+            />
+          </label>
           {nameChanged && (
             <div className="flex gap-2">
               <Button
@@ -148,7 +166,7 @@ export default function MyPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">연결된 계정</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">연결된 계정</h2>
         <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
           <span
             className={cn(
@@ -171,7 +189,7 @@ export default function MyPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">소속 매장</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">소속 매장</h2>
         {stores.map((s) => {
           const Icon = STORE_ICON[s.icon]
           const asking = askDeleteId === s.id
@@ -220,7 +238,7 @@ export default function MyPage() {
                     type="button"
                     aria-label={`${s.name} 삭제`}
                     onClick={() => setAskDeleteId(s.id)}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-[#6B7068]"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
                   >
                     <X className="size-5" />
                   </button>

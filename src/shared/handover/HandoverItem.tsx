@@ -40,11 +40,16 @@ export function HandoverItem({
     >
       <span
         className={cn(
-          'flex size-6 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-white',
+          'flex size-6 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-white transition-colors duration-150',
           done ? 'border-brand bg-brand' : 'border-line bg-transparent',
         )}
       >
-        {done && <Check className="size-4" strokeWidth={3} />}
+        {done && (
+          <Check
+            className="size-4 animate-in duration-150 zoom-in-50 fade-in-0 motion-reduce:animate-none"
+            strokeWidth={3}
+          />
+        )}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <span

@@ -66,7 +66,7 @@ export function ShiftView() {
         </div>
         <div className="flex flex-col gap-1.5 break-keep">
           <h2 className="m-0 text-lg font-bold">이번 주 근무</h2>
-          <span className="text-[13px] leading-relaxed text-[#4F554D]">
+          <span className="text-[13px] leading-relaxed text-balance text-foreground">
             {weekNote || '이번 주 근무가 없어요'}
           </span>
         </div>
@@ -77,6 +77,8 @@ export function ShiftView() {
           {shifts.map((shift, i) => {
             const date = fromDateKey(shift.date)
             const isToday = isSameDay(date, today)
+            // 지난 근무는 연하게 (오늘 · 다가올 근무가 눈에 띄게)
+            const isPast = !isToday && date < today
             // 근무 이름 · 나 · 함께 일하는 사람 (예: 마감 · 지은 · 도윤)
             const people = [store.staffName, ...shift.crew].filter(Boolean).join(' · ')
             return (
@@ -99,13 +101,14 @@ export function ShiftView() {
                   className={cn(
                     'mb-2.5 flex flex-col gap-[5px] rounded-[26px]',
                     isToday ? 'bg-brand texture px-[22px] py-5 text-white' : 'px-2 py-3.5',
+                    isPast && 'opacity-55',
                   )}
                 >
                   <span className="flex items-baseline justify-between gap-2.5">
                     <span className="text-[19px] font-extrabold tracking-[-0.02em]">
                       {formatDate(date)}
                     </span>
-                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums opacity-85">
+                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums">
                       {shift.start} – {shift.end}
                     </span>
                   </span>

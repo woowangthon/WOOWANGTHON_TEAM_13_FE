@@ -28,7 +28,7 @@ export function ManualCard({ manual, href }: { manual: Manual; href: To }) {
         {manual.isNew && <Badge>NEW</Badge>}
       </span>
       <span className="text-[17px] font-bold">{manual.title}</span>
-      <span className="line-clamp-2 text-[13px] leading-normal break-keep text-[#6B7068]">
+      <span className="line-clamp-2 text-[13px] leading-normal break-keep text-muted-foreground">
         {at >= 0 ? (
           <>
             {preview.slice(0, at)}

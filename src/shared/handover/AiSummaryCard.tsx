@@ -20,7 +20,7 @@ export function AiSummaryCard({ from, summary, done, total }: AiSummaryCardProps
           {from}
         </span>
       </div>
-      <p className="m-0 text-sm leading-[1.65] break-keep opacity-90">{summary}</p>
+      <p className="m-0 text-sm leading-[1.65] text-balance break-keep opacity-90">{summary}</p>
       <div className="mt-1.5 flex items-center gap-3">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
           <div

@@ -138,7 +138,7 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
           }}
         />
 
-        <div className="flex gap-3.5 text-xs text-[#6B7068]">
+        <div className="flex gap-3.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="size-3 rounded-full bg-[#D5E0D2]" />
             가능 {okCount}일

@@ -257,7 +257,7 @@ function PayCalendar({
     <section className="flex flex-col gap-3.5 rounded-[28px] bg-card px-[18px] pt-5 pb-[18px] shadow-soft">
       <div className="flex items-baseline justify-between gap-2.5 px-1">
         <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">{payMonth.month}월</h2>
-        <span className="text-[13px] font-semibold whitespace-nowrap text-[#4F554D] tabular-nums">
+        <span className="text-[13px] font-semibold whitespace-nowrap text-foreground tabular-nums">
           근무 {workedCount}일 · 예정 {plannedCount}일
         </span>
       </div>
@@ -304,7 +304,7 @@ function PayCalendar({
           <span className="text-[15px] font-extrabold">
             {formatDate(new Date(payMonth.year, payMonth.month - 1, selectedDay))}
           </span>
-          <span className="text-[13px] leading-normal text-[#6B7068]">
+          <span className="text-[13px] leading-normal text-balance text-foreground">
             {selected.length
               ? selected
                   .map(
@@ -327,7 +327,7 @@ function PayCalendar({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 px-1 pt-0.5 text-xs text-[#6B7068]">
+      <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 px-1 pt-0.5 text-xs text-muted-foreground">
         {(showAll
           ? [
               ...stores.map((s) => ({ label: s.name, color: s.color })),
