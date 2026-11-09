@@ -28,7 +28,11 @@ export function ShiftView() {
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="shift" />
-        {failed ? <LoadError error={failed.error} onRetry={() => failed.refetch()} /> : <Spinner />}
+        {failed ? (
+          <LoadError what="근무표를" error={failed.error} onRetry={() => failed.refetch()} />
+        ) : (
+          <Spinner />
+        )}
       </div>
     )
   }
@@ -54,7 +58,7 @@ export function ShiftView() {
           aria-label={`이번 주 ${weekHours}시간 / ${WEEKLY_ALLOWANCE_HOURS}시간`}
         >
           <div className="flex size-24 flex-col items-center justify-center rounded-full bg-card">
-            <span className="text-[30px] leading-none font-bold">{weekHours}h</span>
+            <span className="text-[30px] leading-none font-bold tabular-nums">{weekHours}</span>
             <span className="mt-1 text-[11px] whitespace-nowrap text-muted-foreground">
               / {WEEKLY_ALLOWANCE_HOURS}시간
             </span>
@@ -101,7 +105,7 @@ export function ShiftView() {
                     <span className="text-[19px] font-extrabold tracking-[-0.02em]">
                       {formatDate(date)}
                     </span>
-                    <span className="text-sm font-semibold whitespace-nowrap opacity-85">
+                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums opacity-85">
                       {shift.start} – {shift.end}
                     </span>
                   </span>
@@ -122,8 +126,8 @@ export function ShiftView() {
         </ol>
       ) : (
         <EmptyGuide
-          message="아직 확정된 근무가 없어요"
-          hint="아래에서 근무 가능 시간을 내면 사장님이 근무표를 짜요"
+          message="아직 정해진 근무가 없어요"
+          hint="가능 시간을 내면 사장님이 근무를 정해 줘요"
         />
       )}
 

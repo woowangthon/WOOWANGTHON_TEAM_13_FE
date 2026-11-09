@@ -44,7 +44,9 @@ function toView(store: MyStoreDetail, index: number, workSummary: string | null)
     ...STORE_THEME[icon],
     photo: store.photoUrl ?? undefined,
     // 매장 목록 한 줄: 이번 주 근무(FE 계산) · 사장님 이름
-    meta: [workSummary, store.ownerName && formatOwner(store.ownerName)].filter(Boolean).join(' · '),
+    meta: [workSummary, store.ownerName && formatOwner(store.ownerName)]
+      .filter(Boolean)
+      .join(' · '),
   }
 }
 

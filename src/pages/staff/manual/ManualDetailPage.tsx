@@ -11,7 +11,7 @@ export default function ManualDetailPage() {
   const { manualId = '' } = useParams()
   const { store } = useCurrentStore()
   const close = useCloseTo('/staff/manuals')
-  const manualQuery = useManual(store.id, manualId)
+  const manualQuery = useManual(store.id, manualId, { fromList: true })
 
   if (isNotFound(manualQuery.error)) return <Navigate to="/staff/manuals" replace />
 

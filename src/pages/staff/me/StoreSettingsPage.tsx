@@ -53,7 +53,7 @@ export default function StoreSettingsPage() {
     return (
       <StaffFrame store={current.store}>
         {current.error ? (
-          <LoadError error={current.error} onRetry={() => current.retry()} />
+          <LoadError what="매장 정보를" error={current.error} onRetry={() => current.retry()} />
         ) : (
           <Spinner />
         )}
@@ -66,7 +66,11 @@ export default function StoreSettingsPage() {
     return (
       <StaffFrame store={store}>
         {estimateQuery.isError ? (
-          <LoadError error={estimateQuery.error} onRetry={() => estimateQuery.refetch()} />
+          <LoadError
+            what="급여 설정을"
+            error={estimateQuery.error}
+            onRetry={() => estimateQuery.refetch()}
+          />
         ) : (
           <Spinner />
         )}
@@ -152,7 +156,7 @@ function SettingsForm({ store, saved }: { store: StaffStoreView; saved: PaySetti
               inputMode="numeric"
               value={wageText ? Number(wageText).toLocaleString('ko-KR') : ''}
               onChange={(event) => setWageText(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="w-[130px] min-w-0 border-none bg-transparent p-0 text-right text-[28px] font-extrabold tracking-[-0.02em]"
+              className="w-[130px] min-w-0 border-none bg-transparent p-0 text-right text-[28px] font-extrabold tracking-[-0.02em] tabular-nums"
             />
             <span className="text-base font-bold text-muted-foreground">원</span>
           </span>

@@ -12,6 +12,7 @@ import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
+import { PRESSABLE } from '@/shared/pressable'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
@@ -28,7 +29,13 @@ export function StaffHome() {
   const scheduleQuery = useMySchedule(store.id)
   const schedule = scheduleQuery.data
   if (scheduleQuery.isError) {
-    return <LoadError error={scheduleQuery.error} onRetry={() => scheduleQuery.refetch()} />
+    return (
+      <LoadError
+        what="근무를"
+        error={scheduleQuery.error}
+        onRetry={() => scheduleQuery.refetch()}
+      />
+    )
   }
   if (!schedule) return <Spinner />
 
@@ -91,7 +98,7 @@ function HomeBody({
               )}
             >
               <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[date.getDay()]}</span>
-              <span className="text-[17px] font-bold">{day}</span>
+              <span className="text-[17px] font-bold tabular-nums">{day}</span>
               <span
                 className={cn(
                   'size-[5px] rounded-full',
@@ -116,8 +123,7 @@ function HomeBody({
         />
       ) : (
         <EmptyGuide
-          message="아직 확정된 근무가 없어요"
-          hint="근무 가능 시간을 내면 사장님이 근무표를 짜요"
+          message="아직 정해진 근무가 없어요"
           action={
             <Button
               size="md"
@@ -140,7 +146,14 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
   const showPhoto = store.photo && !photoFailed
 
   return (
-    <section className="relative isolate min-h-[240px] overflow-hidden rounded-[30px] bg-brand texture">
+    <Link
+      to="/staff/schedule"
+      aria-label={`오늘 근무 ${shift.start} – ${shift.end} · 근무 보기`}
+      className={cn(
+        'relative isolate block min-h-[240px] overflow-hidden rounded-[30px] bg-brand texture',
+        PRESSABLE,
+      )}
+    >
       {showPhoto && (
         <img
           src={store.photo}
@@ -161,21 +174,20 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
         </span>
         <div className="flex items-end justify-between gap-3.5">
           <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em]">
+            <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
               {shift.start} – {shift.end}
             </span>
             <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>
           </div>
-          <Link
-            to="/staff/schedule"
-            aria-label="근무 보기"
+          <span
+            aria-hidden="true"
             className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-white text-foreground"
           >
             <ChevronRight className="size-6" />
-          </Link>
+          </span>
         </div>
       </div>
-    </section>
+    </Link>
   )
 }
 
@@ -223,7 +235,11 @@ function HandoverSection({
       {notesQuery.isPending ? (
         <Spinner />
       ) : notesQuery.isError ? (
-        <LoadError error={notesQuery.error} onRetry={() => notesQuery.refetch()} />
+        <LoadError
+          what="인수인계를"
+          error={notesQuery.error}
+          onRetry={() => notesQuery.refetch()}
+        />
       ) : withItems.length > 0 ? (
         withItems.map((note) => (
           <div key={note.noteId} className="flex flex-col gap-2.5">
@@ -244,7 +260,7 @@ function HandoverSection({
         ))
       ) : live && notes.length === 0 ? (
         <EmptyGuide
-          message="아직 오늘 인수인계가 없어요"
+          message="오늘 남긴 인수인계가 없어요"
           action={
             <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/handover')}>
               인수인계 남기기

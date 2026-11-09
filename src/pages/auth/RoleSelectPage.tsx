@@ -6,6 +6,7 @@ import { env } from '@/lib/env'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { Spinner } from '@/ui/Spinner'
+import { PRESSABLE, PRESSABLE_CARD } from '@/shared/pressable'
 import { cn } from '@/ui/utils'
 
 // 역할 선택 (디자인: docs/design/login-onboarding.html): 사장님은 매장 등록, 알바생은 초대코드 입장으로
@@ -83,8 +84,10 @@ export default function RoleSelectPage() {
             type="button"
             onClick={() => choose(role, to)}
             className={cn(
-              'flex min-h-[190px] flex-col gap-2.5 rounded-[30px] p-[22px] text-left transition-transform active:scale-[0.98]',
-              dark ? 'texture bg-brand text-white' : 'bg-card text-foreground shadow-soft',
+              'flex min-h-[190px] flex-col gap-2.5 rounded-[30px] p-[22px] text-left',
+              dark
+                ? cn('texture bg-brand text-white', PRESSABLE)
+                : cn('bg-card text-foreground shadow-soft', PRESSABLE_CARD),
             )}
           >
             <span

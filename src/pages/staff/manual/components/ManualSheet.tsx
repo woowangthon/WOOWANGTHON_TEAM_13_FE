@@ -1,15 +1,10 @@
 import { Copy } from 'lucide-react'
 import type { Manual } from '@/lib/api/types'
 import { DEFAULT_MANUAL_ICON, MANUAL_ICON } from '@/shared/icons'
+import { findPassword } from '@/shared/manual/manualText'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
-
-/** 내용에서 "비밀번호 ○○○"를 찾는다 (와이파이 · 화장실). "비밀번호 없음"이면 null */
-function findPassword(body: string) {
-  const value = body.match(/비밀번호\s*[:：]?\s*([^\s·,]+)/)?.[1]
-  return value && value !== '없음' ? value : null
-}
 
 // 매뉴얼 상세 시트 (비밀번호가 있으면 복사 버튼)
 export function ManualSheet({

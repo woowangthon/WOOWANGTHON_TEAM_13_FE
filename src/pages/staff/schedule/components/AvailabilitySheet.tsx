@@ -58,7 +58,11 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
     return (
       <BottomSheet open onClose={onClose} label="근무 가능 시간">
         {availabilityQuery.isError ? (
-          <LoadError error={availabilityQuery.error} onRetry={() => availabilityQuery.refetch()} />
+          <LoadError
+            what="가능 시간을"
+            error={availabilityQuery.error}
+            onRetry={() => availabilityQuery.refetch()}
+          />
         ) : (
           <Spinner />
         )}

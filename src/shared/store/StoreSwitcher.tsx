@@ -1,5 +1,7 @@
 import type { StoreTheme } from '@/lib/api/types'
 import { STORE_ICON } from '@/shared/icons'
+import { PRESSABLE } from '@/shared/pressable'
+import { cn } from '@/ui/utils'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { BottomSheet } from '@/ui/BottomSheet'
 
@@ -44,7 +46,10 @@ export function StoreSwitcher<T extends StoreSwitcherItem>({
               type="button"
               onClick={() => onSelect(store)}
               style={{ borderColor: current ? store.color : '#ECEAE3' }}
-              className="flex items-center gap-3 rounded-[22px] border-[1.5px] bg-white px-4 py-3.5 text-left"
+              className={cn(
+                'flex items-center gap-3 rounded-[22px] border-[1.5px] bg-white px-4 py-3.5 text-left',
+                PRESSABLE,
+              )}
             >
               <StoreAvatar color={store.color}>
                 <Icon className="size-5" fill="currentColor" />

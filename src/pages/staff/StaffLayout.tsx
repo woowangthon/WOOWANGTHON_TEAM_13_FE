@@ -59,7 +59,13 @@ export default function StaffLayout() {
       </header>
 
       {/* 매장 정보를 받기 전에는 화면 대신 Spinner (매장 색 · 데이터가 섞여 보이지 않게) */}
-      {isPending ? <Spinner /> : error ? <LoadError error={error} onRetry={retry} /> : <Outlet />}
+      {isPending ? (
+        <Spinner />
+      ) : error ? (
+        <LoadError what="내 매장을" error={error} onRetry={retry} />
+      ) : (
+        <Outlet />
+      )}
 
       <BottomNav
         items={NAV_ITEMS}

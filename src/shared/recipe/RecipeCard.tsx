@@ -10,9 +10,11 @@ interface RecipeCardProps {
   recipe: Recipe
   storeName: string
   footer?: ReactNode
+  /** 목록 내용으로 먼저 보여 주는 중 → 만드는 순서 자리에 안내 한 줄 */
+  stepsPending?: boolean
 }
 
-export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
+export function RecipeCard({ recipe, storeName, footer, stepsPending }: RecipeCardProps) {
   const Icon = CATEGORY_ICON[recipe.category] ?? DEFAULT_CATEGORY_ICON
   const [tint, ink] = getCategoryTint(recipe.category)
   // 온도 · 사이즈는 정하지 않으면 null → 있는 것만 (둘 다 없으면 배지 없음)
@@ -66,6 +68,9 @@ export function RecipeCard({ recipe, storeName, footer }: RecipeCardProps) {
 
       <div className="flex flex-col gap-3">
         <h3 className="m-0 text-[17px] font-bold">만드는 순서</h3>
+        {stepsPending && (
+          <p className="m-0 animate-pulse text-sm text-subtle">순서를 불러오고 있어요</p>
+        )}
         <ol className="m-0 flex list-none flex-col gap-3 p-0">
           {recipe.steps.map((step, i) => (
             <li key={step} className="flex items-start gap-3">
