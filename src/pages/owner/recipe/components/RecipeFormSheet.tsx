@@ -3,12 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { OWNER_CATEGORIES, RECIPE_TEMPLATES } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
 import type { Recipe, RecipeTemp } from '@/lib/api/types'
-import {
-  canSaveRecipePhoto,
-  useCreateRecipe,
-  useRecipePhotos,
-  useUpdateRecipe,
-} from '@/pages/owner/api/content'
+import { canSaveRecipePhoto, useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
 import type { RecipeInput } from '@/pages/owner/api/types'
 import { RecipePhotoField } from '@/pages/owner/recipe/components/RecipePhotoField'
 import { BottomSheet } from '@/ui/BottomSheet'
@@ -58,8 +53,8 @@ export function RecipeFormSheet({
   const [steps, setSteps] = useState(recipe?.steps.join('\n') ?? '')
   const [memo, setMemo] = useState(recipe?.memo ?? '')
   const [photo, setPhoto] = useState<File | null | undefined>(undefined)
-  const photos = useRecipePhotos(storeId)
-  const currentPhoto = recipe ? (photos.data?.[recipe.recipeId] ?? null) : null
+  // 지금 사진: 레시피 imageUrl (없으면 lib/api/recipes 가 메뉴 이름으로 시연 사진, 뺀 사진은 '')
+  const currentPhoto = recipe?.imageUrl || null
   const create = useCreateRecipe(storeId)
   const update = useUpdateRecipe(storeId)
   const pending = create.isPending || update.isPending

@@ -41,7 +41,7 @@ const invitedMember = (
 
 /*
  * 화면의 직원 목록 = 입장한 직원(members, 퇴사 빼고) + 아직 입장 안 한 코드(invitations AVAILABLE).
- * 입장한 직원의 코드는 같은 이름으로 쓰인(USED) 코드를 찾아 보여 준다 (BE 가 직원 ↔ 코드를 이어 주지 않아서).
+ * 입장한 직원의 코드는 members 의 invitationId 로 찾는다.
  */
 const fetchMembers = async (storeId: string): Promise<{ members: Member[] }> => {
   if (!isRealApi('members')) return getMembers(storeId)
@@ -53,13 +53,12 @@ const fetchMembers = async (storeId: string): Promise<{ members: Member[] }> => 
     .filter((m) => m.status === 'ACTIVE' && m.role !== 'owner')
     .map<Member>((m) => ({
       memberId: m.memberId,
-      invitationId: null,
+      invitationId: m.invitationId,
       storeId,
       name: m.staffName,
       hourlyWage: m.hourlyWage,
       status: 'active',
-      inviteCode:
-        invitations.find((i) => i.status === 'USED' && i.staffName === m.staffName)?.code ?? '',
+      inviteCode: invitations.find((i) => i.invitationId === m.invitationId)?.code ?? '',
       shiftLabel: '알바생',
     }))
   const waiting = invitations

@@ -22,7 +22,6 @@ import {
   type Recipe as StaffRecipe,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
-import { menuPhotoUrl } from '@/api/mocks/owner/menuPhotos'
 import { ApiError } from '@/lib/apiClient'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
@@ -313,10 +312,16 @@ export async function dismissNotification(notificationId: string): Promise<void>
 
 // ── 레시피 · 매뉴얼 등록 · 수정 · 삭제 (알바 가짜 데이터에 반영) ──
 
-function toStaffRecipe(storeId: string, id: string, input: RecipeInput): StaffRecipe {
+function toStaffRecipe(
+  storeId: string,
+  id: string,
+  input: RecipeInput,
+  imageUrl: string | null | undefined,
+): StaffRecipe {
   return {
     id,
     storeId,
+    imageUrl,
     name: input.name.trim(),
     // 알바 가짜 데이터는 카테고리 6개만 알지만, 사장님이 정한 이름을 그대로 둔다
     category: input.category as RecipeCategory,
@@ -335,33 +340,28 @@ function checkRecipe(input: RecipeInput) {
   if (!input.name.trim()) fail(422, 'VALIDATION_ERROR', '메뉴 이름을 입력해 주세요')
 }
 
-/** 사장님이 넣거나 뺀 메뉴 사진 (recipeId → 주소, null 은 뺌). 없으면 메뉴 이름으로 시연 사진 */
-const recipePhotos = new Map<string, string | null>()
-
-function savePhoto(recipeId: string, photo: File | null | undefined) {
-  if (photo === undefined) return
-  const before = recipePhotos.get(recipeId)
+/*
+ * 메뉴 사진 → 레시피 imageUrl (알바 · 사장 카드 · 목록이 lib/api/recipes 를 거쳐 보여 준다)
+ * - 새 사진: 브라우저 주소(blob:) · 뺌: '' (빈 값이면 시연 사진도 안 쓰고 아이콘) · 그대로: 원래 값
+ * - imageUrl 이 없으면(undefined · null) lib/api/recipes 가 메뉴 이름으로 시연 사진을 찾는다
+ */
+function photoUrl(before: string | null | undefined, photo: File | null | undefined) {
+  if (photo === undefined) return before
   if (before?.startsWith('blob:')) URL.revokeObjectURL(before)
-  recipePhotos.set(recipeId, photo ? URL.createObjectURL(photo) : null)
-}
-
-/** 레시피 사진 (BE 제안: 레시피 응답의 imageUrl) — recipeId → 사진 주소 */
-export async function getRecipePhotos(storeId: string): Promise<Record<string, string | null>> {
-  await wait(100)
-  return Object.fromEntries(
-    staffRecipes
-      .filter((r) => r.storeId === storeId)
-      .map((r) => [r.id, recipePhotos.has(r.id) ? recipePhotos.get(r.id)! : menuPhotoUrl(r.name)]),
-  )
+  return photo ? URL.createObjectURL(photo) : ''
 }
 
 /** POST /stores/{storeId}/recipes (제안) */
 export async function createRecipe(storeId: string, input: RecipeInput) {
   await wait(400)
   checkRecipe(input)
-  const recipe = toStaffRecipe(storeId, `rcp_${Date.now()}`, input)
+  const recipe = toStaffRecipe(
+    storeId,
+    `rcp_${Date.now()}`,
+    input,
+    photoUrl(undefined, input.photo),
+  )
   staffRecipes.push(recipe)
-  savePhoto(recipe.id, input.photo)
   return { recipeId: recipe.id }
 }
 
@@ -376,8 +376,8 @@ export async function updateRecipe(storeId: string, recipeId: string, input: Rec
   await wait(400)
   checkRecipe(input)
   const index = recipeIndex(storeId, recipeId)
-  staffRecipes[index] = toStaffRecipe(storeId, recipeId, input)
-  savePhoto(recipeId, input.photo)
+  const imageUrl = photoUrl(staffRecipes[index].imageUrl, input.photo)
+  staffRecipes[index] = toStaffRecipe(storeId, recipeId, input, imageUrl)
   return { recipeId }
 }
 
