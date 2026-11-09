@@ -54,7 +54,7 @@ export function ShiftView() {
           aria-label={`이번 주 ${weekHours}시간 / ${WEEKLY_ALLOWANCE_HOURS}시간`}
         >
           <div className="flex size-24 flex-col items-center justify-center rounded-full bg-card">
-            <span className="text-[30px] leading-none font-bold">{weekHours}h</span>
+            <span className="text-[30px] leading-none font-bold tabular-nums">{weekHours}</span>
             <span className="mt-1 text-[11px] whitespace-nowrap text-muted-foreground">
               / {WEEKLY_ALLOWANCE_HOURS}시간
             </span>
@@ -101,7 +101,7 @@ export function ShiftView() {
                     <span className="text-[19px] font-extrabold tracking-[-0.02em]">
                       {formatDate(date)}
                     </span>
-                    <span className="text-sm font-semibold whitespace-nowrap opacity-85">
+                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums opacity-85">
                       {shift.start} – {shift.end}
                     </span>
                   </span>

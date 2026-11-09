@@ -145,10 +145,10 @@ export default function PayrollPage() {
                   급여 설정 ›
                 </Link>
               </div>
-              <span className="px-1 pt-1.5 text-[44px] leading-[1.1] font-extrabold tracking-[-0.035em]">
+              <span className="px-1 pt-1.5 text-[44px] leading-[1.1] font-extrabold tracking-[-0.035em] tabular-nums">
                 {formatWon(total.net)}
               </span>
-              <span className="px-1 pb-2.5 text-sm opacity-75">
+              <span className="px-1 pb-2.5 text-sm tabular-nums opacity-75">
                 세전 {formatWon(total.gross)} · 참고용
               </span>
               <div className="grid grid-cols-3 gap-1.5">
@@ -193,8 +193,11 @@ export default function PayrollPage() {
 function PayTile({ label, value }: { label: string; value: string }) {
   return (
     <span className="flex flex-col gap-1 rounded-2xl bg-white/10 px-2.5 py-3">
-      <span className="text-xs whitespace-nowrap opacity-80">{label}</span>
-      <span className="text-[15px] font-extrabold whitespace-nowrap">{value}</span>
+      <span className="text-xs whitespace-nowrap tabular-nums opacity-80">{label}</span>
+      {/* 금액은 오른쪽 끝에 맞춘다 */}
+      <span className="text-right text-[15px] font-extrabold whitespace-nowrap tabular-nums">
+        {value}
+      </span>
     </span>
   )
 }
@@ -254,7 +257,7 @@ function PayCalendar({
     <section className="flex flex-col gap-3.5 rounded-[28px] bg-card px-[18px] pt-5 pb-[18px] shadow-soft">
       <div className="flex items-baseline justify-between gap-2.5 px-1">
         <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">{payMonth.month}월</h2>
-        <span className="text-[13px] font-semibold whitespace-nowrap text-[#4F554D]">
+        <span className="text-[13px] font-semibold whitespace-nowrap text-[#4F554D] tabular-nums">
           근무 {workedCount}일 · 예정 {plannedCount}일
         </span>
       </div>

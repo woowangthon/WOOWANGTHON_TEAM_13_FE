@@ -167,7 +167,9 @@ export default function JoinPage() {
           {error && (
             <p role="alert" className="m-0 px-1.5 text-[13px] text-destructive-foreground">
               {ERROR_TEXT[error]}
-              {remaining !== null && remaining > 0 && ` · ${remaining}번 더 틀리면 10분 동안 잠겨요`}
+              {remaining !== null &&
+                remaining > 0 &&
+                ` · ${remaining}번 더 틀리면 10분 동안 잠겨요`}
             </p>
           )}
           {error === 'joined' && memberStore && (

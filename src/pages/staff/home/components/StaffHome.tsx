@@ -92,7 +92,7 @@ function HomeBody({
               )}
             >
               <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[date.getDay()]}</span>
-              <span className="text-[17px] font-bold">{day}</span>
+              <span className="text-[17px] font-bold tabular-nums">{day}</span>
               <span
                 className={cn(
                   'size-[5px] rounded-full',
@@ -169,7 +169,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
         </span>
         <div className="flex items-end justify-between gap-3.5">
           <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em]">
+            <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
               {shift.start} – {shift.end}
             </span>
             <span className="text-[13px] break-keep opacity-85">{shift.crew.join(' · ')}</span>

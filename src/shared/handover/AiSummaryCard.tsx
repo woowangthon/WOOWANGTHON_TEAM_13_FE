@@ -16,7 +16,9 @@ export function AiSummaryCard({ from, summary, done, total }: AiSummaryCardProps
     <Card variant="dark" className="gap-2.5 px-[22px] py-5">
       <div className="flex items-center justify-between gap-2.5">
         <span className="text-lg font-extrabold">AI 요약</span>
-        <span className="text-[13px] font-semibold whitespace-nowrap opacity-80">{from}</span>
+        <span className="text-[13px] font-semibold whitespace-nowrap tabular-nums opacity-80">
+          {from}
+        </span>
       </div>
       <p className="m-0 text-sm leading-[1.65] break-keep opacity-90">{summary}</p>
       <div className="mt-1.5 flex items-center gap-3">
@@ -26,7 +28,7 @@ export function AiSummaryCard({ from, summary, done, total }: AiSummaryCardProps
             style={{ width: `${percent}%` }}
           />
         </div>
-        <span className="text-xs font-bold whitespace-nowrap">
+        <span className="text-xs font-bold whitespace-nowrap tabular-nums">
           {done} / {total} 처리
         </span>
       </div>
