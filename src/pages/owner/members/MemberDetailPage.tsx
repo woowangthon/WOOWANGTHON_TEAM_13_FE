@@ -50,10 +50,12 @@ function MemberSheet({
   const remove = useRemoveMember()
   const active = member.status === 'active'
 
-  // 칸을 벗어나면 저장 (최저시급 미만 · 그대로면 저장하지 않음)
+  // [저장]을 눌러야 바뀐다 (그대로 · 최저시급 미만이면 버튼이 꺼져 있다)
+  const nextWage = Number(wage)
+  const wageChanged = nextWage !== member.hourlyWage
   const saveWage = () => {
-    const next = Number(wage)
-    if (next === member.hourlyWage || next < MIN_WAGE) return
+    const next = nextWage
+    if (!wageChanged || next < MIN_WAGE) return
     updateWage.mutate(
       { memberId: member.memberId, hourlyWage: next, invited: member.status === 'invited' },
       {
@@ -94,11 +96,21 @@ function MemberSheet({
             storeName={storeName}
             name={member.name}
             storeId={member.storeId}
-            invitationId={member.invitationId}
+            // 입장한 직원의 코드는 이미 쓰여서(410) 카톡 공유 정보를 부르지 않는다
+            invitationId={active ? null : member.invitationId}
           />
         )}
 
-        <WageInput value={wage} onChange={setWage} onBlur={saveWage} />
+        <div className="flex items-start gap-2">
+          <WageInput value={wage} onChange={setWage} className="flex-1" />
+          <Button
+            className="h-[54px] px-5"
+            disabled={!wageChanged || nextWage < MIN_WAGE || updateWage.isPending}
+            onClick={saveWage}
+          >
+            저장
+          </Button>
+        </div>
 
         {askRemove ? (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
