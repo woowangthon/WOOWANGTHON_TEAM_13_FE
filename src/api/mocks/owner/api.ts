@@ -508,12 +508,21 @@ export async function getMonthShifts(storeId: string, month: string): Promise<Mo
       end,
       hours,
     }))
+  return { month, shifts, memos: dayMemos(storeId, month) }
+}
+
+/** 날짜 메모 (BE 없음 — 진짜 근무 달력에서도 이 브라우저에만 남는다) */
+function dayMemos(storeId: string, month: string) {
   const memos: Record<string, string> = {}
   for (const [key, text] of Object.entries(db.memos)) {
     const [sid, date] = key.split('|')
     if (sid === storeId && date.startsWith(month)) memos[date] = text
   }
-  return { month, shifts, memos }
+  return memos
+}
+
+export async function getDayMemos(storeId: string, month: string) {
+  return dayMemos(storeId, month)
 }
 
 /** POST /stores/{storeId}/schedules (제안) — 근무 한 칸 추가 */

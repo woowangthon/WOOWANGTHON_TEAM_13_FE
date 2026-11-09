@@ -13,14 +13,18 @@ import {
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
 import { toDateKey, todayInKst } from '@/lib/date'
+import * as real from '@/pages/owner/api/schedule'
 import { ownerKeys } from '@/pages/owner/api/stores'
 import type { MemberPay, PayrollEstimateList, ScheduleDraft } from '@/pages/owner/api/types'
 
 /*
  * 근무(달력 · 추천 스케줄) · 급여 훅 — 담당: 나현
- * 급여는 .env VITE_REAL_API 에 'payroll'(+ 'stores')을 넣으면 진짜 API (알바 예상 급여와 같은 스위치).
- * 근무 달력 · 추천 스케줄은 아직 가짜 서버(api/mocks/owner).
+ * .env VITE_REAL_API 에 'schedule'(근무 달력 · 추천 스케줄) · 'availability'(제출 현황) · 'payroll'(급여)을 넣으면 진짜 API.
+ * 진짜 API 연결은 pages/owner/api/schedule.ts, 아니면 가짜 서버(api/mocks/owner).
  */
+
+/** 부족한 칸에 사장님을 넣을 수 있는지 (진짜 API 는 BE 가 사장님 배정을 지원하기 전까지 못 한다) */
+export const canOwnerTakeShift = () => !isRealApi('schedule')
 
 /*
  * 직원별 이번 달 급여. BE 이름을 화면 모양(MemberPay)으로 바꾼다 (연서 공유):
@@ -57,7 +61,10 @@ const fetchStorePayroll = async (
 export function useMonthShifts(storeId: string, month: string) {
   return useQuery({
     queryKey: ownerKeys.shifts(storeId, month),
-    queryFn: () => getMonthShifts(storeId, month),
+    queryFn: () =>
+      isRealApi('schedule')
+        ? real.fetchMonthShifts(storeId, month)
+        : getMonthShifts(storeId, month),
     enabled: !!storeId,
   })
 }
@@ -70,8 +77,10 @@ function useInvalidateShifts(storeId: string) {
 export function useAddShift(storeId: string) {
   const invalidate = useInvalidateShifts(storeId)
   return useMutation({
-    mutationFn: (input: { date: string; memberId: string; start: string; end: string }) =>
-      addShift(storeId, input),
+    mutationFn: async (input: { date: string; memberId: string; start: string; end: string }) => {
+      if (isRealApi('schedule')) await real.addShift(storeId, input)
+      else await addShift(storeId, input)
+    },
     onSuccess: invalidate,
   })
 }
@@ -79,7 +88,8 @@ export function useAddShift(storeId: string) {
 export function useDeleteShift(storeId: string) {
   const invalidate = useInvalidateShifts(storeId)
   return useMutation({
-    mutationFn: (shiftId: string) => deleteShift(storeId, shiftId),
+    mutationFn: (shiftId: string) =>
+      isRealApi('schedule') ? real.deleteShift(storeId, shiftId) : deleteShift(storeId, shiftId),
     onSuccess: invalidate,
   })
 }
@@ -97,7 +107,10 @@ export function useSaveDayMemo(storeId: string) {
 export function useAvailabilityStatus(storeId: string) {
   return useQuery({
     queryKey: ownerKeys.availability(storeId),
-    queryFn: () => getAvailabilityStatus(storeId),
+    queryFn: () =>
+      isRealApi('availability')
+        ? real.fetchAvailabilityStatus(storeId)
+        : getAvailabilityStatus(storeId),
     enabled: !!storeId,
   })
 }
@@ -105,7 +118,7 @@ export function useAvailabilityStatus(storeId: string) {
 export function useScheduleDraft(storeId: string) {
   return useQuery({
     queryKey: ownerKeys.draft(storeId),
-    queryFn: () => getScheduleDraft(storeId),
+    queryFn: () => (isRealApi('schedule') ? real.fetchDraft(storeId) : getScheduleDraft(storeId)),
     enabled: !!storeId,
   })
 }
@@ -114,23 +127,37 @@ function useDraftMutation<T>(storeId: string, fn: (value: T) => Promise<Schedule
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: fn,
-    onSuccess: (draft) => queryClient.setQueryData(ownerKeys.draft(storeId), draft),
+    onSuccess: (draft) => {
+      queryClient.setQueryData(ownerKeys.draft(storeId), draft)
+      // 확정하면 근무 달력에도 들어간다
+      queryClient.invalidateQueries({ queryKey: ['owner', 'stores', storeId, 'shifts'] })
+    },
   })
 }
 
 /** 추천 스케줄 만들기 (P1) */
 export function useCreateDraft(storeId: string) {
-  return useDraftMutation(storeId, () => createScheduleDraft(storeId))
+  return useDraftMutation(storeId, () =>
+    isRealApi('schedule') ? real.createDraft(storeId) : createScheduleDraft(storeId),
+  )
 }
 
 /** 부족한 칸에 사장님 배정 */
 export function useFillDraft(storeId: string) {
-  return useDraftMutation(storeId, (date: string) => fillDraftShortage(storeId, date))
+  return useDraftMutation(storeId, (date: string) =>
+    isRealApi('schedule') ? real.fillDraft() : fillDraftShortage(storeId, date),
+  )
 }
 
 /** 확정하고 알리기 */
 export function useConfirmDraft(storeId: string) {
-  return useDraftMutation(storeId, () => confirmScheduleDraft(storeId))
+  const queryClient = useQueryClient()
+  return useDraftMutation(storeId, () => {
+    const draft = queryClient.getQueryData<ScheduleDraft>(ownerKeys.draft(storeId))
+    return isRealApi('schedule') && draft
+      ? real.confirmDraft(storeId, draft)
+      : confirmScheduleDraft(storeId)
+  })
 }
 
 /** 직원별 이번 달 급여 (참고용) */
