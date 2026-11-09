@@ -77,6 +77,8 @@ export function ShiftView() {
           {shifts.map((shift, i) => {
             const date = fromDateKey(shift.date)
             const isToday = isSameDay(date, today)
+            // 지난 근무는 연하게 (오늘 · 다가올 근무가 눈에 띄게)
+            const isPast = !isToday && date < today
             // 근무 이름 · 나 · 함께 일하는 사람 (예: 마감 · 지은 · 도윤)
             const people = [store.staffName, ...shift.crew].filter(Boolean).join(' · ')
             return (
@@ -99,6 +101,7 @@ export function ShiftView() {
                   className={cn(
                     'mb-2.5 flex flex-col gap-[5px] rounded-[26px]',
                     isToday ? 'bg-brand texture px-[22px] py-5 text-white' : 'px-2 py-3.5',
+                    isPast && 'opacity-55',
                   )}
                 >
                   <span className="flex items-baseline justify-between gap-2.5">
