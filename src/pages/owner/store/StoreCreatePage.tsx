@@ -8,6 +8,7 @@ import { useCreateStore, useSaveOwnerShifts, useSaveStorePhoto } from '@/pages/o
 import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
 import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
+import { AddressField } from '@/pages/owner/store/components/AddressField'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
@@ -20,7 +21,7 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님) 5단계 (11/11 고정 스케줄 개편)
-//   ① 사업자 확인 → ② 매장 이름 · 주소 · 규모 → ③ 근무 타임(시간 · 인원) · 휴무 → ④ 사장님 근무(건너뛰기)
+//   ① 사업자 확인 → ② 매장 이름 · 주소(검색) · 규모 → ③ 근무 타임(시간 · 인원) · 휴무 → ④ 사장님 근무(건너뛰기)
 //   → [④ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ⑤ 매장 사진(건너뛰기) → 등록 완료
 // 매장 사진은 매장이 생긴 뒤에만 올릴 수 있어서(BE) 맨 끝이다
 // 역할 선택에서 [사장님]을 고르거나 마이페이지 [매장 추가]로 여기 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
@@ -50,7 +51,9 @@ export default function StoreCreatePage() {
   const [step, setStep] = useState<Step>('biz')
   const [verificationId, setVerificationId] = useState<number | null>(null)
   const [name, setName] = useState('')
+  /** 주소 검색에서 고른 도로명 주소 + 상세 주소 */
   const [address, setAddress] = useState('')
+  const [addressDetail, setAddressDetail] = useState('')
   const [sizeLabel, setSizeLabel] = useState(SIZES[0].label)
   const [rows, setRows] = useState<ShiftRow[]>(initialRows)
   const [closedWeekdays, setClosedWeekdays] = useState<number[]>([])
@@ -104,7 +107,7 @@ export default function StoreCreatePage() {
     create.mutate(
       {
         name: name.trim(),
-        address: address.trim(),
+        address: [address, addressDetail.trim()].filter(Boolean).join(' '),
         size,
         businessVerificationId: verificationId!,
         shiftTemplates: rows.map((r) => ({
@@ -186,15 +189,12 @@ export default function StoreCreatePage() {
               className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
             />
           </label>
-          <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-            <span className="text-xs font-bold text-muted-foreground">매장 주소</span>
-            <input
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-              placeholder="서울 마포구 와우산로21길 8"
-              className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
-            />
-          </label>
+          <AddressField
+            address={address}
+            onAddressChange={setAddress}
+            detail={addressDetail}
+            onDetailChange={setAddressDetail}
+          />
           <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
             <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
             <div

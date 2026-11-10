@@ -1,9 +1,10 @@
 import { Check, Minus, Plus, X } from 'lucide-react'
 import type { ShiftTemplateInput } from '@/pages/owner/api/types'
+import { TimeField } from '@/pages/owner/store/components/TimeField'
 import { MAX_HEADCOUNT, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 ③ 근무 타임 · 휴무: 타임마다 이름 · 시작 ~ 끝 · 필요 인원, [+ 타임 추가] · 빼기
+// 매장 등록 ③ 근무 타임 · 휴무: 타임마다 이름 · 시작 ~ 끝(눌러서 휠로 고르기) · 필요 인원, [+ 타임 추가] · 빼기
 // 아래에 쉬는 요일(여러 개) · 공휴일에 쉬는지 체크
 
 /** 화면에서 줄을 구분하려고 붙이는 키 (이름은 고칠 수 있어서) */
@@ -73,22 +74,16 @@ export function ShiftTemplateStep({
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5 text-[15px] font-semibold">
-                <input
-                  type="time"
-                  step={600}
+                <TimeField
                   value={row.start}
-                  onChange={(event) => setRow(row.key, { start: event.target.value })}
-                  aria-label={`${row.name || '타임'} 시작`}
-                  className="h-10 rounded-xl border-none bg-background px-2 text-[15px]"
+                  onChange={(start) => setRow(row.key, { start })}
+                  label={`${row.name || '타임'} 시작`}
                 />
                 ~
-                <input
-                  type="time"
-                  step={600}
+                <TimeField
                   value={row.end}
-                  onChange={(event) => setRow(row.key, { end: event.target.value })}
-                  aria-label={`${row.name || '타임'} 끝`}
-                  className="h-10 rounded-xl border-none bg-background px-2 text-[15px]"
+                  onChange={(end) => setRow(row.key, { end })}
+                  label={`${row.name || '타임'} 끝`}
                 />
               </span>
               <span className="flex items-center gap-1">
