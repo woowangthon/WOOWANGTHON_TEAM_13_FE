@@ -6,6 +6,7 @@ import JoinPage from '@/pages/staff/join/JoinPage'
 import ManualDetailPage from '@/pages/staff/manual/ManualDetailPage'
 import ManualListPage from '@/pages/staff/manual/ManualListPage'
 import MyPage from '@/pages/staff/me/MyPage'
+import NotificationsPage from '@/pages/staff/notifications/NotificationsPage'
 import StoreSettingsPage from '@/pages/staff/me/StoreSettingsPage'
 import MySchedulePage from '@/pages/staff/schedule/MySchedulePage'
 import PayrollPage from '@/pages/staff/payroll/PayrollPage'
@@ -20,6 +21,7 @@ export const staffRoutes: RouteObject[] = [
   // 하단 탭 없이 전체 화면으로 보이는 하위 화면 (디자인 알바생 v3)
   { path: '/staff/me', element: <MyPage /> },
   { path: '/staff/stores/:storeId', element: <StoreSettingsPage /> },
+  { path: '/staff/notifications', element: <NotificationsPage /> },
   {
     path: '/staff',
     element: <StaffLayout />,

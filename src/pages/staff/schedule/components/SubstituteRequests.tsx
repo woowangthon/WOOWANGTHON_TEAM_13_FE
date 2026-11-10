@@ -1,5 +1,6 @@
 import { ArrowLeftRight, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router'
+import { useNotifications } from '@/lib/api/notifications'
 import {
   isFinalSubstituteError,
   substituteErrorMessage,
@@ -125,12 +126,21 @@ export function SentSubstitutes() {
   )
 }
 
-/** 홈 한 줄 배너: 대기 중인 받은 대타 요청이 있으면 (누르면 근무표로) */
+/**
+ * 홈 한 줄 배너: 안 읽은 "대타 요청이 왔어요" 알림이 있으면 (누르면 근무표로).
+ * 알림 API 기준이라 홈을 열기만 해서는 대타 요청이 읽음 처리되지 않는다.
+ * 근무표에서 이미 수락 · 거절한 요청(받아 둔 목록에 대기가 아님)은 빼고 보여 준다
+ */
 export function ReceivedSubstituteBanner({ storeId }: { storeId: string }) {
-  const query = useSubstituteRequests(storeId, 'received')
-  const pending = (query.data?.requests ?? []).filter((r) => r.status === 'PENDING')
-  if (pending.length === 0) return null
-  const first = pending[0]
+  const feed = useNotifications(storeId).data
+  const received = useSubstituteRequests(storeId, 'received', false).data
+  const answered = new Set(
+    (received?.requests ?? []).filter((r) => r.status !== 'PENDING').map((r) => r.requestId),
+  )
+  const unread = (feed?.notifications ?? []).filter(
+    (n) => n.type === 'SUBSTITUTE_REQUESTED' && !n.isRead && !answered.has(n.target.id),
+  )
+  if (unread.length === 0) return null
   return (
     <Link
       to="/staff/schedule"
@@ -138,9 +148,7 @@ export function ReceivedSubstituteBanner({ storeId }: { storeId: string }) {
     >
       <ArrowLeftRight className="size-[18px] shrink-0" />
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-        {pending.length > 1
-          ? `받은 대타 요청 ${pending.length}건이 있어요`
-          : `${first.requester.name}님이 ${formatDate(fromDateKey(first.date))} 대타를 요청했어요`}
+        {unread.length > 1 ? `받은 대타 요청 ${unread.length}건이 있어요` : unread[0].body}
       </span>
       <ChevronRight className="size-[18px] shrink-0" />
     </Link>
