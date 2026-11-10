@@ -958,7 +958,7 @@ FE (`src/lib/api/schedule.ts`):
 | 필드 | 뜻 |
 | --- | --- |
 | `hourlyWage` · `payday` · `taxType` · `weeklyAllowanceEnabled` | 이 계산에 쓴 급여 설정. 알바 화면 급여 설정(`/staff/stores/:storeId`)도 이 값을 보여 줘요 ([질문 4](#9-be에-확인하고-싶은-것)) |
-| `payday` | 급여일 1~28, 말일은 `31` |
+| `payday` | 급여일 1~31 (11/11 BE fde9cca: 29 · 30도 받음). 그 달에 없는 날(2월 30일 등)이면 FE는 그 달 말일로 입금일을 계산해요. 사장님이 안 정하면 `null` |
 | `workDays` | 이번 달 근무한 날(`worked`) · 예정(`planned`) — 급여 달력과 날짜별 "18:00 – 23:00 · 5시간" |
 | `taxType` | `"none"` 공제 없음 · `"3.3"` 3.3% · `"ins"` 4대보험 |
 | `weeks` | 주별 근거 (docs/03 A6). 주휴수당은 주 15시간 이상인 주만 |
@@ -968,6 +968,8 @@ FE (`src/lib/api/schedule.ts`):
 > 숫자는 FE 가짜 데이터(`calcPay`)와 같은 규칙이에요: 기본급 = 시간 × 시급, 공제 = (기본급 + 주휴수당) × 공제율 (10원 단위 반올림). 공휴일 가산은 없어요 (docs/03 S7).
 
 > 11/9 BE PR #28(연서, 아직 main 아님) 확인: 위 모양과 같아요. `?month=YYYY-MM`(빼면 한국 시간 이번 달), **사장님이 공개한 스케줄 기준**이라 `isEstimate`는 항상 `true`, `aiNote`는 지금 `null`(FE는 설명 카드를 숨김), `payday`는 사장님이 안 정하면 `null`(FE는 "○월 예상 급여 · 급여일 미정"), 근무 시각 `"HH:MM"`, `hours`는 소수 둘째 자리, 근무가 끝난 시각이 지나면 `worked` 아니면 `planned`. 구성원이 아닌 사장님이 부르면 `403`. FE는 ‹ › 로 달을 넘기며 `?month=`를 보내요
+
+> 11/11 BE #31(은교) 이후: 같은 주소 · 같은 모양이고 **고정 근무표(공유 근무 달력) 기준**으로 계산해요. `workDays: [{ date, start, end, hours, status: "worked" | "planned" }]` (`app/schemas/payroll.py`). FE 예상 급여 달력은 날짜 밑에 `workDays`를 "18–23" 블록으로(일한 날 진하게 · 예정 연하게), 아래에 회색 근무 시간 목록을 보여 줘요. 가짜 서버도 가짜 근무표에서 내 근무만 골라 계산해서 근무표 탭과 같은 날이 보여요
 
 ### 8-2. `PUT /stores/{storeId}/members/{memberId}/hourly-wage` (시급 설정 — 사장님 기능)
 사장님 화면(나현)에서 써요. 알바 화면은 보기만 해요 ([질문 4](#9-be에-확인하고-싶은-것)).
