@@ -178,12 +178,16 @@ export interface Member {
   inviteCode: string
   /** 근무 한 줄 (예: 주 3회 마감) */
   shiftLabel: string
+  /** 입장 전에 정해 둔 고정 근무 (초대할 때, BE 칸이 생기기 전에는 가짜 서버만) */
+  schedule?: WeekShift[]
 }
 
 /** 알바생 추가 (POST /stores/{storeId}/members 제안) — 응답에 초대코드 */
 export interface NewMember {
   name: string
   hourlyWage: number
+  /** 입장하면 들어갈 고정 근무 (선택) — canSaveInviteSchedule() 일 때만 보낸다 */
+  schedule?: WeekShift[]
 }
 
 /** 지금 근무 중인 사람 (홈 카드) */

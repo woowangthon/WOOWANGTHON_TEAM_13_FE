@@ -19,6 +19,13 @@ import type {
  * 시급 바꾸기는 입장한 직원만 (PUT …/members/{memberId}/hourly-wage, BE #27). 입장 전 코드의 시급은 BE 에서 못 바꾼다.
  */
 
+/**
+ * 초대할 때 고정 근무(요일 × 타임)를 같이 정할 수 있는지.
+ * BE 초대에 schedule 칸이 생기면(은교님께 요청, 입장하면 고정 스케줄로 옮김) INVITE_SCHEDULE_IN_BE 를 true 로
+ */
+const INVITE_SCHEDULE_IN_BE = false
+export const canSaveInviteSchedule = () => !isRealApi('invitations') || INVITE_SCHEDULE_IN_BE
+
 /** 초대코드 만들기 결과. existing 이면 같은 이름으로 이미 쓸 수 있는 코드가 있어서 그 코드를 돌려준 것 (409) */
 export interface CreatedMember {
   member: Member
@@ -75,6 +82,7 @@ const postInvitation = async (storeId: string, input: NewMember): Promise<Create
     const invitation = await http.post<InvitationResponse>(`/stores/${storeId}/invitations`, {
       staffName: input.name,
       hourlyWage: input.hourlyWage,
+      ...(INVITE_SCHEDULE_IN_BE && input.schedule?.length ? { schedule: input.schedule } : {}),
     })
     return { member: invitedMember(storeId, invitation), existing: false }
   } catch (error) {

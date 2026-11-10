@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { MIN_WAGE } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
-import { useCreateMember } from '@/pages/owner/api/members'
+import { useShiftTemplates } from '@/pages/owner/api/fixedSchedule'
+import { canSaveInviteSchedule, useCreateMember } from '@/pages/owner/api/members'
 import type { Member } from '@/pages/owner/api/types'
+import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
 import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
 import { MemberBoard } from '@/pages/owner/members/components/MemberBoard'
 import { WageInput } from '@/pages/owner/members/components/WageInput'
+import { cellKey, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { BottomSheet } from '@/ui/BottomSheet'
@@ -16,7 +19,8 @@ import { Input } from '@/ui/Input'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 알바생 추가 · 코드 발급 · 카톡 공유 (docs/03 S4): 이름 · (매장) · 시급 → 초대코드 → 복사 / 카톡
+// 알바생 추가 · 코드 발급 · 카톡 공유 (docs/03 S4): 이름 · (매장) · 시급 · 고정 근무(선택, 요일 × 타임) → 초대코드 → 복사 / 카톡
+// 고정 근무는 BE 초대에 칸이 생기기 전까지 진짜 모드에서는 안내만 (입장하면 근무 탭에서 정한다)
 export default function MemberAddPage() {
   const { store, stores } = useOwnerStore()
   const navigate = useNavigate()
@@ -25,13 +29,29 @@ export default function MemberAddPage() {
   const [name, setName] = useState('')
   const [wage, setWage] = useState(String(MIN_WAGE))
   const [created, setCreated] = useState<Member | null>(null)
+  /** 고정 근무 칸: cellKey(templateId, 요일) */
+  const [cells, setCells] = useState<Set<string>>(new Set())
+  const withSchedule = canSaveInviteSchedule()
+  const templates = useShiftTemplates(storeId)
   const create = useCreateMember(storeId)
   const target = stores.find((s) => s.storeId === storeId) ?? store
   const canCreate = name.trim() && Number(wage) >= MIN_WAGE && !create.isPending
 
   const submit = () =>
     create.mutate(
-      { name: name.trim(), hourlyWage: Number(wage) },
+      {
+        name: name.trim(),
+        hourlyWage: Number(wage),
+        schedule: withSchedule
+          ? (templates.data ?? []).flatMap((t) =>
+              WEEKDAY_LABELS.flatMap((_, weekday) =>
+                cells.has(cellKey(t.templateId, weekday))
+                  ? [{ templateId: t.templateId, weekday }]
+                  : [],
+              ),
+            )
+          : undefined,
+      },
       {
         onSuccess: ({ member, existing }) => {
           setCreated(member)
@@ -85,7 +105,11 @@ export default function MemberAddPage() {
                       role="radio"
                       aria-checked={storeId === s.storeId}
                       active={storeId === s.storeId}
-                      onClick={() => setStoreId(s.storeId)}
+                      onClick={() => {
+                        setStoreId(s.storeId)
+                        // 매장마다 근무 타임이 달라서 고른 칸을 비운다
+                        setCells(new Set())
+                      }}
                       className={cn(
                         'border px-3.5 py-2',
                         storeId === s.storeId ? 'border-brand' : 'border-muted',
@@ -97,6 +121,33 @@ export default function MemberAddPage() {
                 </div>
               )}
               <WageInput value={wage} onChange={setWage} />
+              <div className="flex flex-col gap-2">
+                <span className="px-1 text-[13px] font-bold text-muted-foreground">
+                  고정 근무 (선택)
+                </span>
+                {!withSchedule ? (
+                  <span className="rounded-[18px] bg-white px-4 py-3 text-[13px] text-muted-foreground">
+                    직원이 초대코드로 입장하면 근무 탭에서 요일 · 타임을 정할 수 있어요
+                  </span>
+                ) : (templates.data ?? []).length === 0 ? (
+                  <span className="rounded-[18px] bg-white px-4 py-3 text-[13px] text-muted-foreground">
+                    {templates.isPending
+                      ? '근무 타임을 불러오는 중이에요'
+                      : '근무 타임이 아직 없어요. 근무 탭에서 먼저 만들어 주세요'}
+                  </span>
+                ) : (
+                  <WeekShiftGrid
+                    rows={(templates.data ?? []).map((t) => ({
+                      key: t.templateId,
+                      label: t.name,
+                      sub: `${t.start}~${t.end}`,
+                    }))}
+                    value={cells}
+                    onChange={setCells}
+                    closedWeekdays={target.closedWeekdays}
+                  />
+                )}
+              </div>
               <Button className="h-[54px]" disabled={!canCreate} onClick={submit}>
                 초대코드 만들기
               </Button>

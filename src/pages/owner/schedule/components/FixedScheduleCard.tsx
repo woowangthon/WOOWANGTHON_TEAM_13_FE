@@ -8,7 +8,7 @@ import {
   useShiftTemplates,
 } from '@/pages/owner/api/fixedSchedule'
 import { useMembers } from '@/pages/owner/api/members'
-import type { FixedAssignment, ShiftTemplate } from '@/pages/owner/api/types'
+import type { FixedAssignment, ShiftTemplate, WeekShift } from '@/pages/owner/api/types'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
 import { cellKey, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
@@ -22,10 +22,10 @@ import { toast } from '@/ui/toastStore'
 // 코드로 입장하기 전 직원은 아직 고를 수 없어서 안내만 (BE 에 초대 때 근무 저장 요청 중)
 
 /** "오픈 월 · 화 · 수 / 마감 금" */
-function summary(mine: FixedAssignment[], templates: ShiftTemplate[]) {
+function summary(mine: WeekShift[], templates: ShiftTemplate[]) {
   const parts = templates.flatMap((t) => {
     const days = mine
-      .filter((a) => a.template.templateId === t.templateId)
+      .filter((a) => a.templateId === t.templateId)
       .map((a) => a.weekday)
       .sort()
     return days.length ? [`${t.name} ${days.map((d) => WEEKDAY_LABELS[d]).join(' · ')}`] : []
@@ -75,7 +75,15 @@ export function FixedScheduleCard({ storeId }: { storeId: string }) {
                     {w.role === 'owner' ? `${w.name} (사장님)` : w.name}
                   </span>
                   <span className="text-[13px] break-keep text-muted-foreground">
-                    {mine.length ? summary(mine, templates) : '정해진 근무가 없어요'}
+                    {mine.length
+                      ? summary(
+                          mine.map((a) => ({
+                            templateId: a.template.templateId,
+                            weekday: a.weekday,
+                          })),
+                          templates,
+                        )
+                      : '정해진 근무가 없어요'}
                   </span>
                 </span>
                 <button
@@ -92,11 +100,13 @@ export function FixedScheduleCard({ storeId }: { storeId: string }) {
           })}
         </div>
       )}
-      {invited.length > 0 && (
-        <span className="px-2 text-xs text-muted-foreground">
-          {invited.map((m) => m.name).join(' · ')} 님은 초대코드로 입장하면 근무를 정할 수 있어요
+      {invited.map((m) => (
+        <span key={m.memberId} className="px-2 text-xs break-keep text-muted-foreground">
+          {m.schedule?.length
+            ? `${m.name} 님 (입장 전) · ${summary(m.schedule, templates)} — 입장하면 이 근무로 시작해요`
+            : `${m.name} 님은 초대코드로 입장하면 근무를 정할 수 있어요`}
         </span>
-      )}
+      ))}
       {editing && (
         <EditSheet
           storeId={storeId}

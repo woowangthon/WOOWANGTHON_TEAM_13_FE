@@ -216,6 +216,7 @@ export async function createMember(storeId: string, input: NewMember): Promise<M
     status: 'invited',
     inviteCode: newInviteCode(),
     shiftLabel: '새 알바생',
+    schedule: input.schedule ?? [],
   }
   db.members.push(member)
   return { ...member }
