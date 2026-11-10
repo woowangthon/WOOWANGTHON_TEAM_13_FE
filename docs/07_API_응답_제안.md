@@ -1063,4 +1063,5 @@ FE (민지 결정, 11/11): 알림 화면을 열면 전부 읽음 · 출근 30분
 15. **에러 코드는 초대코드만 꼭 필요해요**: `INVITE_INVALID` · `INVITE_ALREADY_JOINED`(detail에 매장 ID · 이름) · `INVITE_LOCKED`. 나머지 API는 FastAPI 기본 `{detail}`이어도 FE가 읽어요. (11/6 BE main 확인: 이미 이 모양이에요 — 그대로 유지해 주세요)
 16. ✅ (11/9 BE #25로 들어옴) **`GET /users/me/stores`에 매장 정보를 더 넣어 주세요** ([1-3](#1-3-get-usersmestores)): 지금은 `storeId · storeName · role`뿐이고, 알바는 `GET /stores/{id}`(사장님 전용)도 못 불러요. 알바 화면에 `ownerName` · `staffName` · `address` · `photoUrl`(+ `memberId` · `joinedAt`)이 필요해요
 17. **레시피 응답(목록 · 상세)에 메뉴 사진 `imageUrl`(없으면 `null`)을 넣어 주세요.** 사장님이 사진을 올리면(레시피 등록 multipart `images`) 그 주소를 주면 돼요. 지금은 FE가 메뉴 이름으로 시연 사진을 찾아요
+    - 11/11 연서와 정함 (BE `feature_recipe_images`): 등록 multipart `recipe`(JSON 문자열) · `image`(메뉴 사진) · `recipeImage`(레시피 사진, FE는 당분간 안 씀). 수정은 글 PATCH(JSON) 그대로 + 사진만 `PUT` · `DELETE /stores/{storeId}/recipes/{recipeId}/images/{slot}` (`slot` = `menu` · `recipe`, PUT 파일 칸 `image`, DELETE는 204). FE는 새 파일이면 PUT · `null`이면 DELETE · `undefined`면 안 불러요. 응답 `imageUrl` · `recipeImageUrl`(6시간짜리 주소라 저장하지 않고 조회할 때마다 받아 써요). JPEG · PNG · WebP, 10MB 이하 — 넘으면 `413 IMAGE_TOO_LARGE`, 다른 형식이면 `415 UNSUPPORTED_IMAGE_TYPE`
 

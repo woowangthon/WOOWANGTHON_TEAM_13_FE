@@ -1,7 +1,7 @@
 /*
  * 가짜 데이터 메뉴 사진 (public/images/menu, 800px WebP) — 담당: 나현
  * 메뉴 이름으로 찾는다. 두 매장에 같은 메뉴(아메리카노 · 카페라떼 · 레몬 에이드)가 있으면 같은 사진을 쓴다.
- * BE 가 레시피 사진(imageUrl)을 주기 전까지 시연용이다.
+ * 사장님이 메뉴 사진을 넣지 않은 레시피의 기본 사진으로 쓴다 (lib/api/recipes withPhoto). 바꾸면 진짜 사진이 보인다.
  */
 
 const MENU_PHOTO_FILE: Record<string, string> = {
@@ -33,3 +33,6 @@ export function menuPhotoUrl(name: string): string | null {
   const file = MENU_PHOTO_FILE[name.trim()]
   return file ? `/images/menu/${file}.webp` : null
 }
+
+/** 시연(기본) 사진 주소인지 — 진짜로 저장한 사진(BE 주소)과 구분한다 */
+export const isMenuPhotoUrl = (url: string | null) => !!url?.startsWith('/images/menu/')
