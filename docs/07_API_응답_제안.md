@@ -1010,6 +1010,35 @@ FE 화면: 근무표 날짜 목록의 내 근무(오늘 이후) [대타 요청] 
 
 ---
 
+## 10. 알림 (BE `feature_notifications`, 연서 — 11/11 아직 main 아님 · DB 마이그레이션 20)
+FE 스위치: `notifications` (`src/lib/api/notifications.ts`). 알바 · 사장님 같이 쓸 수 있게 `storeId`만 받아요.
+
+### 10-1. `GET /stores/{storeId}/notifications` — 최근 14일 · 내 역할 것만
+```json
+{
+  "banner": {
+    "workDate": "2026-11-20", "startTime": "18:00", "endTime": "23:00", "startsAt": "2026-11-20T18:00:00+09:00",
+    "uncheckedCount": 3,
+    "items": [{ "noteId": "…", "itemId": "…", "tag": "credit", "text": "꽃집 외상 1잔", "authorName": "민수", "workDate": "2026-11-20" }]
+  },
+  "notifications": [
+    { "notificationId": "…", "type": "SUBSTITUTE_REQUESTED", "title": "대타 요청이 왔어요", "body": "도윤님이 … 근무 대타를 부탁했어요",
+      "createdAt": "…", "isRead": false, "target": { "kind": "substitute_request", "id": "…" } }
+  ],
+  "unreadCount": 2
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `banner` | 출근 30분 전 ~ 근무 끝까지만 (없으면 `null`). 체크 안 된 인수인계 항목 (AI 요약 없음) |
+| `type` | 알바: `SUBSTITUTE_REQUESTED` · `SUBSTITUTE_ACCEPTED`(요청한 사람에게) · `OWNER_ANSWERED` / 사장님: `HANDOVER_CREATED` · `OWNER_QUESTION_ASKED` |
+| `target.kind` | `substitute_request` · `assistant_chat` · `handover` · `owner_question` |
+
+### 10-2. `POST /stores/{storeId}/notifications/read` → `204`
+지금까지 알림 전부 읽음.
+
+FE (민지 결정, 11/11): 알림 화면을 열면 전부 읽음 · 출근 30분 전 요약은 앱 안 홈 배너(푸시 X) · 화면에 들어올 때 + 1분마다 다시 부름 · 알바 헤더 종에 `unreadCount` 뱃지 · 누르면 대타 → 근무표, 사장님 답변 → AI 사수 채팅, 그 외 → 홈. 홈의 받은 대타 배너는 **알림 API 기준**(안 읽은 `SUBSTITUTE_REQUESTED`)이라 홈을 열기만 해서는 대타 요청이 읽음 처리되지 않아요 (받은 대타 목록 GET은 BE가 읽음 처리하므로 근무표에서만 불러요). 알림 API가 404면(아직 main 아님) 알림 없음으로 보여요
+
 ## 9. BE에 확인하고 싶은 것
 
 **API 표를 보고 생긴 질문**

@@ -5,6 +5,7 @@ import {
   createHandoverNote,
   getHandoverNotes,
 } from '@/api/mocks/staff/api/handover'
+import { notificationKeys } from '@/lib/api/notifications'
 import { http, isRealApi } from '@/lib/api/source'
 import { toastApiError } from '@/lib/api/errors'
 import type {
@@ -103,6 +104,8 @@ export function useConfirmHandoverItem(storeId: string, date: string) {
       )
       return { previous }
     },
+    // 출근 전 배너(체크 안 된 항목 수)도 바뀌니 알림을 다시 부른다
+    onSettled: () => queryClient.invalidateQueries({ queryKey: notificationKeys.feed(storeId) }),
     onSuccess: (updated) =>
       queryClient.setQueryData<HandoverNoteList>(key, (old) =>
         old
