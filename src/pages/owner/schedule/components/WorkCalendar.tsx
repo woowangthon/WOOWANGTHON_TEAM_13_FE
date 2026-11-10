@@ -4,6 +4,7 @@ import { shiftHours, useScheduleCalendar } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
 import { addDays, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { HOLIDAYS, isClosedDay } from '@/pages/owner/store/holidays'
 import { LoadError } from '@/shared/LoadError'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
@@ -11,6 +12,7 @@ import { cn } from '@/ui/utils'
 // 근무 달력 (고정 근무 + 대타 반영, BE /schedule-calendar) — 알바 근무표(민지 ScheduleMonth)와 같은 모양
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 사장님 근무(내 근무)는 진한 매장 색, 대타는 점선 테두리.
 // 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
+// 사람 칩으로 한 사람만 보기 · 매장 쉬는 날(쉬는 요일 · 공휴일 휴무)은 "휴무" (근무 블록 숨김) · 공휴일은 빨간 날짜
 // 하루만 담당자 바꾸기는 BE 가 담당자 본인의 대타 요청만 받아서 이번엔 없다 (팀에 물어볼 것)
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -37,9 +39,19 @@ const blockName = (shift: CalendarShift) =>
 /** 사장님 화면이라 '내 근무' = 사장님 근무 */
 const isMine = (shift: CalendarShift) => shift.assignee.role === 'owner'
 
-export function WorkCalendar({ storeId, today }: { storeId: string; today: Date }) {
+export function WorkCalendar({
+  storeId,
+  today,
+  closed,
+}: {
+  storeId: string
+  today: Date
+  /** 매장 쉬는 날 (매장 상세) */
+  closed: { closedWeekdays: number[]; closedOnHolidays: boolean }
+}) {
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 })
   const [selected, setSelected] = useState<Date>(today)
+  const [person, setPerson] = useState('all')
   const { start, end, days } = monthGrid(view.year, view.month)
   const query = useScheduleCalendar(storeId, toDateKey(start), toDateKey(end))
 
@@ -54,11 +66,19 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
     )
   }
 
+  const all = query.data?.shifts ?? []
+  // 사람 칩: 이 기간에 근무가 있는 사람 (사장님 먼저)
+  const people = [...new Map(all.map((s) => [s.assignee.userId, s.assignee])).values()].sort(
+    (a, b) => (a.role === b.role ? 0 : a.role === 'owner' ? -1 : 1),
+  )
   const byDate = new Map<string, CalendarShift[]>()
-  for (const shift of query.data?.shifts ?? []) {
+  for (const shift of all) {
+    if (person !== 'all' && shift.assignee.userId !== person) continue
     byDate.set(shift.date, [...(byDate.get(shift.date) ?? []), shift])
   }
-  const selectedShifts = byDate.get(toDateKey(selected)) ?? []
+  const selectedKey = toDateKey(selected)
+  const selectedClosed = isClosedDay(selected, selectedKey, closed)
+  const selectedShifts = selectedClosed ? [] : (byDate.get(selectedKey) ?? [])
 
   return (
     <section className="flex flex-col gap-2.5">
@@ -87,6 +107,38 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
         </div>
       </div>
 
+      {people.length > 0 && (
+        <div
+          className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1"
+          role="radiogroup"
+          aria-label="사람"
+        >
+          {[{ userId: 'all', name: '전체', role: 'staff' as const }, ...people].map((p) => (
+            <button
+              key={p.userId}
+              type="button"
+              role="radio"
+              aria-checked={person === p.userId}
+              onClick={() => setPerson(p.userId)}
+              className={cn(
+                'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold',
+                person === p.userId ? 'bg-ink text-white' : 'bg-card text-foreground',
+              )}
+            >
+              {p.userId !== 'all' && (
+                <span
+                  className={cn(
+                    'size-2 rounded-full',
+                    p.role === 'owner' ? 'bg-brand' : 'bg-brand-soft ring-1 ring-line',
+                  )}
+                />
+              )}
+              {p.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {query.isPending ? (
         <Spinner />
       ) : query.error ? (
@@ -104,7 +156,9 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
             <div className="grid grid-cols-7">
               {days.map((day) => {
                 const key = toDateKey(day)
-                const shifts = byDate.get(key) ?? []
+                const dayClosed = isClosedDay(day, key, closed)
+                const holiday = HOLIDAYS[key]
+                const shifts = dayClosed ? [] : (byDate.get(key) ?? [])
                 const inMonth = day.getMonth() === view.month - 1
                 const isToday = isSameDay(day, today)
                 const isSelected = isSameDay(day, selected)
@@ -114,7 +168,7 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
                     type="button"
                     onClick={() => setSelected(day)}
                     aria-pressed={isSelected}
-                    aria-label={`${formatDate(day)} 근무 ${shifts.length}개`}
+                    aria-label={`${formatDate(day)}${holiday ? ` ${holiday}` : ''} ${dayClosed ? '휴무' : `근무 ${shifts.length}개`}`}
                     className={cn(
                       'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
                       !inMonth && 'opacity-40',
@@ -125,10 +179,16 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
                       className={cn(
                         'flex size-[22px] items-center justify-center self-center rounded-full text-xs tabular-nums',
                         isToday ? 'bg-brand font-bold text-white' : 'font-semibold',
+                        !isToday && (holiday || day.getDay() === 0) && 'text-[#C0574A]',
                       )}
                     >
                       {day.getDate()}
                     </span>
+                    {dayClosed && (
+                      <span className="rounded-[5px] bg-muted px-[2px] py-px text-center text-[10px] leading-[1.3] font-semibold text-muted-foreground">
+                        휴무
+                      </span>
+                    )}
                     {shifts.slice(0, MAX_BLOCKS).map((shift) => {
                       const name = blockName(shift)
                       return (
@@ -174,15 +234,22 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
                 <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
                 대타
               </span>
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] bg-muted" />
+                휴무
+              </span>
             </div>
           </div>
 
           <h3 className="m-0 mt-1.5 px-1 text-lg font-extrabold tracking-[-0.02em]">
             {formatDate(selected)} 근무
+            {HOLIDAYS[selectedKey] && (
+              <span className="ml-2 text-sm font-bold text-[#C0574A]">{HOLIDAYS[selectedKey]}</span>
+            )}
           </h3>
           {selectedShifts.length === 0 ? (
             <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
-              이날은 근무가 없어요
+              {selectedClosed ? '매장이 쉬는 날이에요' : '이날은 근무가 없어요'}
             </p>
           ) : (
             selectedShifts.map((shift) => {

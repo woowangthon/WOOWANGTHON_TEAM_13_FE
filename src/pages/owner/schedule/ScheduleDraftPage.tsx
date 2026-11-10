@@ -13,7 +13,7 @@ export default function ScheduleDraftPage() {
     <div className="flex flex-col gap-[22px]">
       <WorkHeader segment="schedule" />
       <ReceivedRequests storeId={store.storeId} />
-      <WorkCalendar key={store.storeId} storeId={store.storeId} today={today} />
+      <WorkCalendar key={store.storeId} storeId={store.storeId} today={today} closed={store} />
       <FixedScheduleCard storeId={store.storeId} />
       <ShiftTemplatesCard storeId={store.storeId} />
     </div>
