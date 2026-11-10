@@ -320,6 +320,33 @@ export async function getNotifications(): Promise<{ notifications: OwnerNotifica
   return { notifications: [...fromQuestions, ...notices] }
 }
 
+/**
+ * GET /stores/{storeId}/notifications 의 사장님 인수인계 알림 (BE #34 HANDOVER_CREATED) — 시연: 달빛 카페 민수 1개.
+ * POST …/notifications/read 하면 읽음
+ */
+const handoverNotices = [
+  {
+    notificationId: 'HANDOVER_CREATED:hnd_demo',
+    storeId: 'dalbit',
+    title: '민수님이 인수인계를 남겼어요',
+    body: '우유 2팩 남음 · 외상 1건 (단골 김OO님 아메리카노)',
+    createdAt: '2026-11-20T08:40:00Z',
+    isRead: false,
+  },
+]
+
+export async function getHandoverNotices(storeId: string) {
+  await wait(150)
+  return handoverNotices.filter((n) => n.storeId === storeId).map((n) => ({ ...n }))
+}
+
+export async function readHandoverNotices(storeId: string): Promise<void> {
+  await wait(150)
+  handoverNotices.forEach((n) => {
+    if (n.storeId === storeId) n.isRead = true
+  })
+}
+
 /** POST /owner/notifications/{id}/read (제안) */
 export async function dismissNotification(notificationId: string): Promise<void> {
   await wait(150)

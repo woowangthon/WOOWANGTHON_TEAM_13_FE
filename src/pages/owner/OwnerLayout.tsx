@@ -27,7 +27,10 @@ export default function OwnerLayout() {
   const navigate = useNavigate()
 
   const hasQuestion = (questions.data?.questions.length ?? 0) > 0
-  const hasNotification = (notifications.data?.notifications.length ?? 0) > 0
+  // 종 점: 처리할 질문 · 대타가 있거나 안 읽은 인수인계가 있을 때 (읽은 인수인계는 14일 동안 목록에만)
+  const hasNotification = (notifications.data?.notifications ?? []).some(
+    (n) => n.kind !== 'handover' || !n.isRead,
+  )
   const initial = (profile.data?.name ?? '사장님').slice(0, 1)
 
   const navItems: BottomNavItem[] = [
