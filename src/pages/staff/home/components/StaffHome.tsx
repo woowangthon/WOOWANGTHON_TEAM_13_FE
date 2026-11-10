@@ -2,7 +2,7 @@ import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
-import { shiftLabel, useMySchedule } from '@/lib/api/schedule'
+import { availabilityEnabled, shiftLabel, useMySchedule } from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
 import type { Shift } from '@/lib/api/types'
 import { addDays, fromDateKey, isSameDay, todayInKst, toDateKey } from '@/lib/date'
@@ -125,13 +125,24 @@ function HomeBody({
         <EmptyGuide
           message="아직 정해진 근무가 없어요"
           action={
-            <Button
-              size="md"
-              className="h-[46px] px-5"
-              onClick={() => navigate('/staff/availability')}
-            >
-              가능 시간 내기
-            </Button>
+            // 근무 가능 시간은 BE 에서 없어져서 진짜 모드면 전체 근무표로
+            availabilityEnabled() ? (
+              <Button
+                size="md"
+                className="h-[46px] px-5"
+                onClick={() => navigate('/staff/availability')}
+              >
+                가능 시간 내기
+              </Button>
+            ) : (
+              <Button
+                size="md"
+                className="h-[46px] px-5"
+                onClick={() => navigate('/staff/schedule')}
+              >
+                근무표 보기
+              </Button>
+            )
           }
         />
       )}
