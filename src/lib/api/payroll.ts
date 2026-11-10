@@ -20,29 +20,13 @@ export const payrollKeys = {
     [...payrollKeys.estimate(storeId), month ?? 'current'] as const,
 }
 
-/** 근무가 없는 달 (가짜 서버는 시연 달만 데이터가 있어서 다른 달은 이렇게 보여 준다) */
-const emptyMonth = (estimate: PayrollEstimate, month: string): PayrollEstimate => ({
-  ...estimate,
-  month,
-  workDays: [],
-  hours: 0,
-  basePay: 0,
-  weeklyAllowance: 0,
-  grossPay: 0,
-  deduction: 0,
-  netPay: 0,
-  weeks: [],
-  aiNote: null,
-})
-
 /** GET /stores/{storeId}/payroll/estimates/me?month=2026-11 (month 를 빼면 서버 기준 이번 달, docs/07 8-1) */
 async function fetchEstimate(storeId: string, month: string | null): Promise<PayrollEstimate> {
   if (isRealApi('payroll')) {
     const query = month ? `?month=${month}` : ''
     return http.get<PayrollEstimate>(`/stores/${storeId}/payroll/estimates/me${query}`)
   }
-  const estimate = await getMyPayrollEstimate(storeId)
-  return month && month !== estimate.month ? emptyMonth(estimate, month) : estimate
+  return getMyPayrollEstimate(storeId, month ?? undefined)
 }
 
 /** 내 예상 급여 (참고용). month 를 안 주면 이번 달 */
