@@ -28,6 +28,8 @@ import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
 import type {
   AvailabilityStatus,
+  BizVerification,
+  BizVerifyInput,
   ManualInput,
   Member,
   MemberPay,
@@ -43,6 +45,8 @@ import type {
   RecipeInput,
   RecipeScanDraft,
   ScheduleDraft,
+  ShiftTemplate,
+  WeekShift,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -112,13 +116,59 @@ export async function createStore(input: NewStore): Promise<OwnerStore> {
     bizNo: input.bizNo ?? null,
   }
   db.stores.push(store)
+  storeSetup[store.storeId] = {
+    templates: input.shiftTemplates.map((t, i) => ({
+      ...t,
+      templateId: `tpl_${store.storeId}_${i}`,
+      sortOrder: i,
+    })),
+    closedWeekdays: input.closedWeekdays,
+    closedOnHolidays: input.closedOnHolidays,
+    fixedSchedule: [],
+  }
   return toStore(store)
+}
+
+/** 매장 근무 타임 · 휴무 · 고정 스케줄 (가짜 서버, 매장 만들 때 생긴다) */
+const storeSetup: Record<
+  string,
+  {
+    templates: ShiftTemplate[]
+    closedWeekdays: number[]
+    closedOnHolidays: boolean
+    fixedSchedule: (WeekShift & { userId: string })[]
+  }
+> = {}
+
+/** GET /stores/{storeId}/shift-templates */
+export async function getShiftTemplates(storeId: string): Promise<{ templates: ShiftTemplate[] }> {
+  await wait(150)
+  return { templates: storeSetup[storeId]?.templates ?? [] }
+}
+
+/** PUT /stores/{storeId}/fixed-schedule — 매장 고정 스케줄 전체를 바꾼다 */
+export async function putFixedSchedule(
+  storeId: string,
+  assignments: (WeekShift & { userId: string })[],
+): Promise<void> {
+  await wait()
+  const setup = storeSetup[storeId]
+  if (setup) setup.fixedSchedule = assignments
+}
+
+/** POST /stores/{storeId}/photo — 시연은 브라우저 주소로 */
+export async function uploadStorePhoto(
+  _storeId: string,
+  file: File,
+): Promise<{ photoUrl: string }> {
+  await wait(600)
+  return { photoUrl: URL.createObjectURL(file) }
 }
 
 /** PATCH /stores/{storeId} (제안) — 이름 · 급여일 · 사업장 규모 */
 export async function updateStore(
   storeId: string,
-  patch: Partial<Pick<OwnerStore, 'name' | 'payday' | 'size'>>,
+  patch: Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>,
 ): Promise<OwnerStore> {
   await wait()
   const store = findStore(storeId)
@@ -140,12 +190,13 @@ export async function deleteStore(storeId: string): Promise<void> {
 }
 
 /** POST /business-numbers/verify (제안, P2 국세청 상태조회) — 시연: 10자리면 정상 */
-export async function verifyBizNo(bizNo: string): Promise<{ valid: true }> {
+export async function verifyBizNo(input: BizVerifyInput): Promise<BizVerification> {
   await wait(1200)
-  if (bizNo.replace(/\D/g, '').length !== 10) {
+  if (input.bizNo.replace(/\D/g, '').length !== 10) {
     fail(422, 'BIZ_NO_INVALID', '사업자등록번호 10자리를 입력해 주세요')
   }
-  return { valid: true }
+  // 시연: 10자리면 모두 확인된 사업자로 본다
+  return { verificationId: Date.now(), status: 'VERIFIED', message: '' }
 }
 
 export async function getProfile(): Promise<OwnerProfile> {

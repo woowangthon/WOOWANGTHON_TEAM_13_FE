@@ -8,6 +8,24 @@ export function formatDate(value: string | Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAYS[date.getDay()]})`
 }
 
+/** 알림 시각: 방금 · 3분 전 · 2시간 전 · 어제 · 11/18(수) */
+export function formatRelative(value: string | Date, now: Date = new Date()): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000)
+  if (minutes < 1) return '방금'
+  if (minutes < 60) return `${minutes}분 전`
+  if (minutes < 24 * 60 && now.getDate() === date.getDate())
+    return `${Math.floor(minutes / 60)}시간 전`
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+  if (
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate()
+  )
+    return '어제'
+  return formatDate(date)
+}
+
 /** Date → "18:00" */
 export function formatTime(value: string | Date): string {
   const date = typeof value === 'string' ? new Date(value) : value

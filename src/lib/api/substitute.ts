@@ -5,6 +5,7 @@ import {
   getSubstituteRequests,
   respondSubstituteRequest,
 } from '@/api/mocks/staff/api/schedule'
+import { notificationKeys } from '@/lib/api/notifications'
 import { payrollKeys } from '@/lib/api/payroll'
 import { myUserId } from '@/lib/api/schedule'
 import { http, isRealApi } from '@/lib/api/source'
@@ -55,12 +56,15 @@ export function useScheduleWorkers(storeId: string, enabled = true) {
   })
 }
 
-/** 받은 · 보낸 대타 요청 (최신 순). 받은 목록을 부르면 BE 가 읽음 처리한다 */
-export function useSubstituteRequests(storeId: string, box: SubstituteBox) {
+/**
+ * 받은 · 보낸 대타 요청 (최신 순). 받은 목록을 부르면 BE 가 읽음 처리한다.
+ * enabled=false 면 부르지 않고 이미 받아 둔 것만 본다 (홈 배너: 홈을 열기만 해서 읽음 처리되지 않게)
+ */
+export function useSubstituteRequests(storeId: string, box: SubstituteBox, enabled = true) {
   return useQuery({
     queryKey: substituteKeys.list(storeId, box),
     queryFn: () => fetchRequests(storeId, box),
-    enabled: !!storeId,
+    enabled: enabled && !!storeId,
   })
 }
 
@@ -73,6 +77,7 @@ function useRefreshAfterSubstitute(storeId: string) {
       queryClient.invalidateQueries({ queryKey: ['stores', storeId, 'schedules', 'me'] }),
       queryClient.invalidateQueries({ queryKey: substituteKeys.all(storeId) }),
       queryClient.invalidateQueries({ queryKey: payrollKeys.estimate(storeId) }),
+      queryClient.invalidateQueries({ queryKey: notificationKeys.feed(storeId) }),
     ])
 }
 
