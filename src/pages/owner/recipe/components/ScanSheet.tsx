@@ -1,5 +1,5 @@
-import { Camera, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Camera, ChevronLeft, ChevronRight, Images, Sparkles } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { RecipeTemp } from '@/lib/api/types'
 import { ApiError } from '@/lib/apiClient'
@@ -7,12 +7,16 @@ import { useCreateRecipe, useScanRecipe } from '@/pages/owner/api/content'
 import type { RecipeScanDraft } from '@/pages/owner/api/types'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
+import { ImageCropper } from '@/ui/ImageCropper'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 사진으로 레시피 추가 (P1, docs/03 S3): 사진 → AI 초안 → 읽지 못한 칸(노란색)을 채우고 공개
 // 메뉴마다 사진을 찍어 초안을 쌓고(다음 메뉴 찍기), 넘겨 가며 고친 뒤 한 번에 공개한다
 // BE 는 사진에서 맨 위 레시피 하나만 읽는다 (여러 개면 hasMoreRecipes) → 다음 메뉴만 보이게 다시 찍는다
+// 사진 찍기 · 갤러리(파일)에서 고르기 → 자르기(ImageCropper)로 읽을 부분만 남긴 뒤 보낸다
+
+const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif'
 
 const TEMPS: { value: RecipeTemp; label: string }[] = [
   { value: 'ICE', label: 'ICE' },
@@ -66,6 +70,8 @@ export function ScanSheet({
   onSaved: (recipeId: string, category: string) => void
 }) {
   const [photo, setPhoto] = useState<string | null>(null)
+  /** 고르고 아직 자르지 않은 사진 */
+  const [picked, setPicked] = useState<File | null>(null)
   const [items, setItems] = useState<ScanItem[]>([])
   const [page, setPage] = useState(0)
   /** 메뉴가 있어도 사진 찍는 칸을 보여 줄지 (다음 메뉴 찍기) */
@@ -80,6 +86,7 @@ export function ScanSheet({
   const picking = items.length === 0 || adding
 
   const read = (file: File) => {
+    setPicked(null)
     setPhoto(URL.createObjectURL(file))
     scan.mutate(file, {
       onSuccess: (draft) => {
@@ -171,41 +178,44 @@ export function ScanSheet({
                 다음 메뉴만 보이게 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)
               </span>
             )}
-            <label className="relative flex h-[190px] cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-[#6B7068]">
-              {photo ? (
+            {photo ? (
+              <div className="relative h-[190px] overflow-hidden rounded-[22px] bg-white">
                 <img
                   src={photo}
                   alt="레시피 사진"
                   className="absolute inset-0 size-full object-cover"
                 />
-              ) : (
-                <>
-                  <Camera className="size-7" />
-                  <span className="text-sm font-semibold">
-                    {items.length > 0 ? '다음 메뉴 찍기 · 고르기' : '레시피 사진 찍기 · 고르기'}
-                  </span>
-                </>
-              )}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                capture="environment"
-                className="sr-only"
-                disabled={scan.isPending}
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  event.target.value = ''
-                  if (file) read(file)
-                }}
+              </div>
+            ) : picked ? (
+              <ImageCropper
+                file={picked}
+                hint="읽을 레시피 부분만 남겨 주세요. 그대로 두면 사진 전체를 읽어요"
+                confirmLabel="읽기"
+                onCancel={() => setPicked(null)}
+                onConfirm={read}
               />
-            </label>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <PickButton
+                  icon={<Camera className="size-7" />}
+                  label={items.length > 0 ? '다음 메뉴 찍기' : '사진 찍기'}
+                  capture
+                  onPick={setPicked}
+                />
+                <PickButton
+                  icon={<Images className="size-7" />}
+                  label="갤러리 · 파일"
+                  onPick={setPicked}
+                />
+              </div>
+            )}
             {scan.isPending && (
               <div className="flex items-center gap-2 rounded-[18px] bg-warm px-4 py-3.5 text-sm font-semibold text-warm-foreground">
                 <Sparkles className="size-[18px]" />
                 읽고 있어요…
               </div>
             )}
-            {items.length > 0 && !scan.isPending && (
+            {items.length > 0 && !scan.isPending && !picked && (
               <Button variant="soft" onClick={() => setAdding(false)}>
                 취소
               </Button>
@@ -279,6 +289,37 @@ export function ScanSheet({
         )}
       </div>
     </BottomSheet>
+  )
+}
+
+/** 사진 고르기 칸 하나 (capture 면 폰에서 바로 카메라가 열린다) */
+function PickButton({
+  icon,
+  label,
+  capture,
+  onPick,
+}: {
+  icon: ReactNode
+  label: string
+  capture?: boolean
+  onPick: (file: File) => void
+}) {
+  return (
+    <label className="flex h-[150px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-[#6B7068]">
+      {icon}
+      <span className="text-sm font-semibold">{label}</span>
+      <input
+        type="file"
+        accept={ACCEPT}
+        capture={capture ? 'environment' : undefined}
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          event.target.value = ''
+          if (file) onPick(file)
+        }}
+      />
+    </label>
   )
 }
 
