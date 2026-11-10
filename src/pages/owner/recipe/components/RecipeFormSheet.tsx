@@ -3,7 +3,8 @@ import { useState, type ReactNode } from 'react'
 import { OWNER_CATEGORIES, RECIPE_TEMPLATES } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
 import type { Recipe, RecipeTemp } from '@/lib/api/types'
-import { canSaveRecipePhoto, useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
+import { ApiError } from '@/lib/apiClient'
+import { useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
 import type { RecipeInput } from '@/pages/owner/api/types'
 import { RecipePhotoField } from '@/pages/owner/recipe/components/RecipePhotoField'
 import { BottomSheet } from '@/ui/BottomSheet'
@@ -16,7 +17,6 @@ import { cn } from '@/ui/utils'
 
 // 레시피 추가 · 수정 (docs/03 S3): ① 사진 → ② 레시피(템플릿 · 이름 · 카테고리 · 재료와 양 · 순서 · 메모)
 // 위쪽 단계 토글로 오가고, 사진은 건너뛸 수 있다. 추가는 ① 사진부터, 수정은 ② 레시피부터 연다
-// 메뉴 사진을 저장할 수 없으면(진짜 API) 단계 없이 레시피만 보여 준다
 
 type Step = 'photo' | 'recipe'
 
@@ -32,6 +32,12 @@ const TEMPS: { value: RecipeTemp; label: string }[] = [
   { value: 'HOT', label: 'HOT' },
   { value: 'DESSERT', label: '디저트' },
 ]
+
+// BE 사진 오류(영어)는 상태별로 화면 문구를 고른다
+const PHOTO_ERROR: Record<number, string> = {
+  413: '10MB 이하 사진으로 다시 넣어 주세요',
+  415: 'JPG · PNG · WebP 사진만 넣을 수 있어요',
+}
 
 interface RecipeFormSheetProps {
   storeId: string
@@ -62,8 +68,7 @@ export function RecipeFormSheet({
   const [steps, setSteps] = useState(recipe?.steps.join('\n') ?? '')
   const [memo, setMemo] = useState(recipe?.memo ?? '')
   const [photo, setPhoto] = useState<File | null | undefined>(undefined)
-  const hasPhotoStep = canSaveRecipePhoto()
-  const [step, setStep] = useState<Step>(hasPhotoStep && !editing ? 'photo' : 'recipe')
+  const [step, setStep] = useState<Step>(editing ? 'recipe' : 'photo')
   /** 사진 자르는 중이면 아래 [건너뛰기] · [다음]을 숨긴다 */
   const [cropping, setCropping] = useState(false)
   // 지금 사진: 레시피 imageUrl (없으면 lib/api/recipes 가 메뉴 이름으로 시연 사진, 뺀 사진은 '')
@@ -99,8 +104,13 @@ export function RecipeFormSheet({
       toast('저장했어요')
       onSaved(recipeId, category)
     }
-    const onError = (error: unknown) =>
-      toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', save)
+    const onError = (error: unknown) => {
+      const photoError = error instanceof ApiError ? PHOTO_ERROR[error.status] : undefined
+      if (photoError) {
+        setStep('photo')
+        toast.error(photoError)
+      } else toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', save)
+    }
     if (recipe) {
       update.mutate(
         { recipeId: recipe.recipeId, input },
@@ -118,7 +128,7 @@ export function RecipeFormSheet({
           {editing ? '레시피 수정' : '레시피 추가'}
         </h2>
 
-        {hasPhotoStep && <StepToggle step={step} onChange={setStep} />}
+        <StepToggle step={step} onChange={setStep} />
 
         {step === 'photo' && (
           <div className="flex flex-col gap-4 animate-in duration-200 fade-in-0 slide-in-from-left-6 motion-reduce:animate-none">
