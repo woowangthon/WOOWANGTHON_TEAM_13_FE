@@ -1,14 +1,22 @@
-import { BookOpen, Camera, Coffee, UserPlus, type LucideIcon } from 'lucide-react'
+import { BookOpen, Camera, ClipboardList, Coffee, UserPlus, type LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { cn } from '@/ui/utils'
 
 // 하단 + 버튼: 무엇을 추가할지 고르는 시트
-const ITEMS: { to: string; label: string; icon: LucideIcon; primary?: boolean }[] = [
+const ITEMS: {
+  to: string
+  label: string
+  icon: LucideIcon
+  primary?: boolean
+  /** 두 칸 너비 (홀수 개라 마지막 줄) */
+  wide?: boolean
+}[] = [
   { to: '/owner/recipes/new', label: '레시피', icon: Coffee, primary: true },
   { to: '/owner/recipes/scan', label: '사진으로 레시피', icon: Camera },
   { to: '/owner/manuals/new', label: '매뉴얼', icon: BookOpen },
   { to: '/owner/members/new', label: '알바생 초대', icon: UserPlus },
+  { to: '/owner/handover?write=1', label: '인수인계 남기기', icon: ClipboardList, wide: true },
 ]
 
 export function AddMenuSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -18,7 +26,7 @@ export function AddMenuSheet({ open, onClose }: { open: boolean; onClose: () => 
       <div className="flex flex-col gap-3.5">
         <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">추가</h2>
         <div className="grid grid-cols-2 gap-2.5">
-          {ITEMS.map(({ to, label, icon: Icon, primary }) => (
+          {ITEMS.map(({ to, label, icon: Icon, primary, wide }) => (
             <button
               key={to}
               type="button"
@@ -29,6 +37,7 @@ export function AddMenuSheet({ open, onClose }: { open: boolean; onClose: () => 
               className={cn(
                 'flex min-h-[118px] flex-col justify-between gap-3 rounded-[24px] p-4 text-left',
                 primary ? 'bg-brand text-white' : 'bg-white text-foreground',
+                wide && 'col-span-2 min-h-0 flex-row items-center justify-start',
               )}
             >
               <span
