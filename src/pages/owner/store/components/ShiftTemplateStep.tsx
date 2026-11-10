@@ -1,14 +1,18 @@
-import { Check, Minus, Plus, X } from 'lucide-react'
+import { Minus, Plus, X } from 'lucide-react'
 import type { ShiftTemplateInput } from '@/pages/owner/api/types'
+import { ClosedDaysField } from '@/pages/owner/store/components/ClosedDaysField'
 import { TimeField } from '@/pages/owner/store/components/TimeField'
-import { MAX_HEADCOUNT, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
-import { cn } from '@/ui/utils'
+import { MAX_HEADCOUNT } from '@/pages/owner/store/shifts'
 
 // 매장 등록 ③ 근무 타임 · 휴무: 타임마다 이름 · 시작 ~ 끝(눌러서 휠로 고르기) · 필요 인원, [+ 타임 추가] · 빼기
 // 아래에 쉬는 요일(여러 개) · 공휴일에 쉬는지 체크
 
 /** 화면에서 줄을 구분하려고 붙이는 키 (이름은 고칠 수 있어서) */
-export type ShiftRow = ShiftTemplateInput & { key: string }
+export type ShiftRow = ShiftTemplateInput & {
+  key: string
+  /** 이미 저장된 타임이면 아이디 (근무 탭에서 고칠 때) */
+  templateId?: string
+}
 
 export function ShiftTemplateStep({
   rows,
@@ -21,10 +25,11 @@ export function ShiftTemplateStep({
 }: {
   rows: ShiftRow[]
   onRowsChange: (rows: ShiftRow[]) => void
-  closedWeekdays: number[]
-  onClosedWeekdaysChange: (days: number[]) => void
-  closedOnHolidays: boolean
-  onClosedOnHolidaysChange: (closed: boolean) => void
+  /** 쉬는 요일 · 공휴일 칸 (매장 등록에서만, 근무 탭 수정은 BE 칸이 생기면) */
+  closedWeekdays?: number[]
+  onClosedWeekdaysChange?: (days: number[]) => void
+  closedOnHolidays?: boolean
+  onClosedOnHolidaysChange?: (closed: boolean) => void
   /** 저장할 수 없는 까닭 (shiftTemplatesError) */
   error: string | null
 }) {
@@ -36,13 +41,6 @@ export function ShiftTemplateStep({
       ...rows,
       { key: `row_${Date.now()}`, name: '', start: '09:00', end: '18:00', headcount: 1 },
     ])
-
-  const toggleDay = (day: number) =>
-    onClosedWeekdaysChange(
-      closedWeekdays.includes(day)
-        ? closedWeekdays.filter((d) => d !== day)
-        : [...closedWeekdays, day].sort(),
-    )
 
   return (
     <div className="flex flex-col gap-[18px]">
@@ -127,47 +125,17 @@ export function ShiftTemplateStep({
         )}
       </section>
 
-      <section className="flex flex-col gap-2.5">
-        <span className="px-1 text-[13px] font-bold text-muted-foreground">쉬는 요일</span>
-        <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="쉬는 요일">
-          {WEEKDAY_LABELS.map((day, i) => {
-            const on = closedWeekdays.includes(i)
-            return (
-              <button
-                key={day}
-                type="button"
-                role="checkbox"
-                aria-checked={on}
-                aria-label={`${day}요일`}
-                onClick={() => toggleDay(i)}
-                className={cn(
-                  'h-11 rounded-[14px] text-sm font-bold',
-                  on ? 'bg-ink text-white' : 'bg-card text-foreground',
-                )}
-              >
-                {day}
-              </button>
-            )
-          })}
-        </div>
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={closedOnHolidays}
-          onClick={() => onClosedOnHolidaysChange(!closedOnHolidays)}
-          className="flex items-center gap-2.5 px-1 py-1 text-left text-[15px] font-semibold"
-        >
-          <span
-            className={cn(
-              'flex size-6 shrink-0 items-center justify-center rounded-lg border-[1.5px]',
-              closedOnHolidays ? 'border-brand bg-brand text-white' : 'border-line bg-white',
-            )}
-          >
-            {closedOnHolidays && <Check className="size-4" />}
-          </span>
-          공휴일에는 쉬어요
-        </button>
-      </section>
+      {closedWeekdays && onClosedWeekdaysChange && onClosedOnHolidaysChange && (
+        <section className="flex flex-col gap-2.5">
+          <span className="px-1 text-[13px] font-bold text-muted-foreground">쉬는 요일</span>
+          <ClosedDaysField
+            closedWeekdays={closedWeekdays}
+            onClosedWeekdaysChange={onClosedWeekdaysChange}
+            closedOnHolidays={closedOnHolidays ?? false}
+            onClosedOnHolidaysChange={onClosedOnHolidaysChange}
+          />
+        </section>
+      )}
     </div>
   )
 }

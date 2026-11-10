@@ -1,4 +1,4 @@
-import type { ManualIcon, RecipeTemp, StoreTheme } from '@/lib/api/types'
+import type { ManualIcon, RecipeTemp, ScheduleWorker, StoreTheme } from '@/lib/api/types'
 
 /*
  * 사장님 화면 API 타입 (임시) — 담당: 나현
@@ -22,6 +22,10 @@ export interface OwnerStore {
   size: StoreSize
   bizNo: string | null
   staffCount: number
+  /** 쉬는 요일 0=월 ~ 6=일 (BE 칸 요청 중) */
+  closedWeekdays: number[]
+  /** 공휴일에 쉬는지 (BE 칸 요청 중) */
+  closedOnHolidays: boolean
 }
 
 /** 매장 등록 요청 (POST /stores — BE 는 name · address · 사업자 확인 결과 필수) */
@@ -60,6 +64,24 @@ export interface WeekShift {
   weekday: number
 }
 
+/** 고정 스케줄 배정 (GET /stores/{storeId}/fixed-schedule) — 매주 그 요일 그 타임에 그 사람 */
+export interface FixedAssignment {
+  assignmentId: string
+  template: ShiftTemplate
+  weekday: number
+  assignee: ScheduleWorker
+}
+
+/** 사장님이 받은 대타 요청 (직원이 사장님께 부탁) */
+export interface OwnerSubstituteRequest {
+  requestId: string
+  date: string
+  shiftName: string
+  start: string
+  end: string
+  requester: ScheduleWorker
+}
+
 /** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */
 export interface BizVerifyInput {
   /** 000-00-00000 (BE 가 - 를 뺀다) */
@@ -77,7 +99,9 @@ export interface BizVerification {
 }
 
 /** 매장 수정 요청 (PATCH /stores/{storeId}) — 이름 · 급여일 · 사업장 규모 */
-export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>
+export type StoreUpdate = Partial<
+  Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl' | 'closedWeekdays' | 'closedOnHolidays'>
+>
 
 /** BE 사업장 규모 (화면 StoreSize: under5 · over5) */
 export type BusinessSize = 'UNDER_FIVE' | 'FIVE_OR_MORE'
@@ -92,6 +116,9 @@ export interface StoreResponse {
   photoUrl: string | null
   payday: number | null
   businessSize: BusinessSize | null
+  /** BE 칸 요청 중 — 생기기 전에는 오지 않는다 */
+  closedWeekdays?: number[] | null
+  closedOnHolidays?: boolean | null
 }
 
 /** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */
@@ -151,12 +178,16 @@ export interface Member {
   inviteCode: string
   /** 근무 한 줄 (예: 주 3회 마감) */
   shiftLabel: string
+  /** 입장 전에 정해 둔 고정 근무 (초대할 때, BE 칸이 생기기 전에는 가짜 서버만) */
+  schedule?: WeekShift[]
 }
 
 /** 알바생 추가 (POST /stores/{storeId}/members 제안) — 응답에 초대코드 */
 export interface NewMember {
   name: string
   hourlyWage: number
+  /** 입장하면 들어갈 고정 근무 (선택) — canSaveInviteSchedule() 일 때만 보낸다 */
+  schedule?: WeekShift[]
 }
 
 /** 지금 근무 중인 사람 (홈 카드) */

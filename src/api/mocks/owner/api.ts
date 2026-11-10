@@ -22,6 +22,7 @@ import {
   type Recipe as StaffRecipe,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
+import { seedStoreShifts } from '@/api/mocks/owner/schedule'
 import { ApiError } from '@/lib/apiClient'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { fromDateKey, toDateKey } from '@/lib/date'
@@ -45,8 +46,7 @@ import type {
   RecipeInput,
   RecipeScanDraft,
   ScheduleDraft,
-  ShiftTemplate,
-  WeekShift,
+  StoreUpdate,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -110,50 +110,16 @@ export async function createStore(input: NewStore): Promise<OwnerStore> {
     kind: '카페',
     address: input.address.trim(),
     theme: THEME_ORDER[db.stores.length % THEME_ORDER.length],
-    photoUrl: null,
+    photoUrl: null as string | null,
     payday: 10,
     size: input.size,
     bizNo: input.bizNo ?? null,
-  }
-  db.stores.push(store)
-  storeSetup[store.storeId] = {
-    templates: input.shiftTemplates.map((t, i) => ({
-      ...t,
-      templateId: `tpl_${store.storeId}_${i}`,
-      sortOrder: i,
-    })),
     closedWeekdays: input.closedWeekdays,
     closedOnHolidays: input.closedOnHolidays,
-    fixedSchedule: [],
   }
+  db.stores.push(store)
+  seedStoreShifts(store.storeId, input.shiftTemplates, db.profile.name)
   return toStore(store)
-}
-
-/** 매장 근무 타임 · 휴무 · 고정 스케줄 (가짜 서버, 매장 만들 때 생긴다) */
-const storeSetup: Record<
-  string,
-  {
-    templates: ShiftTemplate[]
-    closedWeekdays: number[]
-    closedOnHolidays: boolean
-    fixedSchedule: (WeekShift & { userId: string })[]
-  }
-> = {}
-
-/** GET /stores/{storeId}/shift-templates */
-export async function getShiftTemplates(storeId: string): Promise<{ templates: ShiftTemplate[] }> {
-  await wait(150)
-  return { templates: storeSetup[storeId]?.templates ?? [] }
-}
-
-/** PUT /stores/{storeId}/fixed-schedule — 매장 고정 스케줄 전체를 바꾼다 */
-export async function putFixedSchedule(
-  storeId: string,
-  assignments: (WeekShift & { userId: string })[],
-): Promise<void> {
-  await wait()
-  const setup = storeSetup[storeId]
-  if (setup) setup.fixedSchedule = assignments
 }
 
 /** POST /stores/{storeId}/photo — 시연은 브라우저 주소로 */
@@ -166,10 +132,7 @@ export async function uploadStorePhoto(
 }
 
 /** PATCH /stores/{storeId} (제안) — 이름 · 급여일 · 사업장 규모 */
-export async function updateStore(
-  storeId: string,
-  patch: Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>,
-): Promise<OwnerStore> {
+export async function updateStore(storeId: string, patch: StoreUpdate): Promise<OwnerStore> {
   await wait()
   const store = findStore(storeId)
   if (patch.name !== undefined && !patch.name.trim()) {
@@ -254,6 +217,7 @@ export async function createMember(storeId: string, input: NewMember): Promise<M
     status: 'invited',
     inviteCode: newInviteCode(),
     shiftLabel: '새 알바생',
+    schedule: input.schedule ?? [],
   }
   db.members.push(member)
   return { ...member }
