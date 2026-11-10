@@ -565,7 +565,7 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
 ### 5-3. 사장님께 물어보기
 #### 질문 보내기 — P0 (제안: `POST /stores/{storeId}/assistant-chats/{chatId}/messages/{messageId}/owner-questions`)
 
-> ✅ 11/9 BE main에 들어갔어요 (연서). 본문 없이 `201 { ownerQuestionId, status, question, createdAt, systemMessage }`. 메시지의 `canAskOwner`는 `not_found`이고 아직 안 물어봤을 때 `true`, `ownerQuestion`은 `{ ownerQuestionId, status: "asked" | "answered" }`. 사장님이 답하면 채팅에 `sender: "owner"` 메시지가 생겨요. 에러: `409 OWNER_QUESTION_ALREADY_SENT` · `422 OWNER_QUESTION_NOT_ALLOWED` (FE는 내역을 다시 불러와 맞추고 문장만 알려요). FE는 답을 기다리는 동안만 5초마다 내역을 다시 불러요. 답변의 `addToManual: true`는 아직 501
+> ✅ 11/9 BE main에 들어갔어요 (연서). 본문 없이 `201 { ownerQuestionId, status, question, createdAt, systemMessage }`. 메시지의 `canAskOwner`는 `not_found`이고 아직 안 물어봤을 때 `true`, `ownerQuestion`은 `{ ownerQuestionId, status: "asked" | "answered" }`. 사장님이 답하면 채팅에 `sender: "owner"` 메시지가 생겨요. 에러: `409 OWNER_QUESTION_ALREADY_SENT` · `422 OWNER_QUESTION_NOT_ALLOWED` (FE는 내역을 다시 불러와 맞추고 문장만 알려요). FE는 답을 기다리는 동안만 5초마다 내역을 다시 불러요. 답변의 `addToManual: true`는 11/11 BE #32로 들어왔어요: `{ answer, addToManual, manualTitle?, manualBody?, manualCategoryId? }` — 제목 · 본문을 비우면 BE가 질문 · 답으로 채우고, 카테고리를 안 주면 "물건 위치"(없으면 만들어요). 응답에 `manualId`. FE는 답변 시트의 [매뉴얼에도 추가] 체크박스(처음엔 꺼짐)로 제목 · 본문을 보내요
 > **BE 표에 없는 API예요.** [질문 6](#9-be에-확인하고-싶은-것)에 적었어요. 경로는 BE가 정해 주세요.
 
 `not_found` 답변의 [사장님께 물어보기]를 누르면 불러요. `messageId`는 그 AI 답변 ID예요. 원래 질문은 BE가 그 답변 바로 앞 `staff` 메시지에서 찾아요.

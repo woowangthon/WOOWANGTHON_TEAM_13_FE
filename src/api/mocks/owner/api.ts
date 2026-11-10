@@ -275,7 +275,7 @@ export async function answerOwnerQuestion(
   if (input.addToManual) {
     pushManual(question.storeId, {
       title: input.manualTitle.trim() || question.title,
-      body: input.answer.trim(),
+      body: input.manualBody.trim() || input.answer.trim(),
       icon: question.icon,
     })
   }

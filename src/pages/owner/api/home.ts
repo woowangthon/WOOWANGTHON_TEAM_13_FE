@@ -19,9 +19,6 @@ import type { OwnerAnswer, OwnerNotification, OwnerQuestionItem } from '@/pages/
  * 근무 중 · 재고 알림은 아직 가짜 서버만 (BE 미구현). 진짜 모드 알림에는 질문만 보인다.
  */
 
-/** 답하면서 매뉴얼에도 추가할 수 있는지 (BE 는 아직 501 ADD_TO_MANUAL_NOT_SUPPORTED) */
-export const canAddAnswerToManual = () => !isRealApi('assistantChat')
-
 const fetchQuestions = (storeId: string): Promise<{ questions: OwnerQuestionItem[] }> =>
   isRealApi('assistantChat')
     ? http.get(`/stores/${storeId}/owner-questions?status=asked`)
@@ -29,10 +26,11 @@ const fetchQuestions = (storeId: string): Promise<{ questions: OwnerQuestionItem
 
 const postAnswer = (storeId: string, questionId: string, input: OwnerAnswer) =>
   isRealApi('assistantChat')
-    ? http.post<OwnerQuestionItem>(`/stores/${storeId}/owner-questions/${questionId}/answer`, {
-        ...input,
-        addToManual: false,
-      })
+    ? http.post<OwnerQuestionItem>(
+        `/stores/${storeId}/owner-questions/${questionId}/answer`,
+        // 매뉴얼에 안 넣으면 제목 · 본문은 보내지 않는다
+        input.addToManual ? input : { answer: input.answer, addToManual: false },
+      )
     : answerOwnerQuestion(storeId, questionId, input)
 
 // 진짜 모드: 내 매장마다 답하지 않은 질문을 모아 알림으로 (재고 알림은 BE 가 없어서 빠진다)
