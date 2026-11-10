@@ -24,12 +24,30 @@ export interface OwnerStore {
   staffCount: number
 }
 
-/** 매장 등록 요청 (POST /stores — BE 는 name · address 필수) */
+/** 매장 등록 요청 (POST /stores — BE 는 name · address · 사업자 확인 결과 필수) */
 export interface NewStore {
   name: string
   address: string
   size: StoreSize
   bizNo?: string | null
+  /** 사업자 확인(VERIFIED) 결과 번호 — POST /business-verifications */
+  businessVerificationId: number
+}
+
+/** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */
+export interface BizVerifyInput {
+  /** 000-00-00000 (BE 가 - 를 뺀다) */
+  bizNo: string
+  ownerName: string
+  /** 개업일 YYYY-MM-DD */
+  startDate: string
+}
+
+/** 사업자 확인 결과 — VERIFIED 여야 매장을 등록할 수 있다 */
+export interface BizVerification {
+  verificationId: number
+  status: 'VERIFIED' | 'INVALID'
+  message: string
 }
 
 /** 매장 수정 요청 (PATCH /stores/{storeId}) — 이름 · 급여일 · 사업장 규모 */
