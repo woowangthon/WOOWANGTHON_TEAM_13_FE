@@ -192,11 +192,15 @@ export interface OwnerNotification {
   questionId: string | null
 }
 
-/** 사장님 답변 (POST /stores/{storeId}/owner-questions/{questionId}/answer). addToManual 이면 매뉴얼도 만든다 (BE 는 아직 501) */
+/**
+ * 사장님 답변 (POST /stores/{storeId}/owner-questions/{questionId}/answer, BE #32).
+ * addToManual 이면 매뉴얼도 만든다 — 제목 · 본문을 비우면 BE 가 질문 · 답으로 채우고, 카테고리는 "물건 위치"
+ */
 export interface OwnerAnswer {
   answer: string
   addToManual: boolean
   manualTitle: string
+  manualBody: string
 }
 
 /** 레시피 등록 · 수정 요청 */

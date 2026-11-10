@@ -23,6 +23,7 @@ import {
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
 import { ApiError } from '@/lib/apiClient'
+import { questionSentence } from '@/pages/owner/components/questionText'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
 import type {
@@ -326,7 +327,7 @@ export async function answerOwnerQuestion(
   if (input.addToManual) {
     pushManual(question.storeId, {
       title: input.manualTitle.trim() || question.title,
-      body: input.answer.trim(),
+      body: input.manualBody.trim() || input.answer.trim(),
       icon: question.icon,
     })
   }
@@ -344,7 +345,7 @@ export async function getNotifications(): Promise<{ notifications: OwnerNotifica
       storeId: q.storeId,
       storeName: storeName(q.storeId),
       kind: 'question',
-      title: q.title,
+      title: questionSentence(q.question, 14),
       sub: `${q.staffName} · ${q.askedAt.slice(11, 16)}`,
       questionId: q.questionId,
     }))

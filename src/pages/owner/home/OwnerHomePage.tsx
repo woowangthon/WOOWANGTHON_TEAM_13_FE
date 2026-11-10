@@ -16,6 +16,7 @@ import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { useStorePayroll } from '@/pages/owner/api/work'
+import { questionSentence } from '@/pages/owner/components/questionText'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
@@ -172,8 +173,10 @@ function QuestionCard({ question, onOpen }: { question: OwnerQuestionItem; onOpe
       <span className="flex size-[42px] items-center justify-center rounded-full bg-white text-brand">
         <Icon className="size-[22px]" />
       </span>
-      <span className="mt-1.5 text-lg font-extrabold">{question.title}</span>
-      <span className="text-sm leading-[1.55] break-keep opacity-80">“{question.question}”</span>
+      <span className="mt-1.5 text-lg font-extrabold">{question.staffName} 님의 질문</span>
+      <span className="text-sm leading-[1.55] break-keep opacity-80">
+        {questionSentence(question.question)}
+      </span>
       <span className="mt-auto flex w-full items-center justify-between gap-2.5">
         <span className="text-xs whitespace-nowrap opacity-70">
           {question.staffName} · {formatTime(question.askedAt)}
