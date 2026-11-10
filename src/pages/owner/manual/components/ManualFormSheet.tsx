@@ -1,3 +1,4 @@
+import { Lightbulb } from 'lucide-react'
 import { useState } from 'react'
 import { ApiError } from '@/lib/apiClient'
 import { toastApiError } from '@/lib/api/errors'
@@ -10,6 +11,11 @@ import { Textarea } from '@/ui/Textarea'
 import { toast } from '@/ui/toastStore'
 
 // 매뉴얼 작성 · 수정 · 삭제 (docs/03 S2). 템플릿이면 예시 문구가 플레이스홀더로 보인다
+// 직접 추가 · 수정은 물건 이름과 위치를 함께 적는 예시 + 안내 (AI 사수가 물건 이름으로 찾기 쉬워서, 11/10 회의)
+
+const FREE_TITLE_HINT = '제목 예) 우산 빌려주기'
+const FREE_BODY_HINT =
+  '예) 여분 우산은 창고 선반 두 번째 칸에 있어요. 빌려 가는 손님은 메모지에 이름 · 연락처를 적어 주세요'
 interface ManualFormSheetProps {
   storeId: string
   /** 수정이면 원래 매뉴얼 */
@@ -78,17 +84,23 @@ export function ManualFormSheet({
             setTitle(event.target.value)
             setDuplicate(false)
           }}
-          placeholder="제목"
+          placeholder={template ? '제목' : FREE_TITLE_HINT}
           aria-label="제목"
           className="h-[54px] px-[18px] text-base font-semibold"
         />
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder={template?.hint ?? '내용'}
+          placeholder={template?.hint ?? FREE_BODY_HINT}
           aria-label="내용"
           className="min-h-[140px] px-[18px]"
         />
+        {!template && (
+          <span className="flex items-start gap-1.5 px-1 text-xs leading-normal text-muted-foreground">
+            <Lightbulb className="mt-px size-3.5 shrink-0" />
+            물건 이름과 위치를 함께 적으면 AI 사수가 더 잘 찾아요
+          </span>
+        )}
         {duplicate && (
           <span role="alert" className="text-[13px] text-destructive-foreground">
             이미 있는 제목이에요
