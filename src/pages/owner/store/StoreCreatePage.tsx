@@ -173,6 +173,19 @@ export default function StoreCreatePage() {
         >
           다음
         </Button>
+        {/* 개발 서버에서만: 사업자번호 없이 다음 단계 확인용 (진짜 BE 는 매장 만들 때 400) */}
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            onClick={() => {
+              setVerificationId(1)
+              setStep('info')
+            }}
+            className="-mt-2 self-center p-0 text-xs font-semibold text-subtle underline"
+          >
+            [개발용] 사업자 확인 건너뛰기
+          </button>
+        )}
       </StepFrame>
     )
 
