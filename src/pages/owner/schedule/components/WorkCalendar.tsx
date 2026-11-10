@@ -1,50 +1,64 @@
-import { ChevronLeft, ChevronRight, Repeat } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { useScheduleCalendar } from '@/lib/api/schedule'
+import { shiftHours, useScheduleCalendar } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
-import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
+import { addDays, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
-import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { LoadError } from '@/shared/LoadError'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
-// 근무 달력 (고정 근무 + 대타 반영, BE /schedule-calendar): 한 달 · 사람별로 보기 → 날짜를 누르면 그날 근무
+// 근무 달력 (고정 근무 + 대타 반영, BE /schedule-calendar) — 알바 근무표(민지 ScheduleMonth)와 같은 모양
+// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 사장님 근무(내 근무)는 진한 매장 색, 대타는 점선 테두리.
+// 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
 // 하루만 담당자 바꾸기는 BE 가 담당자 본인의 대타 요청만 받아서 이번엔 없다 (팀에 물어볼 것)
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+/** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
+const MAX_BLOCKS = 3
+/** 4글자 이상 이름은 한 단계 작게 */
+const LONG_NAME = 4
+
+/** 그 달을 덮는 달력 칸: 1일이 있는 주의 일요일 ~ 말일이 있는 주의 토요일 */
+function monthGrid(year: number, month: number) {
+  const first = new Date(year, month - 1, 1)
+  const last = new Date(year, month, 0)
+  const start = addDays(first, -first.getDay())
+  const end = addDays(last, 6 - last.getDay())
+  const days: Date[] = []
+  for (let d = start; d <= end; d = addDays(d, 1)) days.push(d)
+  return { start, end, days }
+}
+
+const hourText = (time: string) => String(Number(time.slice(0, 2)))
+/** 칸이 좁아서 사장님은 "사장"으로만 (아래 카드에는 이름 그대로) */
+const blockName = (shift: CalendarShift) =>
+  shift.assignee.role === 'owner' ? '사장' : shift.assignee.name.trim()
+/** 사장님 화면이라 '내 근무' = 사장님 근무 */
+const isMine = (shift: CalendarShift) => shift.assignee.role === 'owner'
 
 export function WorkCalendar({ storeId, today }: { storeId: string; today: Date }) {
-  const [offset, setOffset] = useState(0)
-  const [person, setPerson] = useState<string>('all')
-  const [selected, setSelected] = useState(toDateKey(today))
-  const first = new Date(today.getFullYear(), today.getMonth() + offset, 1)
-  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0)
-  const query = useScheduleCalendar(storeId, toDateKey(first), toDateKey(last))
-  const shifts = query.data?.shifts ?? []
+  const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 })
+  const [selected, setSelected] = useState<Date>(today)
+  const { start, end, days } = monthGrid(view.year, view.month)
+  const query = useScheduleCalendar(storeId, toDateKey(start), toDateKey(end))
 
-  // 사람 칩: 이 달에 근무가 있는 사람 (사장님 먼저)
-  const people = [...new Map(shifts.map((s) => [s.assignee.userId, s.assignee])).values()].sort(
-    (a, b) => (a.role === b.role ? 0 : a.role === 'owner' ? -1 : 1),
-  )
-  const colorOf = (userId: string) => {
-    const p = people.find((x) => x.userId === userId)
-    if (p?.role === 'owner') return 'var(--brand)'
-    return avatarColors(
-      people.filter((x) => x.role === 'staff').findIndex((x) => x.userId === userId),
-    )[1]
+  const move = (step: number) => {
+    const next = new Date(view.year, view.month - 1 + step, 1)
+    setView({ year: next.getFullYear(), month: next.getMonth() + 1 })
+    // 이번 달로 오면 오늘, 아니면 1일을 고른다
+    setSelected(
+      next.getFullYear() === today.getFullYear() && next.getMonth() === today.getMonth()
+        ? today
+        : next,
+    )
   }
-  const shown = person === 'all' ? shifts : shifts.filter((s) => s.assignee.userId === person)
-  const byDay = (key: string) => shown.filter((s) => s.date === key)
 
-  const lead = first.getDay()
-  const cells = [
-    ...Array.from({ length: lead }, () => null),
-    ...Array.from(
-      { length: last.getDate() },
-      (_, i) => new Date(first.getFullYear(), first.getMonth(), i + 1),
-    ),
-  ]
+  const byDate = new Map<string, CalendarShift[]>()
+  for (const shift of query.data?.shifts ?? []) {
+    byDate.set(shift.date, [...(byDate.get(shift.date) ?? []), shift])
+  }
+  const selectedShifts = byDate.get(toDateKey(selected)) ?? []
 
   return (
     <section className="flex flex-col gap-2.5">
@@ -53,149 +67,178 @@ export function WorkCalendar({ storeId, today }: { storeId: string; today: Date 
         <div className="flex items-center gap-1">
           <button
             type="button"
-            aria-label="이전 달"
-            onClick={() => setOffset(offset - 1)}
-            className="flex size-8 items-center justify-center rounded-full bg-card"
+            aria-label="지난달"
+            onClick={() => move(-1)}
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-5" />
           </button>
-          <span className="w-14 text-center text-sm font-bold">{first.getMonth() + 1}월</span>
+          <span className="min-w-[96px] text-center text-[15px] font-bold tabular-nums">
+            {view.year}년 {view.month}월
+          </span>
           <button
             type="button"
             aria-label="다음 달"
-            onClick={() => setOffset(offset + 1)}
-            className="flex size-8 items-center justify-center rounded-full bg-card"
+            onClick={() => move(1)}
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-5" />
           </button>
         </div>
       </div>
 
-      {people.length > 0 && (
-        <div
-          className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1"
-          role="radiogroup"
-          aria-label="사람"
-        >
-          {[{ userId: 'all', name: '전체' }, ...people].map((p) => (
-            <button
-              key={p.userId}
-              type="button"
-              role="radio"
-              aria-checked={person === p.userId}
-              onClick={() => setPerson(p.userId)}
-              className={cn(
-                'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold',
-                person === p.userId ? 'bg-ink text-white' : 'bg-card text-foreground',
-              )}
-            >
-              {p.userId !== 'all' && (
-                <span className="size-2 rounded-full" style={{ background: colorOf(p.userId) }} />
-              )}
-              {p.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {query.isPending ? (
         <Spinner />
       ) : query.error ? (
-        <LoadError error={query.error} onRetry={() => query.refetch()} />
+        <LoadError what="근무 달력을" error={query.error} onRetry={() => query.refetch()} />
       ) : (
-        <div className="flex flex-col gap-3 rounded-[22px] bg-card p-3 shadow-soft">
-          <div className="grid grid-cols-7 gap-1">
-            {WEEKDAYS.map((d, i) => (
-              <span
-                key={d}
-                className={cn(
-                  'text-center text-[11px] font-bold',
-                  i === 0 ? 'text-destructive-foreground' : 'text-muted-foreground',
-                )}
-              >
-                {d}
+        <>
+          <div className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2 shadow-soft">
+            <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-muted-foreground">
+              {WEEKDAYS.map((w, i) => (
+                <span key={w} className={cn(i === 0 && 'text-[#C0574A]')}>
+                  {w}
+                </span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {days.map((day) => {
+                const key = toDateKey(day)
+                const shifts = byDate.get(key) ?? []
+                const inMonth = day.getMonth() === view.month - 1
+                const isToday = isSameDay(day, today)
+                const isSelected = isSameDay(day, selected)
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelected(day)}
+                    aria-pressed={isSelected}
+                    aria-label={`${formatDate(day)} 근무 ${shifts.length}개`}
+                    className={cn(
+                      'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
+                      !inMonth && 'opacity-40',
+                      isSelected && 'rounded-[10px] bg-background',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'flex size-[22px] items-center justify-center self-center rounded-full text-xs tabular-nums',
+                        isToday ? 'bg-brand font-bold text-white' : 'font-semibold',
+                      )}
+                    >
+                      {day.getDate()}
+                    </span>
+                    {shifts.slice(0, MAX_BLOCKS).map((shift) => {
+                      const name = blockName(shift)
+                      return (
+                        <span
+                          key={`${shift.assignmentId}|${shift.assignee.userId}`}
+                          className={cn(
+                            'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
+                            isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
+                            shift.substituted &&
+                              'outline-1 -outline-offset-1 outline-current outline-dashed',
+                          )}
+                        >
+                          <span className="shrink-0 tabular-nums">{hourText(shift.start)}</span>
+                          <span
+                            className={cn(
+                              'max-w-full min-w-0 truncate',
+                              name.length >= LONG_NAME && 'text-[9px] tracking-[-0.02em]',
+                            )}
+                          >
+                            {name}
+                          </span>
+                        </span>
+                      )
+                    })}
+                    {shifts.length > MAX_BLOCKS && (
+                      <span className="px-[3px] text-[10px] font-semibold text-muted-foreground">
+                        +{shifts.length - MAX_BLOCKS}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] bg-brand" />내 근무
               </span>
-            ))}
-            {cells.map((date, i) => {
-              if (!date) return <span key={`blank-${i}`} />
-              const key = toDateKey(date)
-              const dayShifts = byDay(key)
-              const on = key === selected
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelected(key)}
-                  aria-label={`${formatDate(date)} 근무 ${dayShifts.length}개`}
-                  aria-pressed={on}
-                  className={cn(
-                    'flex aspect-square flex-col items-center justify-start gap-1 rounded-xl pt-1.5 text-[13px]',
-                    on ? 'bg-ink text-white' : 'bg-transparent',
-                    isSameDay(date, today) && !on && 'ring-[1.5px] ring-brand',
-                  )}
-                >
-                  <span className="font-bold">{date.getDate()}</span>
-                  <span className="flex flex-wrap justify-center gap-0.5 px-0.5">
-                    {dayShifts.slice(0, 4).map((s) => (
-                      <span
-                        key={`${s.assignmentId}-${s.assignee.userId}`}
-                        className="size-1.5 rounded-full"
-                        style={{ background: on ? '#fff' : colorOf(s.assignee.userId) }}
-                      />
-                    ))}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <DayList date={selected} shifts={byDay(selected)} colorOf={colorOf} />
-        </div>
-      )}
-    </section>
-  )
-}
-
-function DayList({
-  date,
-  shifts,
-  colorOf,
-}: {
-  date: string
-  shifts: CalendarShift[]
-  colorOf: (userId: string) => string
-}) {
-  return (
-    <div className="flex flex-col gap-1.5 border-t border-[#F0EBE2] pt-3">
-      <span className="px-1 text-[13px] font-bold text-muted-foreground">
-        {formatDate(fromDateKey(date))}
-      </span>
-      {shifts.length === 0 ? (
-        <span className="px-1 py-2 text-sm text-muted-foreground">근무가 없어요</span>
-      ) : (
-        shifts.map((s) => (
-          <div
-            key={`${s.assignmentId}-${s.assignee.userId}`}
-            className="flex items-center gap-2.5 rounded-[16px] bg-background px-3 py-2.5"
-          >
-            <span
-              className="size-2.5 shrink-0 rounded-full"
-              style={{ background: colorOf(s.assignee.userId) }}
-            />
-            <span className="w-[86px] shrink-0 text-[13px] font-semibold text-muted-foreground tabular-nums">
-              {s.start}~{s.end}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-bold">
-              {s.name} · {s.assignee.name}
-            </span>
-            {s.substituted && (
-              <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-warm px-2 py-0.5 text-[11px] font-bold text-warm-foreground">
-                <Repeat className="size-3" />
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] bg-brand-soft" />
+                다른 사람
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
                 대타
               </span>
-            )}
+            </div>
           </div>
-        ))
+
+          <h3 className="m-0 mt-1.5 px-1 text-lg font-extrabold tracking-[-0.02em]">
+            {formatDate(selected)} 근무
+          </h3>
+          {selectedShifts.length === 0 ? (
+            <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
+              이날은 근무가 없어요
+            </p>
+          ) : (
+            selectedShifts.map((shift) => {
+              const mine = isMine(shift)
+              return (
+                <div
+                  key={`${shift.assignmentId}|${shift.assignee.userId}`}
+                  className={cn(
+                    'flex items-center gap-3 rounded-[20px] px-4 py-3.5',
+                    mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',
+                  )}
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-base font-extrabold">{shift.assignee.name}</span>
+                      {mine && (
+                        <span className="rounded-full bg-white/20 px-2 py-px text-[11px] font-bold">
+                          나
+                        </span>
+                      )}
+                      {shift.substituted && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-px text-[11px] font-bold',
+                            mine ? 'bg-white text-brand' : 'bg-warm text-warm-foreground',
+                          )}
+                        >
+                          대타
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={cn('text-[13px]', mine ? 'opacity-80' : 'text-muted-foreground')}
+                    >
+                      {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-0.5">
+                    <span className="text-[15px] font-bold tabular-nums">
+                      {shift.start} – {shift.end}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs tabular-nums',
+                        mine ? 'opacity-80' : 'text-muted-foreground',
+                      )}
+                    >
+                      {shiftHours(shift)}시간
+                    </span>
+                  </span>
+                </div>
+              )
+            })
+          )}
+        </>
       )}
-    </div>
+    </section>
   )
 }
