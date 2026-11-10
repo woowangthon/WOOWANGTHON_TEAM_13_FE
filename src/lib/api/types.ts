@@ -269,6 +269,38 @@ export interface AlreadyJoinedDetail {
 
 // ── 근무 (docs/07 7, P1) ──
 
+/** 근무하는 사람 (알바생 · 사장님). 퇴사한 사람은 memberId null · name "퇴사한 직원" */
+export interface ScheduleWorker {
+  userId: string
+  memberId: string | null
+  name: string
+  role: 'owner' | 'staff'
+}
+
+/** 공유 근무 달력의 근무 한 칸 (그날 · 그 시간 · 그 사람) */
+export interface CalendarShift {
+  /** 고정 근무 배정 ID (요일마다 반복). 날짜와 함께 써야 한 칸이 정해진다 */
+  assignmentId: string
+  templateId: string
+  date: string
+  /** 근무 이름 (오픈 · 마감 …) */
+  name: string
+  start: string
+  end: string
+  /** 역할 메모 (없으면 "") */
+  role: string
+  assignee: ScheduleWorker
+  /** 대타로 바뀐 칸 */
+  substituted: boolean
+}
+
+/** GET /stores/{storeId}/schedule-calendar?startDate=&endDate= (최대 63일, 구성원 누구나) */
+export interface ScheduleCalendar {
+  startDate: string
+  endDate: string
+  shifts: CalendarShift[]
+}
+
 export interface Shift {
   shiftId: string
   date: string

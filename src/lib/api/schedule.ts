@@ -2,32 +2,42 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import {
   createAvailability,
   getMyAvailability,
-  getMySchedule,
+  getScheduleCalendar,
   updateAvailability,
 } from '@/api/mocks/staff/api/schedule'
+import { findStaffStore } from '@/api/mocks/staff/stores'
 import type {
   AvailabilityInput,
+  CalendarShift,
   MyAvailability,
   MySchedule,
   NewAvailability,
+  ScheduleCalendar,
   Shift,
 } from '@/lib/api/types'
 import { http, isRealApi } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
+import { useAuthStore } from '@/lib/authStore'
 import { addDays, fromDateKey, todayInKst, toDateKey } from '@/lib/date'
 
 /*
  * 근무 훅 (P1) — 담당: 민지
- * .env VITE_REAL_API 에 'schedule'를 넣으면 내 근무표(GET /schedules/me)를, 'availability'를 넣으면 근무 가능 시간을 진짜 API(apiFetch)로,
- * 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
- * 내 근무표(GET /schedules/me)는 BE PR #24(은교)에서 모양을 맞춰 뒀다 (docs/07 7-1). main 에 합쳐지기 전에 schedule 을 켜도
- * 404 면 빈 근무표로 보여 줘서 홈 · 근무 탭이 깨지지 않는다
+ * 11/10 회의 · BE #31: 근무표는 "알바생 모두가 같이 보는 전체 스케줄"이다.
+ *   GET /stores/{storeId}/schedule-calendar?startDate=&endDate= (최대 63일, 구성원 누구나) → useScheduleCalendar
+ *   내 근무(홈 오늘 근무 · 이번 주 · 매장 목록 한 줄 · 급여)는 그 달력에서 assignee.userId === 내 userId 만 골라 만든다 → useMySchedule
+ * .env VITE_REAL_API 에 'schedule'를 넣으면 진짜 API, 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
+ * 근무 가능 시간(/availabilities)은 BE 에서 없어졌다 → 진짜 모드에서는 들어가는 곳을 숨긴다 (availabilityEnabled)
  */
 
 /** 근무 가능 시간 메모 최대 글자 수 (BE 검증) */
 export const AVAILABILITY_MEMO_MAX = 500
 
+/** 한 번에 불러올 수 있는 최대 기간 (BE: 시작일부터 63일) */
+export const CALENDAR_MAX_DAYS = 63
+
 export const scheduleKeys = {
+  calendar: (storeId: string, startDate: string, endDate: string) =>
+    ['stores', storeId, 'schedule-calendar', startDate, endDate] as const,
   mine: (storeId: string) => ['stores', storeId, 'schedules', 'me'] as const,
   availability: (storeId: string) => ['stores', storeId, 'availabilities', 'me'] as const,
 }
@@ -36,29 +46,112 @@ const real = () => isRealApi('schedule')
 const realAvailability = () => isRealApi('availability')
 const availabilitiesPath = (storeId: string) => `/stores/${storeId}/availabilities`
 
-/** 근무가 없을 때의 근무표 (오늘 · 이번 주 월요일은 한국 시간 기준) */
-function emptySchedule(): MySchedule {
-  const today = todayInKst()
-  const monday = addDays(today, -((today.getDay() + 6) % 7))
-  return {
-    today: toDateKey(today),
-    weekStart: toDateKey(monday),
-    weekHours: 0,
-    weeklyAllowanceHours: 15,
-    weekNote: '',
-    shifts: [],
+/** 근무 가능 시간 화면을 보여 줄지 — BE 에서 없어져서 진짜 모드(schedule · availability 중 하나라도 켜짐)면 숨긴다 */
+export const availabilityEnabled = () => !real() && !realAvailability()
+
+/** 로그인 없이 볼 때(VITE_SKIP_AUTH) 가짜 근무표의 '나' */
+const MOCK_MY_USER_ID = 'usr_jieun'
+
+/** 내 userId (GET /users/me) — 달력에서 내 근무를 고를 때 쓴다 */
+export function myUserId() {
+  return useAuthStore.getState().me?.userId ?? MOCK_MY_USER_ID
+}
+
+/** 근무표의 오늘: 진짜면 한국 시간 오늘, 가짜면 매장 시연 날짜 (달빛 카페 11/20) */
+export function scheduleToday(storeId: string): Date {
+  return real() ? todayInKst() : findStaffStore(storeId).today
+}
+
+/** 공유 근무 달력 (그 기간의 모든 사람 근무, 날짜 · 시작 시간 순) */
+async function fetchCalendar(
+  storeId: string,
+  startDate: string,
+  endDate: string,
+): Promise<ScheduleCalendar> {
+  if (!real()) return getScheduleCalendar(storeId, startDate, endDate, myUserId())
+  try {
+    return await http.get<ScheduleCalendar>(
+      `/stores/${storeId}/schedule-calendar?startDate=${startDate}&endDate=${endDate}`,
+    )
+  } catch (error) {
+    // 근무표를 아직 안 만든 매장 등 (없으면 빈 달력)
+    if (error instanceof ApiError && error.status === 404) return { startDate, endDate, shifts: [] }
+    throw error
   }
 }
 
-/** 내 근무표: 진짜 API 가 아직 없으면(404) 빈 근무표 — BE 근무표 API 가 main 에 합쳐지면 저절로 진짜가 보인다 */
-async function fetchSchedule(storeId: string): Promise<MySchedule> {
-  if (!real()) return getMySchedule(storeId)
-  try {
-    return await http.get<MySchedule>(`/stores/${storeId}/schedules/me`)
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return emptySchedule()
-    throw error
+/** 공유 근무 달력: startDate ~ endDate ("2026-11-01", 최대 63일) */
+export function useScheduleCalendar(storeId: string, startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: scheduleKeys.calendar(storeId, startDate, endDate),
+    queryFn: () => fetchCalendar(storeId, startDate, endDate),
+    enabled: !!storeId,
+  })
+}
+
+/** 근무 시간 (시간 단위, "18:00" ~ "23:00" → 5) */
+export function shiftHours(shift: Pick<CalendarShift, 'start' | 'end'>) {
+  const minutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number)
+    return h * 60 + m
   }
+  return Math.max(0, minutes(shift.end) - minutes(shift.start)) / 60
+}
+
+const overlaps = (
+  a: Pick<CalendarShift, 'start' | 'end'>,
+  b: Pick<CalendarShift, 'start' | 'end'>,
+) => a.start < b.end && b.start < a.end
+
+const WEEKLY_ALLOWANCE_HOURS = 15
+
+/**
+ * 달력에서 내 근무만 골라 홈 · 급여가 쓰던 모양(MySchedule)으로: 이번 주(월~일) 내 근무 · 시간 · 한 줄 설명.
+ * 함께 일하는 사람 = 같은 날 시간이 겹치는 다른 사람
+ */
+export function toMySchedule(calendar: ScheduleCalendar, today: Date, myId: string): MySchedule {
+  const monday = addDays(today, -((today.getDay() + 6) % 7))
+  const weekKeys = new Set(Array.from({ length: 7 }, (_, i) => toDateKey(addDays(monday, i))))
+  const shifts: Shift[] = calendar.shifts
+    .filter((shift) => shift.assignee.userId === myId)
+    .map((shift) => ({
+      shiftId: `${shift.assignmentId}|${shift.date}`,
+      date: shift.date,
+      start: shift.start,
+      end: shift.end,
+      role: shift.name.trim() || shift.role.trim(),
+      crew: calendar.shifts
+        .filter(
+          (other) =>
+            other.date === shift.date && other.assignee.userId !== myId && overlaps(other, shift),
+        )
+        .map((other) => other.assignee.name),
+    }))
+  const weekHours = shifts
+    .filter((shift) => weekKeys.has(shift.date))
+    .reduce((sum, shift) => sum + shiftHours(shift), 0)
+  const rounded = Math.round(weekHours * 10) / 10
+  return {
+    today: toDateKey(today),
+    weekStart: toDateKey(monday),
+    weekHours: rounded,
+    weeklyAllowanceHours: WEEKLY_ALLOWANCE_HOURS,
+    weekNote:
+      rounded === 0
+        ? ''
+        : rounded >= WEEKLY_ALLOWANCE_HOURS
+          ? `이번 주 ${rounded}시간 · 주휴수당 대상`
+          : `이번 주 ${rounded}시간 · ${Math.round((WEEKLY_ALLOWANCE_HOURS - rounded) * 10) / 10}시간 더 필요`,
+    shifts,
+  }
+}
+
+/** 내 근무 (이번 주): 달력에서 이번 주 월~일을 불러와 내 것만 */
+async function fetchSchedule(storeId: string): Promise<MySchedule> {
+  const today = scheduleToday(storeId)
+  const monday = addDays(today, -((today.getDay() + 6) % 7))
+  const calendar = await fetchCalendar(storeId, toDateKey(monday), toDateKey(addDays(monday, 6)))
+  return toMySchedule(calendar, today, myUserId())
 }
 
 /** 근무 이름: 사장님이 안 정하면 BE 는 "" 를 준다 → "근무" */
@@ -120,11 +213,12 @@ export function useWorkSummaries(storeIds: string[]) {
   })
 }
 
-/** 근무 가능 시간 (받는 달 · 마감일 · 낸 내용) */
-export function useMyAvailability(storeId: string) {
+/** 근무 가능 시간 (받는 달 · 마감일 · 낸 내용). enabled=false 면 부르지 않는다 (진짜 모드: BE 에서 없어짐) */
+export function useMyAvailability(storeId: string, enabled = true) {
   return useQuery({
     queryKey: scheduleKeys.availability(storeId),
     queryFn: () => fetchAvailability(storeId),
+    enabled,
   })
 }
 
