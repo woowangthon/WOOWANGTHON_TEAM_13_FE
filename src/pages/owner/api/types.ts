@@ -216,12 +216,14 @@ export interface OwnerNotification {
   notificationId: string
   storeId: string
   storeName: string
-  /** question 질문 · substitute 사장님이 받은 대타 요청 · stock 재고(가짜) */
-  kind: 'question' | 'substitute' | 'stock'
+  /** question 질문 · substitute 사장님이 받은 대타 요청 · handover 알바생 인수인계 · stock 재고(가짜) */
+  kind: 'question' | 'substitute' | 'handover' | 'stock'
   title: string
   sub: string
   /** kind 가 question 이면 질문 ID */
   questionId: string | null
+  /** 읽었는지 (인수인계만 — 질문 · 대타는 처리할 때까지 늘 새 알림) */
+  isRead?: boolean
 }
 
 /**

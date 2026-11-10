@@ -4,10 +4,13 @@ import {
   dismissNotification,
   getNotifications,
   getOnDuty,
+  getHandoverNotices,
   getOwnerQuestions,
+  readHandoverNotices,
 } from '@/api/mocks/owner/api'
 import { manualKeys } from '@/lib/api/manuals'
 import { http, isRealApi } from '@/lib/api/source'
+import type { NotificationFeed } from '@/lib/api/types'
 import { ApiError } from '@/lib/apiClient'
 import { fromDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
@@ -79,13 +82,64 @@ const fetchSubstituteNotifications = async (
   )
 }
 
+/*
+ * 인수인계 알림: BE 알림 API(#34)가 사장님께 주는 HANDOVER_CREATED (최근 14일, 다른 사람이 남긴 것 · 읽음 여부)
+ * .env VITE_REAL_API 에 'notifications'. 아니면 가짜 서버. 알림 API 가 없으면(404) 빈 목록
+ */
+const fetchHandoverNotifications = async (
+  stores: { storeId: string; name: string }[],
+): Promise<OwnerNotification[]> => {
+  const lists = await Promise.all(
+    stores.map(async (store) => {
+      try {
+        if (!isRealApi('notifications')) return await getHandoverNotices(store.storeId)
+        const feed = await http.get<NotificationFeed>(`/stores/${store.storeId}/notifications`)
+        return feed.notifications.filter((n) => n.type === 'HANDOVER_CREATED')
+      } catch {
+        return []
+      }
+    }),
+  )
+  return stores.flatMap((store, i) =>
+    lists[i].map<OwnerNotification>((n) => ({
+      notificationId: n.notificationId,
+      storeId: store.storeId,
+      storeName: store.name,
+      kind: 'handover',
+      title: n.title,
+      sub: `${n.body} · ${formatTime(n.createdAt)}`,
+      questionId: null,
+      isRead: n.isRead,
+    })),
+  )
+}
+
+// 처리할 것(대타 · 질문) 먼저, 그다음 인수인계
 const fetchNotifications = async (): Promise<{ notifications: OwnerNotification[] }> => {
   const { stores } = await fetchStores()
-  const [questions, substitutes] = await Promise.all([
+  const [questions, substitutes, handovers] = await Promise.all([
     fetchQuestionNotifications(stores),
     fetchSubstituteNotifications(stores),
+    fetchHandoverNotifications(stores),
   ])
-  return { notifications: [...substitutes, ...questions] }
+  return { notifications: [...substitutes, ...questions, ...handovers] }
+}
+
+/** 종을 열면 안 읽은 인수인계가 있는 매장의 알림을 읽음으로 (BE POST /notifications/read — 매장마다 전부) */
+export function useReadHandoverNotifications() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (storeIds: string[]) => {
+      await Promise.all(
+        storeIds.map((storeId) =>
+          isRealApi('notifications')
+            ? http.post<void>(`/stores/${storeId}/notifications/read`)
+            : readHandoverNotices(storeId),
+        ),
+      )
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ownerKeys.notifications }),
+  })
 }
 
 export function useOnDuty(storeId: string) {
