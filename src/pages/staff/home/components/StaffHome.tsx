@@ -7,6 +7,7 @@ import { isRealApi } from '@/lib/api/source'
 import type { Shift } from '@/lib/api/types'
 import { addDays, fromDateKey, isSameDay, todayInKst, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
+import { ReceivedSubstituteBanner } from '@/pages/staff/schedule/components/SubstituteRequests'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
@@ -76,6 +77,7 @@ function HomeBody({
 
   return (
     <div className="flex flex-col gap-[18px]">
+      <ReceivedSubstituteBanner storeId={store.id} />
       <span className="px-1 text-[13px] font-medium text-muted-foreground">
         {formatDate(todayOfStore)}
       </span>

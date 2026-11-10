@@ -8,17 +8,20 @@ import {
   useScheduleCalendar,
 } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
+import { useSubstituteRequests } from '@/lib/api/substitute'
 import { addDays, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
+import { Button } from '@/ui/Button'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 내 근무는 진한 매장 색, 대타는 점선 테두리.
-// 날짜를 누르면 아래에 그날 근무 목록. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
+// 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중"). ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -48,6 +51,15 @@ export function ScheduleMonth() {
   const { start, end, days } = monthGrid(view.year, view.month)
   const calendarQuery = useScheduleCalendar(store.id, toDateKey(start), toDateKey(end))
   const me = myUserId()
+  // 대타: 내가 보낸 요청(진행 중이면 [대타 요청] 대신 "요청 중") · 요청 시트를 띄울 근무
+  const sentQuery = useSubstituteRequests(store.id, 'sent')
+  const [sheetShift, setSheetShift] = useState<CalendarShift | null>(null)
+  const todayKey = toDateKey(today)
+  const pendingSentOf = (shift: CalendarShift) =>
+    sentQuery.data?.requests.find(
+      (r) =>
+        r.status === 'PENDING' && r.assignmentId === shift.assignmentId && r.date === shift.date,
+    )
 
   const move = (step: number) => {
     const next = new Date(view.year, view.month - 1 + step, 1)
@@ -215,57 +227,84 @@ export function ScheduleMonth() {
           ) : (
             selectedShifts.map((shift) => {
               const mine = isMine(shift)
+              // 대타 요청은 내 근무 · 오늘 이후만
+              const canRequest = mine && shift.date >= todayKey
+              const pendingSent = canRequest ? pendingSentOf(shift) : undefined
               return (
                 <div
                   key={`${shift.assignmentId}|${shift.date}`}
                   className={cn(
-                    'flex items-center gap-3 rounded-[20px] px-4 py-3.5',
+                    'flex flex-col gap-3 rounded-[20px] px-4 py-3.5',
                     mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',
                   )}
                 >
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-base font-extrabold">{shift.assignee.name}</span>
-                      {mine && (
-                        <span className="rounded-full bg-white/20 px-2 py-px text-[11px] font-bold">
-                          나
-                        </span>
-                      )}
-                      {shift.substituted && (
-                        <span
-                          className={cn(
-                            'rounded-full px-2 py-px text-[11px] font-bold',
-                            mine ? 'bg-white text-brand' : 'bg-warm text-warm-foreground',
-                          )}
-                        >
-                          대타
-                        </span>
-                      )}
+                  <div className="flex items-center gap-3">
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-base font-extrabold">{shift.assignee.name}</span>
+                        {mine && (
+                          <span className="rounded-full bg-white/20 px-2 py-px text-[11px] font-bold">
+                            나
+                          </span>
+                        )}
+                        {shift.substituted && (
+                          <span
+                            className={cn(
+                              'rounded-full px-2 py-px text-[11px] font-bold',
+                              mine ? 'bg-white text-brand' : 'bg-warm text-warm-foreground',
+                            )}
+                          >
+                            대타
+                          </span>
+                        )}
+                      </span>
+                      <span
+                        className={cn('text-[13px]', mine ? 'opacity-80' : 'text-muted-foreground')}
+                      >
+                        {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
+                      </span>
                     </span>
-                    <span
-                      className={cn('text-[13px]', mine ? 'opacity-80' : 'text-muted-foreground')}
-                    >
-                      {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
+                    <span className="flex shrink-0 flex-col items-end gap-0.5">
+                      <span className="text-[15px] font-bold tabular-nums">
+                        {shift.start} – {shift.end}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-xs tabular-nums',
+                          mine ? 'opacity-80' : 'text-muted-foreground',
+                        )}
+                      >
+                        {shiftHours(shift)}시간
+                      </span>
                     </span>
-                  </span>
-                  <span className="flex shrink-0 flex-col items-end gap-0.5">
-                    <span className="text-[15px] font-bold tabular-nums">
-                      {shift.start} – {shift.end}
-                    </span>
-                    <span
-                      className={cn(
-                        'text-xs tabular-nums',
-                        mine ? 'opacity-80' : 'text-muted-foreground',
-                      )}
-                    >
-                      {shiftHours(shift)}시간
-                    </span>
-                  </span>
+                  </div>
+                  {canRequest &&
+                    (pendingSent ? (
+                      <span className="self-start rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                        {pendingSent.target.name}님에게 대타 요청 중
+                      </span>
+                    ) : (
+                      <Button
+                        variant="white"
+                        size="sm"
+                        className="self-start"
+                        onClick={() => setSheetShift(shift)}
+                      >
+                        대타 요청
+                      </Button>
+                    ))}
                 </div>
               )
             })
           )}
         </section>
+      )}
+      {sheetShift && (
+        <SubstituteSheet
+          storeId={store.id}
+          shift={sheetShift}
+          onClose={() => setSheetShift(null)}
+        />
       )}
     </>
   )
