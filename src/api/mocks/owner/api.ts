@@ -22,6 +22,7 @@ import {
   type Recipe as StaffRecipe,
   type RecipeCategory,
 } from '@/api/mocks/staff/recipes'
+import { seedStoreShifts } from '@/api/mocks/owner/schedule'
 import { ApiError } from '@/lib/apiClient'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
@@ -44,8 +45,6 @@ import type {
   RecipeInput,
   RecipeScanDraft,
   ScheduleDraft,
-  ShiftTemplate,
-  WeekShift,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -115,44 +114,8 @@ export async function createStore(input: NewStore): Promise<OwnerStore> {
     bizNo: input.bizNo ?? null,
   }
   db.stores.push(store)
-  storeSetup[store.storeId] = {
-    templates: input.shiftTemplates.map((t, i) => ({
-      ...t,
-      templateId: `tpl_${store.storeId}_${i}`,
-      sortOrder: i,
-    })),
-    closedWeekdays: input.closedWeekdays,
-    closedOnHolidays: input.closedOnHolidays,
-    fixedSchedule: [],
-  }
+  seedStoreShifts(store.storeId, input.shiftTemplates, db.profile.name)
   return toStore(store)
-}
-
-/** 매장 근무 타임 · 휴무 · 고정 스케줄 (가짜 서버, 매장 만들 때 생긴다) */
-const storeSetup: Record<
-  string,
-  {
-    templates: ShiftTemplate[]
-    closedWeekdays: number[]
-    closedOnHolidays: boolean
-    fixedSchedule: (WeekShift & { userId: string })[]
-  }
-> = {}
-
-/** GET /stores/{storeId}/shift-templates */
-export async function getShiftTemplates(storeId: string): Promise<{ templates: ShiftTemplate[] }> {
-  await wait(150)
-  return { templates: storeSetup[storeId]?.templates ?? [] }
-}
-
-/** PUT /stores/{storeId}/fixed-schedule — 매장 고정 스케줄 전체를 바꾼다 */
-export async function putFixedSchedule(
-  storeId: string,
-  assignments: (WeekShift & { userId: string })[],
-): Promise<void> {
-  await wait()
-  const setup = storeSetup[storeId]
-  if (setup) setup.fixedSchedule = assignments
 }
 
 /** POST /stores/{storeId}/photo — 시연은 브라우저 주소로 */

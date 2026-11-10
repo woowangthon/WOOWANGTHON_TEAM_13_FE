@@ -1,4 +1,4 @@
-import type { ManualIcon, RecipeTemp, StoreTheme } from '@/lib/api/types'
+import type { ManualIcon, RecipeTemp, ScheduleWorker, StoreTheme } from '@/lib/api/types'
 
 /*
  * 사장님 화면 API 타입 (임시) — 담당: 나현
@@ -58,6 +58,24 @@ export interface ShiftTemplate extends ShiftTemplateInput {
 export interface WeekShift {
   templateId: string
   weekday: number
+}
+
+/** 고정 스케줄 배정 (GET /stores/{storeId}/fixed-schedule) — 매주 그 요일 그 타임에 그 사람 */
+export interface FixedAssignment {
+  assignmentId: string
+  template: ShiftTemplate
+  weekday: number
+  assignee: ScheduleWorker
+}
+
+/** 사장님이 받은 대타 요청 (직원이 사장님께 부탁) */
+export interface OwnerSubstituteRequest {
+  requestId: string
+  date: string
+  shiftName: string
+  start: string
+  end: string
+  requester: ScheduleWorker
 }
 
 /** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */

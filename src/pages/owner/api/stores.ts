@@ -4,13 +4,12 @@ import {
   deleteStore,
   getOwnerStores,
   getProfile,
-  getShiftTemplates,
-  putFixedSchedule,
   updateProfile,
   updateStore,
   uploadStorePhoto,
   verifyBizNo,
 } from '@/api/mocks/owner/api'
+import { getShiftTemplates, putFixedSchedule } from '@/api/mocks/owner/schedule'
 import { http, isRealApi } from '@/lib/api/source'
 import { apiFetch } from '@/lib/apiClient'
 import { useAuthStore, type Me } from '@/lib/authStore'

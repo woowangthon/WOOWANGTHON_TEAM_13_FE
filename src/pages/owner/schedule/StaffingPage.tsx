@@ -1,14 +1,6 @@
-import { ScheduleDraftCard } from '@/pages/owner/schedule/components/ScheduleDraftCard'
-import { WorkHeader } from '@/pages/owner/schedule/components/WorkHeader'
-import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { Navigate } from 'react-router'
 
-// 필요 인원 · 제출 현황 (P1): 다음 달 가능 시간 제출 현황 + 추천 스케줄만 따로 본다
+// 예전 "필요 인원 · 제출 현황" 주소 (추천 스케줄은 11/10 회의로 없어짐) → 근무 탭으로
 export default function StaffingPage() {
-  const { store } = useOwnerStore()
-  return (
-    <div className="flex flex-col gap-4">
-      <WorkHeader segment="schedule" />
-      <ScheduleDraftCard storeId={store.storeId} />
-    </div>
-  )
+  return <Navigate to="/owner/schedule" replace />
 }
