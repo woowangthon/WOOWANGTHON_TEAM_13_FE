@@ -4,6 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { MANUAL_TEMPLATES, OWNER_CATEGORIES } from '@/api/mocks/owner/data'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
+import { RecipeGuide } from '@/pages/owner/recipe/components/RecipeGuide'
+import { GUIDE_HIGHLIGHT, useRecipeGuide } from '@/pages/owner/recipe/components/useRecipeGuide'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { MANUAL_ICON } from '@/shared/icons'
@@ -15,6 +17,7 @@ import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { Tabs } from '@/ui/Tabs'
+import { cn } from '@/ui/utils'
 
 // 매장 정보 탭: 레시피(포스기처럼 카테고리 → 메뉴) · 매뉴얼(카드 + 추천 템플릿)
 // 보기는 알바 화면과 같은 훅(lib/api)이라 사장님이 바꾸면 알바 화면에도 그대로 보인다
@@ -54,6 +57,8 @@ function RecipeSection({ storeId }: { storeId: string }) {
   const [params, setParams] = useSearchParams()
   const query = useRecipes(storeId)
   const all = query.data?.recipes ?? []
+  // 처음 한 번: 사진으로 추가 · 직접 추가 안내 (보는 동안 두 버튼을 강조)
+  const guide = useRecipeGuide()
 
   // 사장님은 빈 카테고리도 보여야 메뉴를 넣을 수 있어서 기본 6개 + 사장님이 만든 이름
   const names = [
@@ -100,11 +105,16 @@ function RecipeSection({ storeId }: { storeId: string }) {
         <Link
           to={{ pathname: '/owner/recipes/scan', search: params.toString() }}
           aria-label="사진으로 추가"
-          className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-foreground text-white"
+          className={cn(
+            'flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-foreground text-white',
+            guide.show && GUIDE_HIGHLIGHT,
+          )}
         >
           <Camera className="size-5" />
         </Link>
       </div>
+
+      {guide.show && <RecipeGuide onDismiss={guide.dismiss} />}
 
       {query.isPending ? (
         <Spinner />
@@ -123,7 +133,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
             </h2>
             <Link
               to={{ pathname: '/owner/recipes/new', search: q ? '' : `cat=${category}` }}
-              className="flex items-center gap-1 text-[13px] font-bold text-brand"
+              className={cn(
+                'flex items-center gap-1 rounded-full px-1.5 py-1 text-[13px] font-bold text-brand',
+                guide.show && GUIDE_HIGHLIGHT,
+              )}
             >
               <Plus className="size-4" />
               추가
