@@ -62,6 +62,8 @@ function useRefreshSchedule(storeId: string) {
       queryClient.invalidateQueries({ queryKey: fixedKeys.received(storeId) }),
       queryClient.invalidateQueries({ queryKey: ['stores', storeId, 'schedule-calendar'] }),
       queryClient.invalidateQueries({ queryKey: ['owner', 'stores', storeId, 'payroll'] }),
+      // 상단 종 알림의 대타 요청도 빠지게
+      queryClient.invalidateQueries({ queryKey: ['owner', 'notifications'] }),
     ])
 }
 
@@ -178,18 +180,20 @@ export function useSavePersonShifts(storeId: string) {
   })
 }
 
-/** 직원이 사장님께 부탁한 대타 (대기 중만) */
+/** 직원이 사장님께 부탁한 대타 (대기 중만) — 근무 탭 카드 · 상단 종 알림이 같이 쓴다 */
+export async function fetchOwnerReceived(storeId: string): Promise<OwnerSubstituteRequest[]> {
+  const { requests } = real()
+    ? await http.get<{ requests: OwnerSubstituteRequest[] }>(
+        `${base(storeId)}/substitute-requests?box=received&status=PENDING`,
+      )
+    : await getOwnerReceivedRequests(storeId)
+  return requests
+}
+
 export function useOwnerReceivedRequests(storeId: string) {
   return useQuery({
     queryKey: fixedKeys.received(storeId),
-    queryFn: async (): Promise<OwnerSubstituteRequest[]> => {
-      const { requests } = real()
-        ? await http.get<{ requests: OwnerSubstituteRequest[] }>(
-            `${base(storeId)}/substitute-requests?box=received&status=PENDING`,
-          )
-        : await getOwnerReceivedRequests(storeId)
-      return requests
-    },
+    queryFn: () => fetchOwnerReceived(storeId),
   })
 }
 

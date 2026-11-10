@@ -216,7 +216,8 @@ export interface OwnerNotification {
   notificationId: string
   storeId: string
   storeName: string
-  kind: 'question' | 'stock'
+  /** question 질문 · substitute 사장님이 받은 대타 요청 · stock 재고(가짜) */
+  kind: 'question' | 'substitute' | 'stock'
   title: string
   sub: string
   /** kind 가 question 이면 질문 ID */

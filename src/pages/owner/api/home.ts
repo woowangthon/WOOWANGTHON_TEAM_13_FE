@@ -9,7 +9,9 @@ import {
 import { manualKeys } from '@/lib/api/manuals'
 import { http, isRealApi } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
-import { formatTime } from '@/lib/format'
+import { fromDateKey } from '@/lib/date'
+import { formatDate, formatTime } from '@/lib/format'
+import { fetchOwnerReceived } from '@/pages/owner/api/fixedSchedule'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import type { OwnerAnswer, OwnerNotification, OwnerQuestionItem } from '@/pages/owner/api/types'
@@ -34,24 +36,56 @@ const postAnswer = (storeId: string, questionId: string, input: OwnerAnswer) =>
       )
     : answerOwnerQuestion(storeId, questionId, input)
 
-// 진짜 모드: 내 매장마다 답하지 않은 질문을 모아 알림으로 (재고 알림은 BE 가 없어서 빠진다)
-const fetchNotifications = async (): Promise<{ notifications: OwnerNotification[] }> => {
-  if (!isRealApi('assistantChat')) return getNotifications()
-  const { stores } = await fetchStores()
+// 질문 알림: 진짜 모드는 내 매장마다 답하지 않은 질문을 모은다 (재고 알림은 BE 가 없어서 가짜 서버만)
+const fetchQuestionNotifications = async (
+  stores: { storeId: string; name: string }[],
+): Promise<OwnerNotification[]> => {
+  if (!isRealApi('assistantChat')) return (await getNotifications()).notifications
   const lists = await Promise.all(stores.map((store) => fetchQuestions(store.storeId)))
-  return {
-    notifications: stores.flatMap((store, i) =>
-      lists[i].questions.map<OwnerNotification>((q) => ({
-        notificationId: `ntf_${q.questionId}`,
-        storeId: store.storeId,
-        storeName: store.name,
-        kind: 'question',
-        title: questionSentence(q.question, 14),
-        sub: `${q.staffName} · ${formatTime(q.askedAt)}`,
-        questionId: q.questionId,
-      })),
-    ),
-  }
+  return stores.flatMap((store, i) =>
+    lists[i].questions.map<OwnerNotification>((q) => ({
+      notificationId: `ntf_${q.questionId}`,
+      storeId: store.storeId,
+      storeName: store.name,
+      kind: 'question',
+      title: questionSentence(q.question, 14),
+      sub: `${q.staffName} · ${formatTime(q.askedAt)}`,
+      questionId: q.questionId,
+    })),
+  )
+}
+
+/*
+ * 대타 알림: 직원이 사장님께 부탁한 대타(대기 중)를 매장마다 모은다.
+ * BE 알림 API(#34)는 사장님께 대타 알림을 주지 않아서 대타 요청 목록에서 만든다. 누르면 그 매장 근무 탭에서 수락 · 거절
+ */
+const fetchSubstituteNotifications = async (
+  stores: { storeId: string; name: string }[],
+): Promise<OwnerNotification[]> => {
+  // 한 매장이 실패해도 다른 알림은 보이게
+  const lists = await Promise.all(
+    stores.map((store) => fetchOwnerReceived(store.storeId).catch(() => [])),
+  )
+  return stores.flatMap((store, i) =>
+    lists[i].map<OwnerNotification>((r) => ({
+      notificationId: `sub_${r.requestId}`,
+      storeId: store.storeId,
+      storeName: store.name,
+      kind: 'substitute',
+      title: `${r.requester.name} 님이 대타를 부탁했어요`,
+      sub: `${formatDate(fromDateKey(r.date))} · ${r.shiftName} ${r.start}~${r.end}`,
+      questionId: null,
+    })),
+  )
+}
+
+const fetchNotifications = async (): Promise<{ notifications: OwnerNotification[] }> => {
+  const { stores } = await fetchStores()
+  const [questions, substitutes] = await Promise.all([
+    fetchQuestionNotifications(stores),
+    fetchSubstituteNotifications(stores),
+  ])
+  return { notifications: [...substitutes, ...questions] }
 }
 
 export function useOnDuty(storeId: string) {

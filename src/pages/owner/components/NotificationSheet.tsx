@@ -1,14 +1,16 @@
-import { Package, Umbrella } from 'lucide-react'
+import { Package, Repeat, Umbrella } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useDismissNotification, useNotifications } from '@/pages/owner/api/home'
 import type { OwnerNotification } from '@/pages/owner/api/types'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { LoadError } from '@/shared/LoadError'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
 
-// 상단 종: 모든 내 매장의 알림. 질문은 답하는 시트로, 재고 알림은 누르면 확인
+// 상단 종: 모든 내 매장의 알림. 질문은 답하는 시트로, 대타 요청은 그 매장 근무 탭(수락 · 거절)으로, 재고 알림은 누르면 확인
 interface NotificationSheetProps {
   open: boolean
   onClose: () => void
@@ -18,10 +20,17 @@ interface NotificationSheetProps {
 export function NotificationSheet({ open, onClose, onOpenQuestion }: NotificationSheetProps) {
   const query = useNotifications()
   const dismiss = useDismissNotification()
+  const navigate = useNavigate()
+  const { setCurrentStoreId } = useOwnerStore()
   const list = query.data?.notifications ?? []
 
   const onClick = (n: OwnerNotification) => {
     if (n.kind === 'question') return onOpenQuestion(n)
+    if (n.kind === 'substitute') {
+      setCurrentStoreId(n.storeId)
+      onClose()
+      return navigate('/owner/schedule')
+    }
     dismiss.mutate(n.notificationId, {
       onSuccess: () => toast('확인했어요'),
       onError: (error) => toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요'),
@@ -40,7 +49,8 @@ export function NotificationSheet({ open, onClose, onOpenQuestion }: Notificatio
           <EmptyState message="새 알림이 없어요" className="bg-white" />
         ) : (
           list.map((n) => {
-            const Icon = n.kind === 'question' ? Umbrella : Package
+            const Icon =
+              n.kind === 'question' ? Umbrella : n.kind === 'substitute' ? Repeat : Package
             return (
               <button
                 key={n.notificationId}
