@@ -3,7 +3,8 @@ import { useState, type ReactNode } from 'react'
 import { OWNER_CATEGORIES, RECIPE_TEMPLATES } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
 import type { Recipe, RecipeTemp } from '@/lib/api/types'
-import { canSaveRecipePhoto, useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
+import { ApiError } from '@/lib/apiClient'
+import { useCreateRecipe, useUpdateRecipe } from '@/pages/owner/api/content'
 import type { RecipeInput } from '@/pages/owner/api/types'
 import { RecipePhotoField } from '@/pages/owner/recipe/components/RecipePhotoField'
 import { BottomSheet } from '@/ui/BottomSheet'
@@ -14,7 +15,15 @@ import { Textarea } from '@/ui/Textarea'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 레시피 추가 · 수정 (docs/03 S3): 템플릿 → 메뉴 사진 · 이름 · 카테고리 · 재료와 양 · 순서 · 메모
+// 레시피 추가 · 수정 (docs/03 S3): ① 사진 → ② 레시피(템플릿 · 이름 · 카테고리 · 재료와 양 · 순서 · 메모)
+// 위쪽 단계 토글로 오가고, 사진은 건너뛸 수 있다. 추가는 ① 사진부터, 수정은 ② 레시피부터 연다
+
+type Step = 'photo' | 'recipe'
+
+const STEPS: { value: Step; label: string }[] = [
+  { value: 'photo', label: '① 사진' },
+  { value: 'recipe', label: '② 레시피' },
+]
 
 type Row = { name: string; amount: string }
 
@@ -23,6 +32,12 @@ const TEMPS: { value: RecipeTemp; label: string }[] = [
   { value: 'HOT', label: 'HOT' },
   { value: 'DESSERT', label: '디저트' },
 ]
+
+// BE 사진 오류(영어)는 상태별로 화면 문구를 고른다
+const PHOTO_ERROR: Record<number, string> = {
+  413: '10MB 이하 사진으로 다시 넣어 주세요',
+  415: 'JPG · PNG · WebP 사진만 넣을 수 있어요',
+}
 
 interface RecipeFormSheetProps {
   storeId: string
@@ -53,11 +68,15 @@ export function RecipeFormSheet({
   const [steps, setSteps] = useState(recipe?.steps.join('\n') ?? '')
   const [memo, setMemo] = useState(recipe?.memo ?? '')
   const [photo, setPhoto] = useState<File | null | undefined>(undefined)
+  const [step, setStep] = useState<Step>(editing ? 'recipe' : 'photo')
+  /** 사진 자르는 중이면 아래 [건너뛰기] · [다음]을 숨긴다 */
+  const [cropping, setCropping] = useState(false)
   // 지금 사진: 레시피 imageUrl (없으면 lib/api/recipes 가 메뉴 이름으로 시연 사진, 뺀 사진은 '')
   const currentPhoto = recipe?.imageUrl || null
   const create = useCreateRecipe(storeId)
   const update = useUpdateRecipe(storeId)
   const pending = create.isPending || update.isPending
+  const hasPhoto = photo === undefined ? !!currentPhoto : !!photo
 
   const pickTemplate = (key: string) => {
     const t = RECIPE_TEMPLATES[key]
@@ -85,8 +104,13 @@ export function RecipeFormSheet({
       toast('저장했어요')
       onSaved(recipeId, category)
     }
-    const onError = (error: unknown) =>
-      toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', save)
+    const onError = (error: unknown) => {
+      const photoError = error instanceof ApiError ? PHOTO_ERROR[error.status] : undefined
+      if (photoError) {
+        setStep('photo')
+        toast.error(photoError)
+      } else toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', save)
+    }
     if (recipe) {
       update.mutate(
         { recipeId: recipe.recipeId, input },
@@ -104,149 +128,202 @@ export function RecipeFormSheet({
           {editing ? '레시피 수정' : '레시피 추가'}
         </h2>
 
-        {!editing && (
-          <Field label="템플릿">
-            <div className="flex flex-wrap gap-1.5">
-              {Object.keys(RECIPE_TEMPLATES).map((key) => (
-                <Chip
-                  key={key}
-                  active={template === key}
-                  onClick={() => pickTemplate(key)}
-                  className={cn(
-                    'border px-3.5 py-2',
-                    template === key ? 'border-brand' : 'border-muted',
-                  )}
-                >
-                  {key}
-                </Chip>
+        <StepToggle step={step} onChange={setStep} />
+
+        {step === 'photo' && (
+          <div className="flex flex-col gap-4 animate-in duration-200 fade-in-0 slide-in-from-left-6 motion-reduce:animate-none">
+            <RecipePhotoField
+              currentUrl={currentPhoto}
+              value={photo}
+              onChange={setPhoto}
+              onCroppingChange={setCropping}
+            />
+            {!cropping &&
+              (hasPhoto ? (
+                <Button className="h-[54px]" onClick={() => setStep('recipe')}>
+                  다음
+                </Button>
+              ) : (
+                <Button variant="soft" className="h-[54px]" onClick={() => setStep('recipe')}>
+                  건너뛰기
+                </Button>
               ))}
-            </div>
-          </Field>
+          </div>
         )}
 
-        {canSaveRecipePhoto() && (
-          <RecipePhotoField currentUrl={currentPhoto} value={photo} onChange={setPhoto} />
-        )}
+        {step === 'recipe' && (
+          <div className="flex flex-col gap-4 animate-in duration-200 fade-in-0 slide-in-from-right-6 motion-reduce:animate-none">
+            {!editing && (
+              <Field label="템플릿">
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.keys(RECIPE_TEMPLATES).map((key) => (
+                    <Chip
+                      key={key}
+                      active={template === key}
+                      onClick={() => pickTemplate(key)}
+                      className={cn(
+                        'border px-3.5 py-2',
+                        template === key ? 'border-brand' : 'border-muted',
+                      )}
+                    >
+                      {key}
+                    </Chip>
+                  ))}
+                </div>
+              </Field>
+            )}
 
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="메뉴 이름"
-          aria-label="메뉴 이름"
-          className="h-[54px] px-[18px] text-base"
-        />
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="메뉴 이름"
+              aria-label="메뉴 이름"
+              className="h-[54px] px-[18px] text-base"
+            />
 
-        <Field label="카테고리">
-          <div className="flex flex-wrap gap-1.5">
-            {OWNER_CATEGORIES.map((c) => (
-              <Chip
-                key={c}
-                active={category === c}
-                onClick={() => setCategory(c)}
-                className={cn(
-                  'border px-3.5 py-2',
-                  category === c ? 'border-brand' : 'border-muted',
-                )}
+            <Field label="카테고리">
+              <div className="flex flex-wrap gap-1.5">
+                {OWNER_CATEGORIES.map((c) => (
+                  <Chip
+                    key={c}
+                    active={category === c}
+                    onClick={() => setCategory(c)}
+                    className={cn(
+                      'border px-3.5 py-2',
+                      category === c ? 'border-brand' : 'border-muted',
+                    )}
+                  >
+                    {c}
+                  </Chip>
+                ))}
+              </div>
+            </Field>
+
+            <div className="flex gap-2">
+              <div
+                className="flex flex-1 gap-1 rounded-full bg-muted p-1"
+                role="radiogroup"
+                aria-label="온도"
               >
-                {c}
-              </Chip>
-            ))}
-          </div>
-        </Field>
-
-        <div className="flex gap-2">
-          <div
-            className="flex flex-1 gap-1 rounded-full bg-muted p-1"
-            role="radiogroup"
-            aria-label="온도"
-          >
-            {TEMPS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                role="radio"
-                aria-checked={temp === t.value}
-                onClick={() => setTemp(t.value)}
-                className={cn(
-                  'h-10 flex-1 rounded-full text-[13px] font-bold',
-                  temp === t.value ? 'bg-brand text-white' : 'text-[#6B7068]',
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <Input
-            value={size}
-            onChange={(event) => setSize(event.target.value)}
-            aria-label="사이즈"
-            placeholder="16oz"
-            className="h-12 w-24 text-center"
-          />
-        </div>
-
-        <Field label="재료">
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 rounded-[18px] bg-white py-1.5 pr-1.5 pl-4"
-            >
-              <input
-                value={row.name}
-                onChange={(event) => setRow(i, { name: event.target.value })}
-                placeholder="재료"
-                aria-label={`재료 ${i + 1}`}
-                className="min-w-0 flex-1 border-none bg-transparent text-sm text-[#4F554D] placeholder:text-faint"
+                {TEMPS.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={temp === t.value}
+                    onClick={() => setTemp(t.value)}
+                    className={cn(
+                      'h-10 flex-1 rounded-full text-[13px] font-bold',
+                      temp === t.value ? 'bg-brand text-white' : 'text-[#6B7068]',
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <Input
+                value={size}
+                onChange={(event) => setSize(event.target.value)}
+                aria-label="사이즈"
+                placeholder="16oz"
+                className="h-12 w-24 text-center"
               />
-              <input
-                value={row.amount}
-                onChange={(event) => setRow(i, { amount: event.target.value })}
-                placeholder="양"
-                aria-label={`재료 ${i + 1} 양`}
-                className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-sm placeholder:text-faint"
-              />
-              <button
-                type="button"
-                aria-label={`재료 ${i + 1} 빼기`}
-                onClick={() => setRows((list) => list.filter((_, j) => j !== i))}
-                className="flex size-8 items-center justify-center rounded-full text-faint"
-              >
-                <X className="size-4" />
-              </button>
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => setRows((list) => [...list, { name: '', amount: '' }])}
-            className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068]"
-          >
-            <Plus className="size-4" />
-            재료 추가
-          </button>
-        </Field>
 
-        <Field label="만드는 순서 (한 줄에 하나씩)">
-          <Textarea
-            value={steps}
-            onChange={(event) => setSteps(event.target.value)}
-            placeholder={'얼음을 가득 담아요\n샷 2개를 올려요'}
-            aria-label="만드는 순서"
-            className="min-h-[96px]"
-          />
-        </Field>
+            <Field label="재료">
+              {rows.map((row, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 rounded-[18px] bg-white py-1.5 pr-1.5 pl-4"
+                >
+                  <input
+                    value={row.name}
+                    onChange={(event) => setRow(i, { name: event.target.value })}
+                    placeholder="재료"
+                    aria-label={`재료 ${i + 1}`}
+                    className="min-w-0 flex-1 border-none bg-transparent text-sm text-[#4F554D] placeholder:text-faint"
+                  />
+                  <input
+                    value={row.amount}
+                    onChange={(event) => setRow(i, { amount: event.target.value })}
+                    placeholder="양"
+                    aria-label={`재료 ${i + 1} 양`}
+                    className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-sm placeholder:text-faint"
+                  />
+                  <button
+                    type="button"
+                    aria-label={`재료 ${i + 1} 빼기`}
+                    onClick={() => setRows((list) => list.filter((_, j) => j !== i))}
+                    className="flex size-8 items-center justify-center rounded-full text-faint"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setRows((list) => [...list, { name: '', amount: '' }])}
+                className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068]"
+              >
+                <Plus className="size-4" />
+                재료 추가
+              </button>
+            </Field>
 
-        <Input
-          value={memo}
-          onChange={(event) => setMemo(event.target.value)}
-          placeholder="메모 (선택) 예) 딸기청은 매일 아침 확인"
-          aria-label="메모"
-        />
+            <Field label="만드는 순서 (한 줄에 하나씩)">
+              <Textarea
+                value={steps}
+                onChange={(event) => setSteps(event.target.value)}
+                placeholder={'얼음을 가득 담아요\n샷 2개를 올려요'}
+                aria-label="만드는 순서"
+                className="min-h-[96px]"
+              />
+            </Field>
 
-        <Button className="h-[54px]" disabled={!name.trim() || pending} onClick={save}>
-          저장
-        </Button>
+            <Input
+              value={memo}
+              onChange={(event) => setMemo(event.target.value)}
+              placeholder="메모 (선택) 예) 딸기청은 매일 아침 확인"
+              aria-label="메모"
+            />
+
+            <Button className="h-[54px]" disabled={!name.trim() || pending} onClick={save}>
+              저장
+            </Button>
+          </div>
+        )}
       </div>
     </BottomSheet>
+  )
+}
+
+/** 위쪽 단계 토글: 누르면 진한 칸이 옆으로 밀리며 단계가 바뀐다 */
+function StepToggle({ step, onChange }: { step: Step; onChange: (step: Step) => void }) {
+  return (
+    <div className="relative flex rounded-full bg-muted p-1" role="tablist" aria-label="작성 단계">
+      <span
+        aria-hidden
+        className={cn(
+          'absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-brand transition-transform duration-200 motion-reduce:transition-none',
+          step === 'recipe' && 'translate-x-full',
+        )}
+      />
+      {STEPS.map((s) => (
+        <button
+          key={s.value}
+          type="button"
+          role="tab"
+          aria-selected={step === s.value}
+          onClick={() => onChange(s.value)}
+          className={cn(
+            'relative h-10 flex-1 rounded-full text-sm font-bold transition-colors',
+            step === s.value ? 'text-white' : 'text-[#6B7068]',
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
   )
 }
 

@@ -21,14 +21,20 @@ import type { ManualInput, RecipeInput, RecipeScanDraft } from '@/pages/owner/ap
  * 사진 스캔도 'recipes'를 따른다 (사진은 저장하지 않고 초안만 받는다). 알바생은 이 훅을 쓰지 않는다 (보기만).
  */
 
-// 등록은 multipart: JSON 은 recipe · manual 칸에 문자열로 (사진 · 파일 칸은 BE 저장소가 정해지면)
-const postForm = <T>(path: string, field: string, input: unknown) => {
+// 등록은 multipart: JSON 은 recipe · manual 칸에 문자열로, 파일은 files 의 칸 이름으로
+const postForm = <T>(
+  path: string,
+  field: string,
+  input: unknown,
+  files: Record<string, File> = {},
+) => {
   const form = new FormData()
   form.append(field, JSON.stringify(input))
+  for (const [name, file] of Object.entries(files)) form.append(name, file)
   return apiFetch<T>(path, { method: 'POST', body: form })
 }
 
-// 사진은 BE 가 아직 저장하지 않아서(501) 진짜 API 에는 글만 보낸다
+// 메뉴 사진은 JSON 이 아니라 파일 칸(image)으로 보낸다. 레시피 사진(recipeImage)은 FE 에서 쓰지 않는다
 const withoutPhoto = (input: RecipeInput): Omit<RecipeInput, 'photo'> => {
   const rest = { ...input }
   delete rest.photo
@@ -37,22 +43,32 @@ const withoutPhoto = (input: RecipeInput): Omit<RecipeInput, 'photo'> => {
 
 const postRecipe = (storeId: string, input: RecipeInput) =>
   isRealApi('recipes')
-    ? postForm<{ recipeId: string }>(`/stores/${storeId}/recipes`, 'recipe', withoutPhoto(input))
-    : createRecipe(storeId, input)
-const patchRecipe = (storeId: string, recipeId: string, input: RecipeInput) =>
-  isRealApi('recipes')
-    ? http.patch<{ recipeId: string }>(
-        `/stores/${storeId}/recipes/${recipeId}`,
+    ? postForm<{ recipeId: string }>(
+        `/stores/${storeId}/recipes`,
+        'recipe',
         withoutPhoto(input),
+        input.photo ? { image: input.photo } : {},
       )
-    : updateRecipe(storeId, recipeId, input)
+    : createRecipe(storeId, input)
+
+// 수정: 글은 PATCH(JSON), 메뉴 사진은 따로 — 새 파일이면 PUT · null 이면 DELETE · undefined 면 그대로
+const patchRecipe = async (storeId: string, recipeId: string, input: RecipeInput) => {
+  if (!isRealApi('recipes')) return updateRecipe(storeId, recipeId, input)
+  const path = `/stores/${storeId}/recipes/${recipeId}`
+  const saved = await http.patch<{ recipeId: string }>(path, withoutPhoto(input))
+  if (input.photo) {
+    const form = new FormData()
+    form.append('image', input.photo)
+    await apiFetch(`${path}/images/menu`, { method: 'PUT', body: form })
+  } else if (input.photo === null) {
+    await http.delete<void>(`${path}/images/menu`)
+  }
+  return saved
+}
 const removeRecipe = (storeId: string, recipeId: string) =>
   isRealApi('recipes')
     ? http.delete<void>(`/stores/${storeId}/recipes/${recipeId}`)
     : deleteRecipe(storeId, recipeId)
-
-/** 사진을 저장할 수 있는지 (BE 사진 저장 전까지 가짜 서버만) */
-export const canSaveRecipePhoto = () => !isRealApi('recipes')
 
 const postManual = (storeId: string, input: ManualInput) =>
   isRealApi('manuals')
