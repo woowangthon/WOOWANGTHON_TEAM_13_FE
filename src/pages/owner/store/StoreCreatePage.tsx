@@ -3,17 +3,20 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
+import { ApiError } from '@/lib/apiClient'
 import { useCreateStore } from '@/pages/owner/api/stores'
+import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
+import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): 매장 이름 · 주소 · 직원 수 → 등록 완료
-// 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new)
+// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): ① 사업자 확인 → ② 매장 이름 · 주소 · 직원 수 → 등록 완료
+// 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
 
 // 사업장 규모는 5인 미만 · 이상 두 가지 (BE businessSize, 매장 상세와 같은 기준)
 const SIZES: { label: string; size: StoreSize }[] = [
@@ -29,11 +32,13 @@ export default function StoreCreatePage() {
   const [address, setAddress] = useState('')
   const [sizeLabel, setSizeLabel] = useState(SIZES[0].label)
   const [created, setCreated] = useState<OwnerStore | null>(null)
+  const [step, setStep] = useState<'biz' | 'store'>('biz')
+  const [verificationId, setVerificationId] = useState<number | null>(null)
   const size = SIZES.find((s) => s.label === sizeLabel)?.size ?? 'under5'
 
   const submit = () =>
     create.mutate(
-      { name: name.trim(), address: address.trim(), size },
+      { name: name.trim(), address: address.trim(), size, businessVerificationId: verificationId! },
       {
         onSuccess: (store) => {
           setCurrentStoreId(store.storeId)
@@ -50,22 +55,41 @@ export default function StoreCreatePage() {
           }
           setCreated(store)
         },
-        onError: (error) => toastApiError(error, '등록하지 못했어요. 다시 시도해 주세요', submit),
+        onError: (error) => {
+          // 사업자 확인 결과를 못 쓰면(400) 확인부터 다시
+          if (error instanceof ApiError && error.status === 400) {
+            setVerificationId(null)
+            setStep('biz')
+            return toast.error('사업자 확인을 다시 해 주세요')
+          }
+          toastApiError(error, '등록하지 못했어요. 다시 시도해 주세요', submit)
+        },
       },
     )
 
   if (created)
     return <CreateDone store={created} onStart={() => navigate('/owner', { replace: true })} />
 
+  if (step === 'biz')
+    return (
+      <AuthFrame className="gap-[22px]">
+        <OnboardingHeader step={1} onBack={() => navigate('/role')} />
+        <StepTitle step={1} title="사업자 확인" />
+        <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
+        <Button
+          className="mt-auto h-14 text-base"
+          disabled={verificationId === null}
+          onClick={() => setStep('store')}
+        >
+          다음
+        </Button>
+      </AuthFrame>
+    )
+
   return (
     <AuthFrame className="gap-[22px]">
-      <OnboardingHeader step={1} onBack={() => navigate('/role')} />
-      <div className="flex flex-col gap-2 px-1 pt-1.5">
-        <span className="text-[13px] font-medium text-muted-foreground">사장님</span>
-        <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">
-          매장 등록
-        </h1>
-      </div>
+      <OnboardingHeader step={1} onBack={() => setStep('biz')} />
+      <StepTitle step={2} title="매장 등록" />
 
       <div className="flex flex-col gap-2.5">
         <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
@@ -123,6 +147,16 @@ export default function StoreCreatePage() {
         시작하기
       </Button>
     </AuthFrame>
+  )
+}
+
+/** 제목 위 "사장님 · 1 / 2" (위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라 단계는 여기서 보여 준다) */
+function StepTitle({ step, title }: { step: 1 | 2; title: string }) {
+  return (
+    <div className="flex flex-col gap-2 px-1 pt-1.5">
+      <span className="text-[13px] font-medium text-muted-foreground">사장님 · {step} / 2</span>
+      <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">{title}</h1>
+    </div>
   )
 }
 

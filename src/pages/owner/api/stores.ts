@@ -11,6 +11,8 @@ import {
 import { http, isRealApi } from '@/lib/api/source'
 import { useAuthStore, type Me } from '@/lib/authStore'
 import type {
+  BizVerification,
+  BizVerifyInput,
   BusinessSize,
   NewStore,
   OwnerStore,
@@ -22,7 +24,7 @@ import type {
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
  * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — lib/api/source.
- * 프로필 · 사업자 확인은 아직 가짜 서버만 (BE 미구현).
+ * 사업자 확인도 'stores'를 따른다 (POST /business-verifications, 국세청 진위확인 → 매장 등록에 verificationId).
  */
 
 /** 사업장 규모: 화면 under5 · over5 ↔ BE UNDER_FIVE · FIVE_OR_MORE */
@@ -61,6 +63,7 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
     name: input.name,
     address: input.address,
     businessSize: toBusinessSize(input.size),
+    businessVerificationId: input.businessVerificationId,
   })
   return toOwnerStore(store)
 }
@@ -152,7 +155,17 @@ export function useDeleteStore() {
   })
 }
 
-/** 사업자등록번호 확인 (P2: 국세청 상태조회) */
+// 사업자 확인: 번호 · 대표자 이름 · 개업일이 국세청과 맞으면 VERIFIED (아니면 INVALID, 에러 아님)
+const postBizVerification = (input: BizVerifyInput): Promise<BizVerification> =>
+  isRealApi('stores')
+    ? http.post<BizVerification>('/business-verifications', {
+        businessRegistrationNumber: input.bizNo,
+        ownerName: input.ownerName.trim(),
+        businessStartDate: input.startDate,
+      })
+    : verifyBizNo(input)
+
+/** 사업자 확인 (매장 등록 · 매장 추가 전에) */
 export function useVerifyBizNo() {
-  return useMutation({ mutationFn: verifyBizNo })
+  return useMutation({ mutationFn: postBizVerification })
 }

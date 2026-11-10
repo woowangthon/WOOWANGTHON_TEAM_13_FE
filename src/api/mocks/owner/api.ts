@@ -27,6 +27,8 @@ import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
 import type {
   AvailabilityStatus,
+  BizVerification,
+  BizVerifyInput,
   ManualInput,
   Member,
   MemberPay,
@@ -139,12 +141,13 @@ export async function deleteStore(storeId: string): Promise<void> {
 }
 
 /** POST /business-numbers/verify (제안, P2 국세청 상태조회) — 시연: 10자리면 정상 */
-export async function verifyBizNo(bizNo: string): Promise<{ valid: true }> {
+export async function verifyBizNo(input: BizVerifyInput): Promise<BizVerification> {
   await wait(1200)
-  if (bizNo.replace(/\D/g, '').length !== 10) {
+  if (input.bizNo.replace(/\D/g, '').length !== 10) {
     fail(422, 'BIZ_NO_INVALID', '사업자등록번호 10자리를 입력해 주세요')
   }
-  return { valid: true }
+  // 시연: 10자리면 모두 확인된 사업자로 본다
+  return { verificationId: Date.now(), status: 'VERIFIED', message: '' }
 }
 
 export async function getProfile(): Promise<OwnerProfile> {

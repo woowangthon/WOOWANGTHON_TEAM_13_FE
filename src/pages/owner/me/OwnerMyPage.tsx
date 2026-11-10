@@ -11,8 +11,8 @@ import {
   useDeleteStore,
   useOwnerProfile,
   useUpdateOwnerProfile,
-  useVerifyBizNo,
 } from '@/pages/owner/api/stores'
+import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
@@ -248,43 +248,30 @@ function StoreRow({
   )
 }
 
-/** 매장 추가: 이름 · 주소 + 사업자등록번호 확인(P2) → 추가 */
+/** 매장 추가: 이름 · 주소 + 사업자 확인(국세청 진위확인) → 추가 */
 function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
-  const [bizNo, setBizNo] = useState('')
-  const [verified, setVerified] = useState(false)
-  const [bizError, setBizError] = useState('')
-  const verify = useVerifyBizNo()
+  const [verificationId, setVerificationId] = useState<number | null>(null)
+  /** 추가한 뒤 사업자 칸을 비우려고 바꾸는 키 */
+  const [formKey, setFormKey] = useState(0)
   const create = useCreateStore()
-
-  const formatBizNo = (value: string) => {
-    const d = value.replace(/\D/g, '').slice(0, 10)
-    if (d.length > 5) return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`
-    if (d.length > 3) return `${d.slice(0, 3)}-${d.slice(3)}`
-    return d
-  }
-
-  const check = () => {
-    if (bizNo.replace(/\D/g, '').length !== 10) {
-      return setBizError('사업자등록번호 10자리를 입력해 주세요')
-    }
-    verify.mutate(bizNo, {
-      onSuccess: () => setVerified(true),
-      onError: (error) => toastApiError(error, '확인하지 못했어요. 다시 시도해 주세요', check),
-    })
-  }
 
   const add = () =>
     create.mutate(
-      { name: name.trim(), address: address.trim(), size: 'under5', bizNo },
+      {
+        name: name.trim(),
+        address: address.trim(),
+        size: 'under5',
+        businessVerificationId: verificationId!,
+      },
       {
         onSuccess: (store) => {
           toast(`${store.name} 매장을 추가했어요`)
           setName('')
           setAddress('')
-          setBizNo('')
-          setVerified(false)
+          setVerificationId(null)
+          setFormKey((k) => k + 1)
           onAdded(store.storeId)
         },
         onError: (error) => toastApiError(error, '추가하지 못했어요. 다시 시도해 주세요', add),
@@ -307,37 +294,14 @@ function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
         placeholder="매장 주소"
         aria-label="새 매장 주소"
       />
-      <div className="flex gap-2">
-        <Input
-          variant="card"
-          inputMode="numeric"
-          value={bizNo}
-          onChange={(event) => {
-            setBizNo(formatBizNo(event.target.value))
-            setVerified(false)
-            setBizError('')
-          }}
-          placeholder="사업자등록번호 000-00-00000"
-          aria-label="사업자등록번호"
-          className="flex-1"
-        />
-        <Button
-          variant={verified ? 'soft' : 'ink'}
-          className={cn('text-sm', verified && 'bg-accent text-brand')}
-          disabled={verify.isPending || verified}
-          onClick={check}
-        >
-          {verify.isPending ? '확인 중…' : verified ? '확인됨' : '확인'}
-        </Button>
-      </div>
-      {bizError && (
-        <span role="alert" className="px-1 text-[13px] text-destructive-foreground">
-          {bizError}
-        </span>
-      )}
+      <BizVerifyForm
+        key={formKey}
+        verified={verificationId !== null}
+        onVerified={setVerificationId}
+      />
       <Button
         className="text-sm"
-        disabled={!name.trim() || !address.trim() || !verified || create.isPending}
+        disabled={!name.trim() || !address.trim() || verificationId === null || create.isPending}
         onClick={add}
       >
         매장 추가
