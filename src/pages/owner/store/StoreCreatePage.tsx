@@ -1,6 +1,6 @@
 import { ArrowRight, BookOpen, Check, Coffee, UserPlus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
@@ -23,7 +23,7 @@ import { cn } from '@/ui/utils'
 //   ① 사업자 확인 → ② 매장 이름 · 주소 · 규모 → ③ 근무 타임(시간 · 인원) · 휴무 → ④ 사장님 근무(건너뛰기)
 //   → [④ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ⑤ 매장 사진(건너뛰기) → 등록 완료
 // 매장 사진은 매장이 생긴 뒤에만 올릴 수 있어서(BE) 맨 끝이다
-// 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
+// 역할 선택에서 [사장님]을 고르거나 마이페이지 [매장 추가]로 여기 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
 
 // 사업장 규모는 5인 미만 · 이상 두 가지 (BE businessSize, 매장 상세와 같은 기준)
 const SIZES: { label: string; size: StoreSize }[] = [
@@ -41,6 +41,8 @@ type OwnerShift = { templateName: string; weekday: number }
 
 export default function StoreCreatePage() {
   const navigate = useNavigate()
+  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로
+  const from = (useLocation().state as { from?: string } | null)?.from ?? '/role'
   const create = useCreateStore()
   const saveShifts = useSaveOwnerShifts()
   const savePhoto = useSaveStorePhoto()
@@ -159,7 +161,7 @@ export default function StoreCreatePage() {
 
   if (step === 'biz')
     return (
-      <StepFrame step={1} title="사업자 확인" onBack={() => navigate('/role')}>
+      <StepFrame step={1} title="사업자 확인" onBack={() => navigate(from)}>
         <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
         <Button
           className="mt-auto h-14 text-base"
