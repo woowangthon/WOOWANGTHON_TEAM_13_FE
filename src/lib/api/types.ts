@@ -294,6 +294,36 @@ export interface CalendarShift {
   substituted: boolean
 }
 
+/** 대타 요청 상태: 대기 · 수락됨 · 거절됨 · 취소됨 */
+export type SubstituteStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'
+
+/** 대타 요청 (GET /stores/{storeId}/substitute-requests?box=received|sent) */
+export interface SubstituteRequest {
+  requestId: string
+  status: SubstituteStatus
+  /** 바꿀 근무 날짜 */
+  date: string
+  assignmentId: string
+  shiftName: string
+  start: string
+  end: string
+  /** 요청한 사람 (원래 근무자) */
+  requester: ScheduleWorker
+  /** 요청받은 사람 (대신 일할 사람) */
+  target: ScheduleWorker
+  /** 받은 사람이 읽었는지 (받은 목록을 불러오면 읽음 처리) */
+  isRead: boolean
+  createdAt: string
+  respondedAt: string | null
+}
+
+/** POST /stores/{storeId}/substitute-requests 요청 */
+export interface NewSubstituteRequest {
+  assignmentId: string
+  date: string
+  targetUserId: string
+}
+
 /** GET /stores/{storeId}/schedule-calendar?startDate=&endDate= (최대 63일, 구성원 누구나) */
 export interface ScheduleCalendar {
   startDate: string

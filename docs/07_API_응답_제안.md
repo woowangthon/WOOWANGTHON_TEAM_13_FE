@@ -826,6 +826,29 @@ FE (`src/lib/api/schedule.ts`):
 - `useScheduleCalendar(storeId, start, end)`: 근무표 탭 월 달력 (그 달을 덮는 6주, 최대 42일)
 - `useMySchedule(storeId)`: 이번 주(월~일) 달력에서 **`assignee.userId === GET /users/me 의 userId`** 만 골라 홈 오늘 근무 · 이번 주 · 매장 목록 한 줄 · 급여 화면에 써요. 함께 일하는 사람 = 같은 날 시간이 겹치는 다른 사람
 
+### 7-6. 대타 ✅ BE #31 (11/10 회의: 날짜 선택 → 사람 지정 → 그 사람이 수락하면 이름 변경)
+구성원 누구나 써요. FE 스위치는 `schedule`을 같이 써요 (`src/lib/api/substitute.ts`).
+
+| API | 요청 · 응답 |
+| --- | --- |
+| `GET /stores/{storeId}/schedule-workers` | `{ workers: [{ userId, memberId, name, role }] }` — 대타로 고를 사람 (나 · 사장님 포함, FE가 나를 빼요) |
+| `POST /stores/{storeId}/substitute-requests` | `{ assignmentId, date, targetUserId }` → `201` 요청 1개 |
+| `GET /stores/{storeId}/substitute-requests?box=received\|sent&status=` | `{ requests: [{ requestId, status, date, assignmentId, shiftName, start, end, requester, target, isRead, createdAt, respondedAt }] }`. `status`: `PENDING` · `ACCEPTED` · `REJECTED` · `CANCELLED`. **받은 목록을 부르면 읽음 처리** |
+| `POST …/substitute-requests/{requestId}/accept` · `/reject` | 요청 1개. 수락하면 그날 그 근무가 받은 사람 이름으로 바뀌어요 (`schedule-calendar`의 `substituted: true`) |
+
+에러 (`{code, message}`) → FE 토스트
+| code | FE 문장 |
+| --- | --- |
+| `PAST_SHIFT` (422) | 이미 지난 근무라 대타를 요청할 수 없어요 |
+| `NOT_ASSIGNEE` (403) | 내 근무에만 대타를 요청할 수 있어요 |
+| `SUBSTITUTE_REQUEST_CONFLICT` (409) | 이미 진행 중이거나 처리된 대타 요청이에요 |
+| `SUBSTITUTE_TIME_CONFLICT` (409) | 그 시간에 이미 근무가 있어서 맡을 수 없어요 |
+| `INVALID_SUBSTITUTE` (422) | 이 사람에게는 대타를 맡길 수 없어요 |
+| `NOT_SUBSTITUTE_TARGET` (403) | 나에게 온 요청만 수락하거나 거절할 수 있어요 |
+| `SHIFT_NOT_FOUND` · `SUBSTITUTE_REQUEST_NOT_FOUND` (404) | 그날 근무를 · 대타 요청을 찾지 못했어요 |
+
+FE 화면: 근무표 날짜 목록의 내 근무(오늘 이후) [대타 요청] → 시트에서 사람 고르기 / 진행 중이면 "○○님에게 대타 요청 중" · 근무표 맨 위 받은 요청 카드 [거절] [수락] · 근무표 아래 보낸 요청 상태 · 홈 한 줄 배너. 요청 · 응답 뒤 근무 달력 · 내 근무 · 대타 목록 · 예상 급여를 다시 불러요. 대타 알림은 연서님 알림 API 후(챕터 D)
+
 > ⛔ 아래 7-1(`/schedules/me`) · 7-2 ~ 7-5(`/availabilities`)는 **BE #31에서 없어졌어요**. 기록용으로 남겨 둬요. FE는 진짜 모드에서 근무 가능 시간 화면으로 들어가는 곳을 숨겨요 (`availabilityEnabled`)
 
 ### 7-1. ~~`GET /stores/{storeId}/schedules/me`~~ (내 스케줄 — BE #31에서 없어짐)
