@@ -20,7 +20,7 @@ import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
-// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 내 근무는 진한 매장 색, 대타는 점선 테두리.
+// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로. 내 근무는 진한 매장 색, 대타는 점선 테두리.
 // 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중"). ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -39,9 +39,11 @@ function monthGrid(year: number, month: number) {
 }
 
 const hourText = (time: string) => String(Number(time.slice(0, 2)))
-/** 칸이 좁아서 사장님은 "사장님"으로만 (아래 목록에는 이름 그대로) */
+/** 칸이 좁아서(375px 폭에서 한 칸 47px) 사장님은 "사장"으로만 (아래 목록에는 이름 그대로) */
 const blockName = (shift: CalendarShift) =>
-  shift.assignee.role === 'owner' ? '사장님' : shift.assignee.name
+  shift.assignee.role === 'owner' ? '사장' : shift.assignee.name.trim()
+/** 4글자 이상 이름은 한 단계 작게 — 4글자까지는 칸에 다 보이고, 더 길면 … */
+const LONG_NAME = 4
 
 export function ScheduleMonth() {
   const { store } = useCurrentStore()
@@ -177,19 +179,32 @@ export function ScheduleMonth() {
                   >
                     {day.getDate()}
                   </span>
-                  {shifts.slice(0, MAX_BLOCKS).map((shift) => (
-                    <span
-                      key={`${shift.assignmentId}|${shift.date}`}
-                      className={cn(
-                        'truncate rounded-[5px] px-[3px] py-px text-[10px] leading-[1.35] font-semibold tabular-nums',
-                        isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
-                        shift.substituted &&
-                          'outline-1 -outline-offset-1 outline-current outline-dashed',
-                      )}
-                    >
-                      {hourText(shift.start)} {blockName(shift)}
-                    </span>
-                  ))}
+                  {shifts.slice(0, MAX_BLOCKS).map((shift) => {
+                    const name = blockName(shift)
+                    // 시간 · 이름이 한 줄에 들어가면 한 줄("15 지은"), 안 들어가면 이름이 아랫줄로 ("15" / "김민수")
+                    return (
+                      <span
+                        key={`${shift.assignmentId}|${shift.date}`}
+                        className={cn(
+                          'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
+                          isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
+                          shift.substituted &&
+                            'outline-1 -outline-offset-1 outline-current outline-dashed',
+                        )}
+                      >
+                        <span className="shrink-0 tabular-nums">{hourText(shift.start)}</span>
+                        <span
+                          data-name
+                          className={cn(
+                            'max-w-full min-w-0 truncate',
+                            name.length >= LONG_NAME && 'text-[9px] tracking-[-0.02em]',
+                          )}
+                        >
+                          {name}
+                        </span>
+                      </span>
+                    )
+                  })}
                   {shifts.length > MAX_BLOCKS && (
                     <span className="px-[3px] text-[10px] font-semibold text-muted-foreground">
                       +{shifts.length - MAX_BLOCKS}
