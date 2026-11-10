@@ -32,6 +32,32 @@ export interface NewStore {
   bizNo?: string | null
   /** 사업자 확인(VERIFIED) 결과 번호 — POST /business-verifications */
   businessVerificationId: number
+  /** 근무 타임 (오픈 · 미들 · 마감 …) — 매장과 함께 만든다 */
+  shiftTemplates: ShiftTemplateInput[]
+  /** 쉬는 요일 0=월 ~ 6=일 (BE 칸 요청 중) */
+  closedWeekdays: number[]
+  /** 공휴일에 쉬는지 (BE 칸 요청 중) */
+  closedOnHolidays: boolean
+}
+
+/** 근무 타임 (고정 스케줄 템플릿, /stores/{storeId}/shift-templates). 시간은 HH:MM */
+export interface ShiftTemplateInput {
+  name: string
+  start: string
+  end: string
+  /** 필요 인원 (BE 칸 요청 중) */
+  headcount: number
+}
+
+export interface ShiftTemplate extends ShiftTemplateInput {
+  templateId: string
+  sortOrder: number
+}
+
+/** 고정 스케줄 한 칸: 요일(0=월 ~ 6=일) × 근무 타임 */
+export interface WeekShift {
+  templateId: string
+  weekday: number
 }
 
 /** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */
@@ -51,7 +77,7 @@ export interface BizVerification {
 }
 
 /** 매장 수정 요청 (PATCH /stores/{storeId}) — 이름 · 급여일 · 사업장 규모 */
-export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size'>>
+export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>
 
 /** BE 사업장 규모 (화면 StoreSize: under5 · over5) */
 export type BusinessSize = 'UNDER_FIVE' | 'FIVE_OR_MORE'

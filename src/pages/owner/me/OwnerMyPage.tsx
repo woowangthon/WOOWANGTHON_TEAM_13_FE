@@ -14,6 +14,7 @@ import {
 } from '@/pages/owner/api/stores'
 import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
+import { DEFAULT_SHIFT_TEMPLATES } from '@/pages/owner/store/shifts'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
@@ -264,6 +265,10 @@ function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
         address: address.trim(),
         size: 'under5',
         businessVerificationId: verificationId!,
+        // 근무 타임은 기본(오픈 · 미들 · 마감)으로 만들고 매장 상세에서 고친다
+        shiftTemplates: DEFAULT_SHIFT_TEMPLATES,
+        closedWeekdays: [],
+        closedOnHolidays: false,
       },
       {
         onSuccess: (store) => {

@@ -1,0 +1,178 @@
+import { Check, Minus, Plus, X } from 'lucide-react'
+import type { ShiftTemplateInput } from '@/pages/owner/api/types'
+import { MAX_HEADCOUNT, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
+import { cn } from '@/ui/utils'
+
+// 매장 등록 ③ 근무 타임 · 휴무: 타임마다 이름 · 시작 ~ 끝 · 필요 인원, [+ 타임 추가] · 빼기
+// 아래에 쉬는 요일(여러 개) · 공휴일에 쉬는지 체크
+
+/** 화면에서 줄을 구분하려고 붙이는 키 (이름은 고칠 수 있어서) */
+export type ShiftRow = ShiftTemplateInput & { key: string }
+
+export function ShiftTemplateStep({
+  rows,
+  onRowsChange,
+  closedWeekdays,
+  onClosedWeekdaysChange,
+  closedOnHolidays,
+  onClosedOnHolidaysChange,
+  error,
+}: {
+  rows: ShiftRow[]
+  onRowsChange: (rows: ShiftRow[]) => void
+  closedWeekdays: number[]
+  onClosedWeekdaysChange: (days: number[]) => void
+  closedOnHolidays: boolean
+  onClosedOnHolidaysChange: (closed: boolean) => void
+  /** 저장할 수 없는 까닭 (shiftTemplatesError) */
+  error: string | null
+}) {
+  const setRow = (key: string, patch: Partial<ShiftRow>) =>
+    onRowsChange(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)))
+
+  const addRow = () =>
+    onRowsChange([
+      ...rows,
+      { key: `row_${Date.now()}`, name: '', start: '09:00', end: '18:00', headcount: 1 },
+    ])
+
+  const toggleDay = (day: number) =>
+    onClosedWeekdaysChange(
+      closedWeekdays.includes(day)
+        ? closedWeekdays.filter((d) => d !== day)
+        : [...closedWeekdays, day].sort(),
+    )
+
+  return (
+    <div className="flex flex-col gap-[18px]">
+      <section className="flex flex-col gap-2.5">
+        <span className="px-1 text-[13px] font-bold text-muted-foreground">근무 타임</span>
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft"
+          >
+            <div className="flex items-center gap-2">
+              <input
+                value={row.name}
+                onChange={(event) => setRow(row.key, { name: event.target.value })}
+                placeholder="타임 이름 (예: 주말 오후)"
+                aria-label="타임 이름"
+                maxLength={50}
+                className="min-w-0 flex-1 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+              />
+              <button
+                type="button"
+                aria-label={`${row.name || '타임'} 빼기`}
+                disabled={rows.length <= 1}
+                onClick={() => onRowsChange(rows.filter((r) => r.key !== row.key))}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-faint disabled:opacity-30"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-[15px] font-semibold">
+                <input
+                  type="time"
+                  step={600}
+                  value={row.start}
+                  onChange={(event) => setRow(row.key, { start: event.target.value })}
+                  aria-label={`${row.name || '타임'} 시작`}
+                  className="h-10 rounded-xl border-none bg-background px-2 text-[15px]"
+                />
+                ~
+                <input
+                  type="time"
+                  step={600}
+                  value={row.end}
+                  onChange={(event) => setRow(row.key, { end: event.target.value })}
+                  aria-label={`${row.name || '타임'} 끝`}
+                  className="h-10 rounded-xl border-none bg-background px-2 text-[15px]"
+                />
+              </span>
+              <span className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="인원 줄이기"
+                  disabled={row.headcount <= 1}
+                  onClick={() => setRow(row.key, { headcount: row.headcount - 1 })}
+                  className="flex size-8 items-center justify-center rounded-full bg-background disabled:opacity-40"
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-9 text-center text-sm font-bold" aria-live="polite">
+                  {row.headcount}명
+                </span>
+                <button
+                  type="button"
+                  aria-label="인원 늘리기"
+                  disabled={row.headcount >= MAX_HEADCOUNT}
+                  onClick={() => setRow(row.key, { headcount: row.headcount + 1 })}
+                  className="flex size-8 items-center justify-center rounded-full bg-background disabled:opacity-40"
+                >
+                  <Plus className="size-4" />
+                </button>
+              </span>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addRow}
+          className="flex h-12 items-center justify-center gap-1 rounded-[20px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068]"
+        >
+          <Plus className="size-4" />
+          타임 추가
+        </button>
+        {error && (
+          <span role="alert" className="px-2 text-[13px] text-destructive-foreground">
+            {error}
+          </span>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <span className="px-1 text-[13px] font-bold text-muted-foreground">쉬는 요일</span>
+        <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="쉬는 요일">
+          {WEEKDAY_LABELS.map((day, i) => {
+            const on = closedWeekdays.includes(i)
+            return (
+              <button
+                key={day}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                aria-label={`${day}요일`}
+                onClick={() => toggleDay(i)}
+                className={cn(
+                  'h-11 rounded-[14px] text-sm font-bold',
+                  on ? 'bg-ink text-white' : 'bg-card text-foreground',
+                )}
+              >
+                {day}
+              </button>
+            )
+          })}
+        </div>
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={closedOnHolidays}
+          onClick={() => onClosedOnHolidaysChange(!closedOnHolidays)}
+          className="flex items-center gap-2.5 px-1 py-1 text-left text-[15px] font-semibold"
+        >
+          <span
+            className={cn(
+              'flex size-6 shrink-0 items-center justify-center rounded-lg border-[1.5px]',
+              closedOnHolidays ? 'border-brand bg-brand text-white' : 'border-line bg-white',
+            )}
+          >
+            {closedOnHolidays && <Check className="size-4" />}
+          </span>
+          공휴일에는 쉬어요
+        </button>
+      </section>
+    </div>
+  )
+}
