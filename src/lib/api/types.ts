@@ -267,6 +267,55 @@ export interface AlreadyJoinedDetail {
   storeName: string
 }
 
+// ── 알림 (docs/07 10, BE feature_notifications) ──
+
+/** 알바: SUBSTITUTE_REQUESTED · SUBSTITUTE_ACCEPTED · OWNER_ANSWERED / 사장님: HANDOVER_CREATED · OWNER_QUESTION_ASKED */
+export type NotificationType =
+  | 'SUBSTITUTE_REQUESTED'
+  | 'SUBSTITUTE_ACCEPTED'
+  | 'OWNER_ANSWERED'
+  | 'HANDOVER_CREATED'
+  | 'OWNER_QUESTION_ASKED'
+
+export interface AppNotification {
+  notificationId: string
+  /** 모르는 종류가 와도 깨지지 않게 string 도 받는다 */
+  type: NotificationType | (string & {})
+  title: string
+  body: string
+  createdAt: string
+  isRead: boolean
+  /** 누르면 갈 곳: substitute_request · assistant_chat · handover · owner_question */
+  target: { kind: string; id: string }
+}
+
+/** 출근 전 인수인계 배너 항목 (체크 안 된 것) */
+export interface ShiftBannerItem {
+  noteId: string
+  itemId: string
+  tag: HandoverTag
+  text: string
+  authorName: string
+  workDate: string
+}
+
+/** 출근 30분 전 ~ 근무 끝까지 오는 배너 */
+export interface ShiftBanner {
+  workDate: string
+  startTime: string
+  endTime: string
+  startsAt: string
+  uncheckedCount: number
+  items: ShiftBannerItem[]
+}
+
+/** GET /stores/{storeId}/notifications — 최근 14일, 내 역할에 맞는 것만 */
+export interface NotificationFeed {
+  banner: ShiftBanner | null
+  notifications: AppNotification[]
+  unreadCount: number
+}
+
 // ── 근무 (docs/07 7, P1) ──
 
 /** 근무하는 사람 (알바생 · 사장님). 퇴사한 사람은 memberId null · name "퇴사한 직원" */
