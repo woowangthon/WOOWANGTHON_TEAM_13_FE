@@ -267,7 +267,118 @@ export interface AlreadyJoinedDetail {
   storeName: string
 }
 
+// ── 알림 (docs/07 10, BE feature_notifications) ──
+
+/** 알바: SUBSTITUTE_REQUESTED · SUBSTITUTE_ACCEPTED · OWNER_ANSWERED / 사장님: HANDOVER_CREATED · OWNER_QUESTION_ASKED */
+export type NotificationType =
+  | 'SUBSTITUTE_REQUESTED'
+  | 'SUBSTITUTE_ACCEPTED'
+  | 'OWNER_ANSWERED'
+  | 'HANDOVER_CREATED'
+  | 'OWNER_QUESTION_ASKED'
+
+export interface AppNotification {
+  notificationId: string
+  /** 모르는 종류가 와도 깨지지 않게 string 도 받는다 */
+  type: NotificationType | (string & {})
+  title: string
+  body: string
+  createdAt: string
+  isRead: boolean
+  /** 누르면 갈 곳: substitute_request · assistant_chat · handover · owner_question */
+  target: { kind: string; id: string }
+}
+
+/** 출근 전 인수인계 배너 항목 (체크 안 된 것) */
+export interface ShiftBannerItem {
+  noteId: string
+  itemId: string
+  tag: HandoverTag
+  text: string
+  authorName: string
+  workDate: string
+}
+
+/** 출근 30분 전 ~ 근무 끝까지 오는 배너 */
+export interface ShiftBanner {
+  workDate: string
+  startTime: string
+  endTime: string
+  startsAt: string
+  uncheckedCount: number
+  items: ShiftBannerItem[]
+}
+
+/** GET /stores/{storeId}/notifications — 최근 14일, 내 역할에 맞는 것만 */
+export interface NotificationFeed {
+  banner: ShiftBanner | null
+  notifications: AppNotification[]
+  unreadCount: number
+}
+
 // ── 근무 (docs/07 7, P1) ──
+
+/** 근무하는 사람 (알바생 · 사장님). 퇴사한 사람은 memberId null · name "퇴사한 직원" */
+export interface ScheduleWorker {
+  userId: string
+  memberId: string | null
+  name: string
+  role: 'owner' | 'staff'
+}
+
+/** 공유 근무 달력의 근무 한 칸 (그날 · 그 시간 · 그 사람) */
+export interface CalendarShift {
+  /** 고정 근무 배정 ID (요일마다 반복). 날짜와 함께 써야 한 칸이 정해진다 */
+  assignmentId: string
+  templateId: string
+  date: string
+  /** 근무 이름 (오픈 · 마감 …) */
+  name: string
+  start: string
+  end: string
+  /** 역할 메모 (없으면 "") */
+  role: string
+  assignee: ScheduleWorker
+  /** 대타로 바뀐 칸 */
+  substituted: boolean
+}
+
+/** 대타 요청 상태: 대기 · 수락됨 · 거절됨 · 취소됨 */
+export type SubstituteStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'
+
+/** 대타 요청 (GET /stores/{storeId}/substitute-requests?box=received|sent) */
+export interface SubstituteRequest {
+  requestId: string
+  status: SubstituteStatus
+  /** 바꿀 근무 날짜 */
+  date: string
+  assignmentId: string
+  shiftName: string
+  start: string
+  end: string
+  /** 요청한 사람 (원래 근무자) */
+  requester: ScheduleWorker
+  /** 요청받은 사람 (대신 일할 사람) */
+  target: ScheduleWorker
+  /** 받은 사람이 읽었는지 (받은 목록을 불러오면 읽음 처리) */
+  isRead: boolean
+  createdAt: string
+  respondedAt: string | null
+}
+
+/** POST /stores/{storeId}/substitute-requests 요청 */
+export interface NewSubstituteRequest {
+  assignmentId: string
+  date: string
+  targetUserId: string
+}
+
+/** GET /stores/{storeId}/schedule-calendar?startDate=&endDate= (최대 63일, 구성원 누구나) */
+export interface ScheduleCalendar {
+  startDate: string
+  endDate: string
+  shifts: CalendarShift[]
+}
 
 export interface Shift {
   shiftId: string

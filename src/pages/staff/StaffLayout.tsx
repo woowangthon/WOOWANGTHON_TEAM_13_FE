@@ -1,6 +1,7 @@
-import { CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
+import { Bell, CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { useNotifications } from '@/lib/api/notifications'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
@@ -35,6 +36,8 @@ export default function StaffLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const StoreIcon = STORE_ICON[store.icon]
+  // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
+  const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -64,13 +67,27 @@ export default function StaffLayout() {
           {store.name}
           <ChevronDown className="size-[18px] text-muted-foreground" />
         </button>
-        <Link
-          to="/staff/me"
-          aria-label="마이페이지"
-          className="flex size-[42px] items-center justify-center rounded-full bg-brand text-base font-extrabold text-background"
-        >
-          {profileName.slice(0, 1)}
-        </Link>
+        <span className="flex items-center gap-2">
+          <Link
+            to="/staff/notifications"
+            aria-label={unread > 0 ? `알림 · 안 읽은 알림 ${unread}개` : '알림'}
+            className="relative flex size-[42px] items-center justify-center rounded-full bg-card text-foreground"
+          >
+            <Bell className="size-5" />
+            {unread > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-white tabular-nums">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </Link>
+          <Link
+            to="/staff/me"
+            aria-label="마이페이지"
+            className="flex size-[42px] items-center justify-center rounded-full bg-brand text-base font-extrabold text-background"
+          >
+            {profileName.slice(0, 1)}
+          </Link>
+        </span>
       </header>
 
       {/* 매장 정보를 받기 전에는 화면 대신 Spinner (매장 색 · 데이터가 섞여 보이지 않게) */}

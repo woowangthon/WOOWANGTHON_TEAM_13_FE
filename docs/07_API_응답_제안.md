@@ -62,6 +62,7 @@ FE가 지금 쓰는 **가짜 데이터(`src/api/mocks/staff/`) 모양을 기준�
 | 404 | `NOT_FOUND` | 레시피 · 매뉴얼 등이 없음 (삭제됨) |
 | 422 | `VALIDATION_ERROR` | 입력값 오류. `detail`에 필드별 이유 |
 | 500 | `INTERNAL_ERROR` | 서버 오류 → FE는 "다시 시도" 토스트 |
+| 503 | `DATABASE_BUSY` | DB 연결이 꽉 참 (11/11 연서). FE는 **조회만** 1초 · 2초 · 4초 간격으로 3번 다시 시도하고, 끝내 실패하면 "지금 사용하는 사람이 많아요. 잠시 뒤 다시 시도해 주세요" (저장 · 전송은 중복 위험이 있어 재시도 안 함) |
 
 API별 에러 코드는 각 API 아래에 적었어요.
 
@@ -792,7 +793,66 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 ## 7. 근무 (P1)
 근무 가능 시간 입력 · 내 근무표 (docs/03 A5). 담당: 은교
 
-### 7-1. `GET /stores/{storeId}/schedules/me` (내 스케줄)
+### 7-0. `GET /stores/{storeId}/schedule-calendar?startDate=&endDate=` (공유 근무 달력) ✅ BE #31 (11/10, 은교)
+11/10 회의: 알바 근무표는 **알바생 모두가 같이 보는 전체 스케줄**이에요. 구성원 누구나 부를 수 있고, 기간은 시작일부터 **최대 63일**이에요 (넘으면 `422 INVALID_CALENDAR_PERIOD`).
+
+응답 `200`
+```json
+{
+  "startDate": "2026-11-01",
+  "endDate": "2026-12-05",
+  "shifts": [
+    {
+      "assignmentId": "…",
+      "templateId": "…",
+      "date": "2026-11-20",
+      "name": "마감",
+      "start": "18:00",
+      "end": "23:00",
+      "role": "",
+      "assignee": { "userId": "…", "memberId": "…", "name": "지은", "role": "staff" },
+      "substituted": false
+    }
+  ]
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `assignmentId` | 요일마다 반복되는 고정 근무 배정 ID → **`assignmentId` + `date`** 가 한 칸 |
+| `name` · `role` | 근무 이름(오픈 · 마감) · 역할 메모(없으면 `""`) |
+| `assignee` | 그날 일하는 사람. 사장님이면 `role: "owner"`, 퇴사한 사람은 `memberId: null` · `name: "퇴사한 직원"` |
+| `substituted` | 그날만 대타로 바뀐 칸 |
+
+FE (`src/lib/api/schedule.ts`):
+- `useScheduleCalendar(storeId, start, end)`: 근무표 탭 월 달력 (그 달을 덮는 6주, 최대 42일)
+- `useMySchedule(storeId)`: 이번 주(월~일) 달력에서 **`assignee.userId === GET /users/me 의 userId`** 만 골라 홈 오늘 근무 · 이번 주 · 매장 목록 한 줄 · 급여 화면에 써요. 함께 일하는 사람 = 같은 날 시간이 겹치는 다른 사람
+
+### 7-6. 대타 ✅ BE #31 (11/10 회의: 날짜 선택 → 사람 지정 → 그 사람이 수락하면 이름 변경)
+구성원 누구나 써요. FE 스위치는 `schedule`을 같이 써요 (`src/lib/api/substitute.ts`).
+
+| API | 요청 · 응답 |
+| --- | --- |
+| `GET /stores/{storeId}/schedule-workers` | `{ workers: [{ userId, memberId, name, role }] }` — 대타로 고를 사람 (나 · 사장님 포함, FE가 나를 빼요) |
+| `POST /stores/{storeId}/substitute-requests` | `{ assignmentId, date, targetUserId }` → `201` 요청 1개 |
+| `GET /stores/{storeId}/substitute-requests?box=received\|sent&status=` | `{ requests: [{ requestId, status, date, assignmentId, shiftName, start, end, requester, target, isRead, createdAt, respondedAt }] }`. `status`: `PENDING` · `ACCEPTED` · `REJECTED` · `CANCELLED`. **받은 목록을 부르면 읽음 처리** |
+| `POST …/substitute-requests/{requestId}/accept` · `/reject` | 요청 1개. 수락하면 그날 그 근무가 받은 사람 이름으로 바뀌어요 (`schedule-calendar`의 `substituted: true`) |
+
+에러 (`{code, message}`) → FE 토스트
+| code | FE 문장 |
+| --- | --- |
+| `PAST_SHIFT` (422) | 이미 지난 근무라 대타를 요청할 수 없어요 |
+| `NOT_ASSIGNEE` (403) | 내 근무에만 대타를 요청할 수 있어요 |
+| `SUBSTITUTE_REQUEST_CONFLICT` (409) | 이미 진행 중이거나 처리된 대타 요청이에요 |
+| `SUBSTITUTE_TIME_CONFLICT` (409) | 그 시간에 이미 근무가 있어서 맡을 수 없어요 |
+| `INVALID_SUBSTITUTE` (422) | 이 사람에게는 대타를 맡길 수 없어요 |
+| `NOT_SUBSTITUTE_TARGET` (403) | 나에게 온 요청만 수락하거나 거절할 수 있어요 |
+| `SHIFT_NOT_FOUND` · `SUBSTITUTE_REQUEST_NOT_FOUND` (404) | 그날 근무를 · 대타 요청을 찾지 못했어요 |
+
+FE 화면: 근무표 날짜 목록의 내 근무(오늘 이후) [대타 요청] → 시트에서 사람 고르기 / 진행 중이면 "○○님에게 대타 요청 중" · 근무표 맨 위 받은 요청 카드 [거절] [수락] · 근무표 아래 보낸 요청 상태 · 홈 한 줄 배너. 요청 · 응답 뒤 근무 달력 · 내 근무 · 대타 목록 · 예상 급여를 다시 불러요. 대타 알림은 연서님 알림 API 후(챕터 D)
+
+> ⛔ 아래 7-1(`/schedules/me`) · 7-2 ~ 7-5(`/availabilities`)는 **BE #31에서 없어졌어요**. 기록용으로 남겨 둬요. FE는 진짜 모드에서 근무 가능 시간 화면으로 들어가는 곳을 숨겨요 (`availabilityEnabled`)
+
+### 7-1. ~~`GET /stores/{storeId}/schedules/me`~~ (내 스케줄 — BE #31에서 없어짐)
 홈 주간 달력 · 오늘 근무 카드 · 근무표에 써요. 주간 달력의 "근무 있는 날", 오늘 근무 카드, 매장 목록 한 줄("주 3회 마감" · "주말 오후")은 FE가 `shifts`에서 만들어요.
 
 응답 `200`
@@ -833,7 +893,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 > 11/9 BE PR #24(은교, 아직 main 아님) 확인: 위 모양과 같아요. 다른 점 — `today` · `weekStart`(월요일)는 한국 날짜, **사장님이 공개(published)한 근무만**, 이번 주 월요일부터 앞으로의 근무만 와요. `role`은 안 정하면 `""` → FE가 "근무"로 보여 줘요. `crew`에 퇴사한 사람은 "퇴사한 직원". 사장님 계정이면 `403 FORBIDDEN`. FE는 main에 합쳐지기 전(404)엔 빈 근무표로 보여 줘요
 
-### 7-2. `GET /stores/{storeId}/availabilities/me` (내 근무 가능 시간)
+### 7-2. ~~`GET /stores/{storeId}/availabilities/me`~~ (내 근무 가능 시간 — BE #31에서 없어짐)
 응답 `200`
 ```json
 {
@@ -922,7 +982,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 | 필드 | 뜻 |
 | --- | --- |
 | `hourlyWage` · `payday` · `taxType` · `weeklyAllowanceEnabled` | 이 계산에 쓴 급여 설정. 알바 화면 급여 설정(`/staff/stores/:storeId`)도 이 값을 보여 줘요 ([질문 4](#9-be에-확인하고-싶은-것)) |
-| `payday` | 급여일 1~28, 말일은 `31` |
+| `payday` | 급여일 1~31 (11/11 BE fde9cca: 29 · 30도 받음). 그 달에 없는 날(2월 30일 등)이면 FE는 그 달 말일로 입금일을 계산해요. 사장님이 안 정하면 `null` |
 | `workDays` | 이번 달 근무한 날(`worked`) · 예정(`planned`) — 급여 달력과 날짜별 "18:00 – 23:00 · 5시간" |
 | `taxType` | `"none"` 공제 없음 · `"3.3"` 3.3% · `"ins"` 4대보험 |
 | `weeks` | 주별 근거 (docs/03 A6). 주휴수당은 주 15시간 이상인 주만 |
@@ -932,6 +992,8 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 > 숫자는 FE 가짜 데이터(`calcPay`)와 같은 규칙이에요: 기본급 = 시간 × 시급, 공제 = (기본급 + 주휴수당) × 공제율 (10원 단위 반올림). 공휴일 가산은 없어요 (docs/03 S7).
 
 > 11/9 BE PR #28(연서, 아직 main 아님) 확인: 위 모양과 같아요. `?month=YYYY-MM`(빼면 한국 시간 이번 달), **사장님이 공개한 스케줄 기준**이라 `isEstimate`는 항상 `true`, `aiNote`는 지금 `null`(FE는 설명 카드를 숨김), `payday`는 사장님이 안 정하면 `null`(FE는 "○월 예상 급여 · 급여일 미정"), 근무 시각 `"HH:MM"`, `hours`는 소수 둘째 자리, 근무가 끝난 시각이 지나면 `worked` 아니면 `planned`. 구성원이 아닌 사장님이 부르면 `403`. FE는 ‹ › 로 달을 넘기며 `?month=`를 보내요
+
+> 11/11 BE #31(은교) 이후: 같은 주소 · 같은 모양이고 **고정 근무표(공유 근무 달력) 기준**으로 계산해요. `workDays: [{ date, start, end, hours, status: "worked" | "planned" }]` (`app/schemas/payroll.py`). FE 예상 급여 달력은 날짜 밑에 `workDays`를 "18–23" 블록으로(일한 날 진하게 · 예정 연하게), 아래에 회색 근무 시간 목록을 보여 줘요. 가짜 서버도 가짜 근무표에서 내 근무만 골라 계산해서 근무표 탭과 같은 날이 보여요
 
 ### 8-2. `PUT /stores/{storeId}/members/{memberId}/hourly-wage` (시급 설정 — 사장님 기능)
 사장님 화면(나현)에서 써요. 알바 화면은 보기만 해요 ([질문 4](#9-be에-확인하고-싶은-것)).
@@ -948,6 +1010,36 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 - 에러: `422 WAGE_BELOW_MINIMUM` "최저시급 10,320원보다 낮아요" (docs/03 S4), `403 FORBIDDEN` (사장님이 아님)
 
 ---
+
+## 10. 알림 (BE `feature_notifications`, 연서 — 11/11 아직 main 아님 · DB 마이그레이션 20)
+FE 스위치: `notifications` (`src/lib/api/notifications.ts`). 알바 · 사장님 같이 쓸 수 있게 `storeId`만 받아요.
+
+### 10-1. `GET /stores/{storeId}/notifications` — 최근 14일 · 내 역할 것만
+```json
+{
+  "banner": {
+    "workDate": "2026-11-20", "startTime": "18:00", "endTime": "23:00", "startsAt": "2026-11-20T18:00:00+09:00",
+    "uncheckedCount": 3,
+    "items": [{ "noteId": "…", "itemId": "…", "tag": "credit", "text": "꽃집 외상 1잔", "authorName": "민수", "workDate": "2026-11-20" }]
+  },
+  "notifications": [
+    { "notificationId": "…", "type": "SUBSTITUTE_REQUESTED", "title": "대타 요청이 왔어요", "body": "도윤님이 … 근무 대타를 부탁했어요",
+      "createdAt": "…", "isRead": false, "target": { "kind": "substitute_request", "id": "…" } }
+  ],
+  "unreadCount": 2
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `banner` | 출근 30분 전 ~ 근무 끝까지만 (없으면 `null`). 체크 안 된 인수인계 항목 (AI 요약 없음) |
+| `type` | 알바: `SUBSTITUTE_REQUESTED` · `SUBSTITUTE_ACCEPTED`(요청한 사람에게) · `OWNER_ANSWERED` / 사장님: `HANDOVER_CREATED` · `OWNER_QUESTION_ASKED` |
+| `target.kind` | `substitute_request` · `assistant_chat` · `handover` · `owner_question` |
+| `OWNER_ANSWERED` 의 `target.id` | 채팅방 ID (11/11 연서 확정). 알바 채팅은 매장마다 방 1개라 FE는 `/staff/chat`으로 가서 메시지를 새로 불러오고 마지막 사장님 답변 위치로 스크롤해요 |
+
+### 10-2. `POST /stores/{storeId}/notifications/read` → `204`
+지금까지 알림 전부 읽음.
+
+FE (민지 결정, 11/11): 알림 화면을 열면 전부 읽음 · 출근 30분 전 요약은 앱 안 홈 배너(푸시 X) · 화면에 들어올 때 + 1분마다 다시 부름 · 알바 헤더 종에 `unreadCount` 뱃지 · 누르면 대타 → 근무표, 사장님 답변 → AI 사수 채팅, 그 외 → 홈. 홈의 받은 대타 배너는 **알림 API 기준**(안 읽은 `SUBSTITUTE_REQUESTED`)이라 홈을 열기만 해서는 대타 요청이 읽음 처리되지 않아요 (받은 대타 목록 GET은 BE가 읽음 처리하므로 근무표에서만 불러요). 알림 API가 404면(아직 main 아님) 알림 없음으로 보여요
 
 ## 9. BE에 확인하고 싶은 것
 

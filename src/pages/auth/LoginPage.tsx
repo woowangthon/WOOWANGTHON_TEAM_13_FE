@@ -43,7 +43,8 @@ export default function LoginPage() {
           <span className="flex size-[30px] items-center justify-center rounded-full bg-white text-brand">
             <Coffee className="size-[17px]" />
           </span>
-          AI 사수
+          {/* 서비스 이름 (11/10 회의 확정, 로고는 나오면 바꾼다). AI 채팅 기능 이름 "AI 사수"와 헷갈리지 않게 */}
+          crewBean
         </span>
         <div className="flex flex-col gap-2.5">
           <h1 className="m-0 text-[34px] leading-[1.22] font-extrabold tracking-[-0.035em]">

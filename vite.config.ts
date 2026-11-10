@@ -12,9 +12,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'AI 사수',
-        short_name: 'AI 사수',
-        description: '개인 카페 신입 알바생의 AI 사수',
+        // 서비스 이름은 crewBean (11/10 회의). AI 채팅 기능 이름은 그대로 "AI 사수"
+        name: 'crewBean',
+        short_name: 'crewBean',
+        description: '카페 알바생의 AI 사수, crewBean',
         lang: 'ko',
         start_url: '/',
         display: 'standalone',

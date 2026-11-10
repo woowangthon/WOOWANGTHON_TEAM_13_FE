@@ -44,7 +44,7 @@ BE API가 기능별로 하나씩 나오니, **기능마다** 진짜 API와 가�
 - BE 서버가 꺼져 있는데 켜면 "서버에 연결하지 못했어요" 토스트가 뜬다 (API 공통 처리)
 - `.env`를 바꾸면 개발 서버를 다시 켠다 (`npm run dev`). 개발 중에는 콘솔에 진짜 API 목록이 찍히고, 이름을 잘못 적으면 경고가 뜬다
 - 예상 급여(`payroll`)는 BE PR #28(`GET /payroll/estimates/me?month=`)에 맞춰 뒀다 (main에 합쳐지면 켜기). 급여 설정은 사장님이 정하고 알바 화면은 보기 전용 (docs/07 질문 4). 근무 가능 시간은 `availability`로 따로 켠다
-- 내 근무표(`schedule`)는 BE PR #24에 맞춰 뒀다. main에 합쳐지기 전에 켜도 404면 빈 근무표("아직 확정된 근무가 없어요")로 보여서 깨지지 않는다
+- 근무표(`schedule`)는 공유 근무 달력 `GET /schedule-calendar` (BE #31). `schedule`을 켜면 근무 가능 시간 화면은 숨겨진다 (`/availabilities`는 BE에서 없어짐 → `availability`도 켜지 않는다)
 - 주의: `users`를 켜면 로그인 후 `GET /users/me`도 진짜로 부른다 → BE에 사용자가 있어야 `/role` · 알바 화면으로 들어갈 수 있다
 
 ## 환경 변수 (`.env.example` 참고)

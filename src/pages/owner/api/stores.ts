@@ -4,16 +4,23 @@ import {
   deleteStore,
   getOwnerStores,
   getProfile,
+  getShiftTemplates,
+  putFixedSchedule,
   updateProfile,
   updateStore,
+  uploadStorePhoto,
   verifyBizNo,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
+import { apiFetch } from '@/lib/apiClient'
 import { useAuthStore, type Me } from '@/lib/authStore'
 import type {
+  BizVerification,
+  BizVerifyInput,
   BusinessSize,
   NewStore,
   OwnerStore,
+  ShiftTemplate,
   StoreResponse,
   StoreSize,
   StoreUpdate,
@@ -22,7 +29,7 @@ import type {
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
  * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — lib/api/source.
- * 프로필 · 사업자 확인은 아직 가짜 서버만 (BE 미구현).
+ * 사업자 확인도 'stores'를 따른다 (POST /business-verifications, 국세청 진위확인 → 매장 등록에 verificationId).
  */
 
 /** 사업장 규모: 화면 under5 · over5 ↔ BE UNDER_FIVE · FIVE_OR_MORE */
@@ -61,6 +68,10 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
     name: input.name,
     address: input.address,
     businessSize: toBusinessSize(input.size),
+    businessVerificationId: input.businessVerificationId,
+    shiftTemplates: input.shiftTemplates.map((t, i) => ({ ...t, sortOrder: i })),
+    closedWeekdays: input.closedWeekdays,
+    closedOnHolidays: input.closedOnHolidays,
   })
   return toOwnerStore(store)
 }
@@ -72,6 +83,7 @@ const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerSto
     name: patch.name,
     payday: patch.payday,
     businessSize: patch.size && toBusinessSize(patch.size),
+    photoUrl: patch.photoUrl,
   })
   return toOwnerStore(store)
 }
@@ -127,11 +139,92 @@ export function useUpdateOwnerProfile() {
   })
 }
 
+const fetchShiftTemplates = async (storeId: string): Promise<ShiftTemplate[]> => {
+  const { templates } = isRealApi('stores')
+    ? await http.get<{ templates: ShiftTemplate[] }>(`/stores/${storeId}/shift-templates`)
+    : await getShiftTemplates(storeId)
+  return templates
+}
+
+/*
+ * 사장님 본인 고정 근무 저장 (온보딩 ④): 매장을 막 만들어서 고정 스케줄에는 사장님만 있다.
+ * 근무 타임은 이름으로 고르고(매장 만들기 전이라 아이디가 없음), 사장님 userId 는 근무자 목록의 owner
+ * PUT /fixed-schedule 은 매장 전체를 바꾸므로 직원이 생긴 뒤에는 쓰지 않는다
+ * 매장과 함께 만든 것이라 진짜/가짜는 'stores'를 따른다
+ */
+const saveOwnerShifts = async (
+  storeId: string,
+  shifts: { templateName: string; weekday: number }[],
+) => {
+  const templates = await fetchShiftTemplates(storeId)
+  const idOf = (name: string) => templates.find((t) => t.name === name)?.templateId
+  if (!isRealApi('stores')) {
+    const assignments = shifts.map((s) => ({
+      templateId: idOf(s.templateName)!,
+      weekday: s.weekday,
+      userId: 'owner',
+    }))
+    return putFixedSchedule(storeId, assignments)
+  }
+  const { workers } = await http.get<{ workers: { userId: string; role: 'owner' | 'staff' }[] }>(
+    `/stores/${storeId}/schedule-workers`,
+  )
+  const ownerId = workers.find((w) => w.role === 'owner')?.userId
+  await apiFetch(`/stores/${storeId}/fixed-schedule`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      assignments: shifts.map((s) => ({
+        templateId: idOf(s.templateName),
+        weekday: s.weekday,
+        assigneeUserId: ownerId,
+      })),
+    }),
+  })
+}
+
+// 매장 사진: 올려서 주소를 받고(POST /stores/{storeId}/photo, 파일 칸 image) 매장 photoUrl 로 저장
+const saveStorePhoto = async (storeId: string, file: File): Promise<OwnerStore> => {
+  if (!isRealApi('stores')) {
+    const { photoUrl } = await uploadStorePhoto(storeId, file)
+    return updateStore(storeId, { photoUrl })
+  }
+  const form = new FormData()
+  form.append('image', file)
+  const { photoUrl } = await apiFetch<{ photoUrl: string }>(`/stores/${storeId}/photo`, {
+    method: 'POST',
+    body: form,
+  })
+  return patchStore(storeId, { photoUrl })
+}
+
 /** 매장 등록 (온보딩 · 마이페이지 매장 추가) */
 export function useCreateStore() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: postStore,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
+  })
+}
+
+/** 사장님 본인 고정 근무 (온보딩 ④) */
+export function useSaveOwnerShifts() {
+  return useMutation({
+    mutationFn: ({
+      storeId,
+      shifts,
+    }: {
+      storeId: string
+      shifts: { templateName: string; weekday: number }[]
+    }) => saveOwnerShifts(storeId, shifts),
+  })
+}
+
+/** 매장 사진 올리기 (온보딩 ⑤) */
+export function useSaveStorePhoto() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ storeId, file }: { storeId: string; file: File }) =>
+      saveStorePhoto(storeId, file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
   })
 }
@@ -152,7 +245,17 @@ export function useDeleteStore() {
   })
 }
 
-/** 사업자등록번호 확인 (P2: 국세청 상태조회) */
+// 사업자 확인: 번호 · 대표자 이름 · 개업일이 국세청과 맞으면 VERIFIED (아니면 INVALID, 에러 아님)
+const postBizVerification = (input: BizVerifyInput): Promise<BizVerification> =>
+  isRealApi('stores')
+    ? http.post<BizVerification>('/business-verifications', {
+        businessRegistrationNumber: input.bizNo,
+        ownerName: input.ownerName.trim(),
+        businessStartDate: input.startDate,
+      })
+    : verifyBizNo(input)
+
+/** 사업자 확인 (매장 등록 · 매장 추가 전에) */
 export function useVerifyBizNo() {
-  return useMutation({ mutationFn: verifyBizNo })
+  return useMutation({ mutationFn: postBizVerification })
 }

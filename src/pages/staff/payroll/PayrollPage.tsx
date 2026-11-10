@@ -81,7 +81,9 @@ export default function PayrollPage() {
   const today = fromDateKey(schedule.today)
   const isThisMonth = today.getFullYear() === year && today.getMonth() + 1 === month
   // 고른 날이 없으면 이번 달은 오늘, 다른 달은 1일
-  const selectedDay = pickedDay ?? (isThisMonth ? today.getDate() : 1)
+  // 고른 날 (없으면 달력 아래에 이번 주 근무 — 다른 달이면 첫 주)
+  const selectedDay = pickedDay
+  const weekBase = isThisMonth ? today.getDate() : 1
   const moveMonth = (step: number) => {
     const next = new Date(year, month - 1 + step, 1)
     setViewMonth(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`)
@@ -98,9 +100,8 @@ export default function PayrollPage() {
       : new Date(
           payMonth.year,
           payMonth.month,
-          settings.payday === 31
-            ? new Date(payMonth.year, payMonth.month + 1, 0).getDate()
-            : settings.payday,
+          // 31(말일)이나 29 · 30일이 없는 달(2월 등)은 그 달 말일로
+          Math.min(settings.payday, new Date(payMonth.year, payMonth.month + 1, 0).getDate()),
         )
   const dDay = payDate ? Math.round((payDate.getTime() - today.getTime()) / DAY_MS) : null
   const payDateText =
@@ -217,7 +218,9 @@ export default function PayrollPage() {
               showAll={showAll}
               todayKey={toDateKey(today)}
               selectedDay={selectedDay}
-              onSelect={setSelectedDay}
+              weekBase={weekBase}
+              // 같은 날을 다시 누르면 고르기 취소 (이번 주 보기)
+              onSelect={(day) => setSelectedDay(day === selectedDay ? null : day)}
             />
 
             {current.aiNote && (
@@ -255,16 +258,28 @@ interface PayCalendarProps {
   showAll: boolean
   /** 오늘 "2026-11-20" — 지난날 · 앞으로의 날 색 구분 */
   todayKey: string
-  selectedDay: number
+  /** 고른 날 (null 이면 이번 주) */
+  selectedDay: number | null
+  /** 고른 날이 없을 때 보여 줄 주에 들어 있는 날 (이번 달이면 오늘) */
+  weekBase: number
   onSelect: (day: number) => void
 }
 
+/** "18:00" → "18", "13:30" → "13:30" (칸이 좁아서 정각은 시만) */
+const shortTime = (time: string) =>
+  time.endsWith(':00')
+    ? String(Number(time.slice(0, 2)))
+    : `${Number(time.slice(0, 2))}:${time.slice(3)}`
+
+// 예상 급여 달력: 근무표(공유 달력)와 같은 모양 — 날짜 숫자 밑에 그날 내 근무를 작은 블록("18–23")으로.
+// 일한 날은 진한 매장 색, 예정은 연한 색. 달력 칸은 나현 ui/Calendar 의 renderDay 로 그린다 (ui 는 그대로)
 function PayCalendar({
   targets,
   payMonth,
   showAll,
   todayKey,
   selectedDay,
+  weekBase,
   onSelect,
 }: PayCalendarProps) {
   const lastDay = new Date(payMonth.year, payMonth.month, 0).getDate()
@@ -272,21 +287,13 @@ function PayCalendar({
   const keyOf = (day: number) =>
     `${payMonth.year}-${String(payMonth.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-  // 그날 매장별 근무 (근무한 날 · 예정)
+  // 그날 매장별 내 근무 (일한 날 · 예정)
   const infoOf = (day: number) =>
-    targets.flatMap(({ store, estimate }) => {
-      const workDay = estimate.workDays.find((d) => d.date === keyOf(day))
-      return workDay
-        ? [
-            {
-              store,
-              workDay,
-              worked: workDay.status === 'worked',
-              planned: workDay.status === 'planned',
-            },
-          ]
-        : []
-    })
+    targets.flatMap(({ store, estimate }) =>
+      estimate.workDays
+        .filter((d) => d.date === keyOf(day))
+        .map((workDay) => ({ store, workDay, worked: workDay.status === 'worked' })),
+    )
 
   let workedCount = 0
   let plannedCount = 0
@@ -296,13 +303,19 @@ function PayCalendar({
     else if (info.length) plannedCount++
   }
 
-  const selected = infoOf(selectedDay)
-  const selectedWorked = selected.some((i) => i.worked)
-  const selectedHours = selected.reduce((sum, i) => sum + i.workDay.hours, 0)
+  // 달력 아래 목록: 고른 날, 없으면 그 주(일~토, 이번 달 안)
+  const firstWeekday = new Date(payMonth.year, payMonth.month - 1, 1).getDay()
+  const weekStart = weekBase - ((firstWeekday + weekBase - 1) % 7)
+  const listDays =
+    selectedDay !== null
+      ? [selectedDay]
+      : Array.from({ length: 7 }, (_, i) => weekStart + i).filter((d) => d >= 1 && d <= lastDay)
+  const listItems = listDays.flatMap((day) => infoOf(day).map((info) => ({ day, ...info })))
+  const listHours = listItems.reduce((sum, i) => sum + i.workDay.hours, 0)
 
   return (
-    <section className="flex flex-col gap-3.5 rounded-[28px] bg-card px-[18px] pt-5 pb-[18px] shadow-soft">
-      <div className="flex items-baseline justify-between gap-2.5 px-1">
+    <section className="flex flex-col gap-3 rounded-[24px] bg-card px-2 pt-4 pb-3 shadow-soft">
+      <div className="flex items-baseline justify-between gap-2.5 px-2.5">
         <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">{payMonth.month}월</h2>
         <span className="text-[13px] font-semibold whitespace-nowrap text-foreground tabular-nums">
           근무 {workedCount}일 · 예정 {plannedCount}일
@@ -312,84 +325,114 @@ function PayCalendar({
       <Calendar
         year={payMonth.year}
         month={payMonth.month}
+        className="gap-x-0 gap-y-0.5"
         renderDay={(day) => {
           const info = infoOf(day)
-          const worked = info.some((i) => i.worked)
-          const colors = info.map((i) => (i.worked ? i.store.color : i.store.soft))
-          const background = !colors.length
-            ? 'transparent'
-            : colors.length === 1
-              ? colors[0]
-              : `conic-gradient(${colors[0]} 0 50%, ${colors[1]} 50% 100%)`
-          const color = worked
-            ? '#fff'
-            : info.length
-              ? info[0].store.color
-              : keyOf(day) > todayKey
-                ? '#A3A69E'
-                : '#1F2A24'
+          const isToday = keyOf(day) === todayKey
+          const isSelected = day === selectedDay
+          const future = keyOf(day) > todayKey
           return (
             <button
               type="button"
               onClick={() => onSelect(day)}
-              aria-pressed={day === selectedDay}
-              style={{ background, color }}
+              aria-pressed={isSelected}
+              aria-label={`${formatDate(new Date(payMonth.year, payMonth.month - 1, day))} ${
+                info.length
+                  ? info
+                      .map(
+                        (i) => `${i.workDay.start}–${i.workDay.end} ${i.worked ? '근무' : '예정'}`,
+                      )
+                      .join(', ')
+                  : '근무 없음'
+              }`}
               className={cn(
-                'flex size-8 items-center justify-center rounded-full p-0 text-sm',
-                info.length ? 'font-bold' : 'font-medium',
-                day === selectedDay && 'shadow-[0_0_0_2px_#FBF8F3,0_0_0_4px_var(--brand)]',
+                'flex min-h-[58px] w-full min-w-0 flex-col items-stretch gap-[3px] rounded-[10px] px-[2px] pt-0.5 pb-1 transition-colors duration-150',
+                isSelected && 'bg-background',
               )}
             >
-              {day}
+              <span
+                className={cn(
+                  'flex size-[22px] items-center justify-center self-center rounded-full text-xs tabular-nums',
+                  isToday
+                    ? 'bg-brand font-bold text-white'
+                    : future && !info.length
+                      ? 'font-medium text-faint'
+                      : 'font-semibold',
+                )}
+              >
+                {day}
+              </span>
+              {info.map(({ store, workDay, worked }) => (
+                <span
+                  key={`${store.id}-${workDay.start}`}
+                  style={
+                    worked
+                      ? { background: store.color, color: '#fff' }
+                      : { background: store.soft, color: 'var(--foreground)' }
+                  }
+                  className="truncate rounded-[5px] px-[2px] py-px text-center text-[10px] leading-[1.35] font-semibold tabular-nums"
+                >
+                  {shortTime(workDay.start)}–{shortTime(workDay.end)}
+                </span>
+              ))}
             </button>
           )
         }}
       />
 
-      <div className="flex items-center justify-between gap-3 rounded-[20px] bg-background px-4 py-3.5">
-        <span className="flex min-w-0 flex-col gap-[3px]">
-          <span className="text-[15px] font-extrabold">
-            {formatDate(new Date(payMonth.year, payMonth.month - 1, selectedDay))}
-          </span>
-          <span className="text-[13px] leading-normal text-balance text-foreground">
-            {selected.length
-              ? selected
-                  .map(
-                    (i) =>
-                      `${showAll ? `${i.store.name} ` : ''}${i.workDay.start} – ${i.workDay.end}${i.worked ? '' : ' · 예정'}`,
-                  )
-                  .join(' · ')
-              : '근무 없음'}
-          </span>
-        </span>
-        {selected.length > 0 && (
-          <span
-            className={cn(
-              'text-xl font-extrabold tracking-[-0.02em] whitespace-nowrap',
-              selectedWorked ? 'text-foreground' : 'text-brand',
-            )}
-          >
-            {selectedHours}시간{selectedWorked ? '' : ' 예정'}
-          </span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-2.5 text-[11px] text-muted-foreground">
+        {showAll ? (
+          <>
+            {stores.map((s) => (
+              <span key={s.id} className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px]" style={{ background: s.color }} />
+                {s.name}
+              </span>
+            ))}
+            <span>연한 색은 예정</span>
+          </>
+        ) : (
+          <>
+            <span className="flex items-center gap-1">
+              <span className="size-2.5 rounded-[3px] bg-brand" />
+              일한 날
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2.5 rounded-[3px] bg-brand-soft" />
+              예정
+            </span>
+          </>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 px-1 pt-0.5 text-xs text-muted-foreground">
-        {(showAll
-          ? [
-              ...stores.map((s) => ({ label: s.name, color: s.color })),
-              { label: '예정 · 연한 색', color: '#D9D2C4' },
-            ]
-          : [
-              { label: '근무', color: 'var(--brand)' },
-              { label: '예정', color: 'var(--brand-soft)' },
-            ]
-        ).map((legend) => (
-          <span key={legend.label} className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full" style={{ background: legend.color }} />
-            {legend.label}
-          </span>
-        ))}
+      {/* 근무 시간 목록 (회색): 고른 날 · 없으면 이번 주 */}
+      <div className="flex flex-col gap-1 border-t border-[#F0EBE2] px-2.5 pt-3">
+        <span className="flex items-baseline justify-between gap-2 text-[13px] font-bold text-foreground">
+          {selectedDay !== null
+            ? formatDate(new Date(payMonth.year, payMonth.month - 1, selectedDay))
+            : '이번 주 근무'}
+          {listItems.length > 0 && (
+            <span className="font-semibold tabular-nums">
+              {Math.round(listHours * 100) / 100}시간
+            </span>
+          )}
+        </span>
+        {listItems.length === 0 ? (
+          <span className="text-[13px] text-muted-foreground">근무 없음</span>
+        ) : (
+          <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+            {listItems.map(({ day, store, workDay, worked }) => (
+              <li
+                key={`${day}-${store.id}-${workDay.start}`}
+                className="text-[13px] text-muted-foreground tabular-nums"
+              >
+                {formatDate(new Date(payMonth.year, payMonth.month - 1, day))}{' '}
+                {showAll ? `${store.name} ` : ''}
+                {workDay.start} – {workDay.end} · {workDay.hours}시간{worked ? '' : ' · 예정'}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )

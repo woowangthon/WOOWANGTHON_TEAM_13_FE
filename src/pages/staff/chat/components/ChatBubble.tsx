@@ -36,7 +36,8 @@ export function ChatBubble({ message, ownerName, onAskOwner }: ChatBubbleProps) 
       )
     case 'owner':
       return (
-        <div className="flex max-w-[88%] flex-col gap-1.5 self-start">
+        // data-owner-answer: 알림에서 오면 채팅 화면이 이 말풍선 위치로 스크롤한다
+        <div data-owner-answer className="flex max-w-[88%] flex-col gap-1.5 self-start">
           <span className="text-xs font-bold text-warm-foreground">
             {formatOwner(ownerName)} 답변
           </span>
