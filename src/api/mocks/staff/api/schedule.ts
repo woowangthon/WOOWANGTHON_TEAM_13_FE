@@ -2,40 +2,77 @@ import {
   availabilityMonth,
   initialAvailability,
   initialAvailabilityMemo,
-  myShifts,
+  storeSchedules,
 } from '@/api/mocks/staff/schedule'
-import { findStaffStore } from '@/api/mocks/staff/stores'
-import { toDateKey } from '@/lib/date'
+import { fromDateKey, toDateKey } from '@/lib/date'
 import { ApiError } from '@/lib/apiClient'
 import type {
   AvailabilityInput,
+  CalendarShift,
   MyAvailability,
-  MySchedule,
   NewAvailability,
+  ScheduleCalendar,
+  ScheduleWorker,
 } from '@/lib/api/types'
 
-// 가짜 서버: 근무 API (docs/07 7) — 시연 날짜는 매장마다 다르다 (달빛 카페 11/20 · 오후의 커피 11/21)
+// 가짜 서버: 근무 API (docs/07 7) — 공유 근무 달력 + (BE 에서 없어진) 근무 가능 시간. 시연 날짜는 매장마다 다르다 (달빛 카페 11/20 · 오후의 커피 11/21)
 
-const WEEKLY_ALLOWANCE_HOURS = 15
-
-/** GET /stores/{storeId}/schedules/me */
-export async function getMySchedule(storeId: string): Promise<MySchedule> {
-  const store = findStaffStore(storeId)
-  return {
-    today: toDateKey(store.today),
-    weekStart: toDateKey(store.week[0].date),
-    weekHours: store.weekHours,
-    weeklyAllowanceHours: WEEKLY_ALLOWANCE_HOURS,
-    weekNote: store.weekNote,
-    shifts: (myShifts[storeId] ?? []).map((shift) => ({
-      shiftId: `shf_${storeId}_${toDateKey(shift.date)}`,
-      date: toDateKey(shift.date),
-      start: shift.start,
-      end: shift.end,
-      role: shift.role,
-      crew: shift.crew,
-    })),
+/**
+ * GET /stores/{storeId}/schedule-calendar?startDate=&endDate= — 요일마다 반복되는 고정 근무를 날짜별로 펼치고, 대타 칸은 사람만 바꾼다.
+ * 시연의 '나'(userId 'me')는 로그인한 사람의 userId 로 바꿔서 돌려준다 (로그인 없이 볼 때는 usr_jieun)
+ */
+export async function getScheduleCalendar(
+  storeId: string,
+  startDate: string,
+  endDate: string,
+  myUserId: string,
+): Promise<ScheduleCalendar> {
+  const start = fromDateKey(startDate)
+  const end = fromDateKey(endDate)
+  const days = Math.round((end.getTime() - start.getTime()) / 86_400_000)
+  if (days < 0 || days > 62) {
+    throw new ApiError(422, {
+      code: 'INVALID_CALENDAR_PERIOD',
+      message: '조회 기간은 시작일부터 최대 63일까지 가능해요',
+      detail: null,
+    })
   }
+  const schedule = storeSchedules[storeId]
+  if (!schedule) return { startDate, endDate, shifts: [] }
+  const idOf = (userId: string) => (userId === 'me' ? myUserId : userId)
+  const workerOf = (userId: string): ScheduleWorker => {
+    const worker = schedule.workers.find((w) => w.userId === userId)
+    return worker
+      ? {
+          userId: idOf(worker.userId),
+          memberId: `mbr_${worker.userId}`,
+          name: worker.name,
+          role: worker.role,
+        }
+      : { userId: idOf(userId), memberId: null, name: '퇴사한 직원', role: 'staff' }
+  }
+  const shifts: CalendarShift[] = []
+  for (let i = 0; i <= days; i++) {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+    const key = toDateKey(date)
+    for (const shift of schedule.weekly) {
+      if (!shift.dows.includes(date.getDay())) continue
+      const substitute = schedule.substitutes[`${shift.id}|${key}`]
+      shifts.push({
+        assignmentId: shift.id,
+        templateId: `tpl_${shift.name}_${shift.start}`,
+        date: key,
+        name: shift.name,
+        start: shift.start,
+        end: shift.end,
+        role: shift.role,
+        assignee: workerOf(substitute ?? shift.worker),
+        substituted: substitute !== undefined,
+      })
+    }
+  }
+  shifts.sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
+  return { startDate, endDate, shifts }
 }
 
 const monthKey = `${availabilityMonth.year}-${String(availabilityMonth.month).padStart(2, '0')}`

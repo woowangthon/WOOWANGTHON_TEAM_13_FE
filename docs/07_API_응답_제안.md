@@ -792,7 +792,43 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 ## 7. 근무 (P1)
 근무 가능 시간 입력 · 내 근무표 (docs/03 A5). 담당: 은교
 
-### 7-1. `GET /stores/{storeId}/schedules/me` (내 스케줄)
+### 7-0. `GET /stores/{storeId}/schedule-calendar?startDate=&endDate=` (공유 근무 달력) ✅ BE #31 (11/10, 은교)
+11/10 회의: 알바 근무표는 **알바생 모두가 같이 보는 전체 스케줄**이에요. 구성원 누구나 부를 수 있고, 기간은 시작일부터 **최대 63일**이에요 (넘으면 `422 INVALID_CALENDAR_PERIOD`).
+
+응답 `200`
+```json
+{
+  "startDate": "2026-11-01",
+  "endDate": "2026-12-05",
+  "shifts": [
+    {
+      "assignmentId": "…",
+      "templateId": "…",
+      "date": "2026-11-20",
+      "name": "마감",
+      "start": "18:00",
+      "end": "23:00",
+      "role": "",
+      "assignee": { "userId": "…", "memberId": "…", "name": "지은", "role": "staff" },
+      "substituted": false
+    }
+  ]
+}
+```
+| 필드 | 뜻 |
+| --- | --- |
+| `assignmentId` | 요일마다 반복되는 고정 근무 배정 ID → **`assignmentId` + `date`** 가 한 칸 |
+| `name` · `role` | 근무 이름(오픈 · 마감) · 역할 메모(없으면 `""`) |
+| `assignee` | 그날 일하는 사람. 사장님이면 `role: "owner"`, 퇴사한 사람은 `memberId: null` · `name: "퇴사한 직원"` |
+| `substituted` | 그날만 대타로 바뀐 칸 |
+
+FE (`src/lib/api/schedule.ts`):
+- `useScheduleCalendar(storeId, start, end)`: 근무표 탭 월 달력 (그 달을 덮는 6주, 최대 42일)
+- `useMySchedule(storeId)`: 이번 주(월~일) 달력에서 **`assignee.userId === GET /users/me 의 userId`** 만 골라 홈 오늘 근무 · 이번 주 · 매장 목록 한 줄 · 급여 화면에 써요. 함께 일하는 사람 = 같은 날 시간이 겹치는 다른 사람
+
+> ⛔ 아래 7-1(`/schedules/me`) · 7-2 ~ 7-5(`/availabilities`)는 **BE #31에서 없어졌어요**. 기록용으로 남겨 둬요. FE는 진짜 모드에서 근무 가능 시간 화면으로 들어가는 곳을 숨겨요 (`availabilityEnabled`)
+
+### 7-1. ~~`GET /stores/{storeId}/schedules/me`~~ (내 스케줄 — BE #31에서 없어짐)
 홈 주간 달력 · 오늘 근무 카드 · 근무표에 써요. 주간 달력의 "근무 있는 날", 오늘 근무 카드, 매장 목록 한 줄("주 3회 마감" · "주말 오후")은 FE가 `shifts`에서 만들어요.
 
 응답 `200`
@@ -833,7 +869,7 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 > 11/9 BE PR #24(은교, 아직 main 아님) 확인: 위 모양과 같아요. 다른 점 — `today` · `weekStart`(월요일)는 한국 날짜, **사장님이 공개(published)한 근무만**, 이번 주 월요일부터 앞으로의 근무만 와요. `role`은 안 정하면 `""` → FE가 "근무"로 보여 줘요. `crew`에 퇴사한 사람은 "퇴사한 직원". 사장님 계정이면 `403 FORBIDDEN`. FE는 main에 합쳐지기 전(404)엔 빈 근무표로 보여 줘요
 
-### 7-2. `GET /stores/{storeId}/availabilities/me` (내 근무 가능 시간)
+### 7-2. ~~`GET /stores/{storeId}/availabilities/me`~~ (내 근무 가능 시간 — BE #31에서 없어짐)
 응답 `200`
 ```json
 {
