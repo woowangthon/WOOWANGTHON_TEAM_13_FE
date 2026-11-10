@@ -1,6 +1,8 @@
 import { ArrowLeftRight, Bell, ClipboardList, MessageCircleReply, UserCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { chatKeys } from '@/lib/api/assistantChat'
 import { useNotifications, useReadNotifications } from '@/lib/api/notifications'
 import type { AppNotification } from '@/lib/api/types'
 import { formatRelative } from '@/lib/format'
@@ -25,7 +27,10 @@ const ICON: Record<string, typeof Bell> = {
   HANDOVER_CREATED: ClipboardList,
 }
 
-/** 누르면 갈 곳: 대타 → 근무표(받은 대타 카드) · 사장님 답변 → AI 사수 채팅 · 그 외 → 홈 */
+/**
+ * 누르면 갈 곳: 대타 → 근무표(받은 대타 카드) · 사장님 답변 → AI 사수 채팅(사장님 답변 위치로) · 그 외 → 홈.
+ * 사장님 답변의 target.id 는 채팅방 ID 지만, 알바 채팅은 매장마다 방 1개(useAssistantChat 의 chats[0])라 /staff/chat 으로 가면 그 방이다
+ */
 const targetPath = (n: AppNotification) =>
   n.target.kind === 'substitute_request'
     ? '/staff/schedule'
@@ -39,6 +44,15 @@ export default function NotificationsPage() {
   const { store } = useCurrentStore()
   const query = useNotifications(store.id)
   const read = useReadNotifications(store.id)
+  const queryClient = useQueryClient()
+  const open = (n: AppNotification) => {
+    if (n.target.kind === 'assistant_chat') {
+      // 사장님 답변이 바로 보이게 메시지를 새로 불러오고, 채팅 화면은 사장님 답변 위치로 스크롤한다
+      void queryClient.invalidateQueries({ queryKey: chatKeys.list(store.id) })
+      return navigate('/staff/chat', { state: { focus: 'owner-answer' } })
+    }
+    navigate(targetPath(n))
+  }
   const notifications = query.data?.notifications
 
   // 처음 받은 목록에서 안 읽은 것을 기억하고, 바로 전부 읽음 처리
@@ -75,7 +89,7 @@ export default function NotificationsPage() {
               <li key={n.notificationId}>
                 <button
                   type="button"
-                  onClick={() => navigate(targetPath(n))}
+                  onClick={() => open(n)}
                   className={cn(
                     'flex w-full items-start gap-3 rounded-[20px] bg-card px-4 py-3.5 text-left shadow-soft',
                     PRESSABLE_CARD,

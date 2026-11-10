@@ -68,14 +68,26 @@ export default function ChatPage() {
   }, [firstId, loadingOlder])
 
   // 새 메시지가 끝에 붙거나 답을 기다리기 시작하면(입력 중 ···) 맨 아래로. 이전 대화가 앞에 붙을 때는 그대로
+  // 알림("사장님이 답했어요")에서 왔으면 맨 아래 대신 마지막 사장님 답변 위치로 (질문을 보내면 다시 맨 아래 기준)
+  const focusOwnerAnswer = useRef(
+    (location.state as { focus?: string } | null)?.focus === 'owner-answer',
+  )
   const lastId = chat.messages?.at(-1)?.messageId
   const first = useRef(true)
   useEffect(() => {
     if (lastId === undefined && !send.isPending && !failed) return
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: first.current ? 'auto' : 'smooth',
-    })
+    if (send.isPending) focusOwnerAnswer.current = false
+    const ownerAnswer = focusOwnerAnswer.current
+      ? [...document.querySelectorAll('[data-owner-answer]')].at(-1)
+      : undefined
+    if (ownerAnswer) {
+      ownerAnswer.scrollIntoView({ block: 'center', behavior: first.current ? 'auto' : 'smooth' })
+    } else {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: first.current ? 'auto' : 'smooth',
+      })
+    }
     if (first.current) setTimeout(() => (scrolledToBottom.current = true), 300)
     first.current = false
   }, [lastId, send.isPending, failed])

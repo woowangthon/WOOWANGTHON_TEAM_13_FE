@@ -7,6 +7,7 @@ import {
   handleUnauthorized,
   isNotFound,
   isUnauthorized,
+  retryDelay,
   shouldRetry,
 } from '@/lib/api/errors'
 import { toast } from '@/ui/toastStore'
@@ -14,6 +15,7 @@ import { toast } from '@/ui/toastStore'
 /*
  * 서버 데이터 공통 설정 — 담당: 민지 (에러 규칙: src/lib/api/errors.ts)
  * - 불러오기 실패: 빨간 토스트 + 다시 시도 (404 는 화면이 목록으로 돌려보내는 등 따로 처리)
+ *   재시도(shouldRetry · retryDelay)가 다 끝난 마지막 실패에만 토스트 한 번 — 503(DB 바쁨)은 1초 · 2초 · 4초로 3번 다시 시도
  * - 401: 로그아웃 → /login (불러오기 · 저장 모두)
  */
 const queryClient: QueryClient = new QueryClient({
@@ -34,6 +36,7 @@ const queryClient: QueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: shouldRetry,
+      retryDelay,
       refetchOnWindowFocus: false,
     },
     mutations: {
