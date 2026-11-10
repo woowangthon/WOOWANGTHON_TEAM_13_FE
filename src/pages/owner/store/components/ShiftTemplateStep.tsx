@@ -1,8 +1,8 @@
-import { Check, Minus, Plus, X } from 'lucide-react'
+import { Minus, Plus, X } from 'lucide-react'
 import type { ShiftTemplateInput } from '@/pages/owner/api/types'
+import { ClosedDaysField } from '@/pages/owner/store/components/ClosedDaysField'
 import { TimeField } from '@/pages/owner/store/components/TimeField'
-import { MAX_HEADCOUNT, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
-import { cn } from '@/ui/utils'
+import { MAX_HEADCOUNT } from '@/pages/owner/store/shifts'
 
 // 매장 등록 ③ 근무 타임 · 휴무: 타임마다 이름 · 시작 ~ 끝(눌러서 휠로 고르기) · 필요 인원, [+ 타임 추가] · 빼기
 // 아래에 쉬는 요일(여러 개) · 공휴일에 쉬는지 체크
@@ -41,14 +41,6 @@ export function ShiftTemplateStep({
       ...rows,
       { key: `row_${Date.now()}`, name: '', start: '09:00', end: '18:00', headcount: 1 },
     ])
-
-  const toggleDay = (day: number) =>
-    closedWeekdays &&
-    onClosedWeekdaysChange?.(
-      closedWeekdays.includes(day)
-        ? closedWeekdays.filter((d) => d !== day)
-        : [...closedWeekdays, day].sort(),
-    )
 
   return (
     <div className="flex flex-col gap-[18px]">
@@ -133,47 +125,15 @@ export function ShiftTemplateStep({
         )}
       </section>
 
-      {closedWeekdays && onClosedOnHolidaysChange && (
+      {closedWeekdays && onClosedWeekdaysChange && onClosedOnHolidaysChange && (
         <section className="flex flex-col gap-2.5">
           <span className="px-1 text-[13px] font-bold text-muted-foreground">쉬는 요일</span>
-          <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="쉬는 요일">
-            {WEEKDAY_LABELS.map((day, i) => {
-              const on = closedWeekdays.includes(i)
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={on}
-                  aria-label={`${day}요일`}
-                  onClick={() => toggleDay(i)}
-                  className={cn(
-                    'h-11 rounded-[14px] text-sm font-bold',
-                    on ? 'bg-ink text-white' : 'bg-card text-foreground',
-                  )}
-                >
-                  {day}
-                </button>
-              )
-            })}
-          </div>
-          <button
-            type="button"
-            role="checkbox"
-            aria-checked={closedOnHolidays}
-            onClick={() => onClosedOnHolidaysChange(!closedOnHolidays)}
-            className="flex items-center gap-2.5 px-1 py-1 text-left text-[15px] font-semibold"
-          >
-            <span
-              className={cn(
-                'flex size-6 shrink-0 items-center justify-center rounded-lg border-[1.5px]',
-                closedOnHolidays ? 'border-brand bg-brand text-white' : 'border-line bg-white',
-              )}
-            >
-              {closedOnHolidays && <Check className="size-4" />}
-            </span>
-            공휴일에는 쉬어요
-          </button>
+          <ClosedDaysField
+            closedWeekdays={closedWeekdays}
+            onClosedWeekdaysChange={onClosedWeekdaysChange}
+            closedOnHolidays={closedOnHolidays ?? false}
+            onClosedOnHolidaysChange={onClosedOnHolidaysChange}
+          />
         </section>
       )}
     </div>

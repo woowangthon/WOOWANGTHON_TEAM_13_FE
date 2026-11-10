@@ -22,6 +22,10 @@ export interface OwnerStore {
   size: StoreSize
   bizNo: string | null
   staffCount: number
+  /** 쉬는 요일 0=월 ~ 6=일 (BE 칸 요청 중) */
+  closedWeekdays: number[]
+  /** 공휴일에 쉬는지 (BE 칸 요청 중) */
+  closedOnHolidays: boolean
 }
 
 /** 매장 등록 요청 (POST /stores — BE 는 name · address · 사업자 확인 결과 필수) */
@@ -95,7 +99,9 @@ export interface BizVerification {
 }
 
 /** 매장 수정 요청 (PATCH /stores/{storeId}) — 이름 · 급여일 · 사업장 규모 */
-export type StoreUpdate = Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>
+export type StoreUpdate = Partial<
+  Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl' | 'closedWeekdays' | 'closedOnHolidays'>
+>
 
 /** BE 사업장 규모 (화면 StoreSize: under5 · over5) */
 export type BusinessSize = 'UNDER_FIVE' | 'FIVE_OR_MORE'
@@ -110,6 +116,9 @@ export interface StoreResponse {
   photoUrl: string | null
   payday: number | null
   businessSize: BusinessSize | null
+  /** BE 칸 요청 중 — 생기기 전에는 오지 않는다 */
+  closedWeekdays?: number[] | null
+  closedOnHolidays?: boolean | null
 }
 
 /** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */

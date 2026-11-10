@@ -45,6 +45,7 @@ import type {
   RecipeInput,
   RecipeScanDraft,
   ScheduleDraft,
+  StoreUpdate,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -108,10 +109,12 @@ export async function createStore(input: NewStore): Promise<OwnerStore> {
     kind: '카페',
     address: input.address.trim(),
     theme: THEME_ORDER[db.stores.length % THEME_ORDER.length],
-    photoUrl: null,
+    photoUrl: null as string | null,
     payday: 10,
     size: input.size,
     bizNo: input.bizNo ?? null,
+    closedWeekdays: input.closedWeekdays,
+    closedOnHolidays: input.closedOnHolidays,
   }
   db.stores.push(store)
   seedStoreShifts(store.storeId, input.shiftTemplates, db.profile.name)
@@ -128,10 +131,7 @@ export async function uploadStorePhoto(
 }
 
 /** PATCH /stores/{storeId} (제안) — 이름 · 급여일 · 사업장 규모 */
-export async function updateStore(
-  storeId: string,
-  patch: Partial<Pick<OwnerStore, 'name' | 'payday' | 'size' | 'photoUrl'>>,
-): Promise<OwnerStore> {
+export async function updateStore(storeId: string, patch: StoreUpdate): Promise<OwnerStore> {
   await wait()
   const store = findStore(storeId)
   if (patch.name !== undefined && !patch.name.trim()) {

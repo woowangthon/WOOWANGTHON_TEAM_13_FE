@@ -9,6 +9,7 @@ import { useUpdateStore } from '@/pages/owner/api/stores'
 import type { Member, StoreSize } from '@/pages/owner/api/types'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
+import { ClosedDaysField } from '@/pages/owner/store/components/ClosedDaysField'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { Button } from '@/ui/Button'
@@ -19,7 +20,7 @@ import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 매장 상세 (마이페이지 › 내 매장): 매장 이름 · 급여일 · 사업장 규모 · 직원별 시급 → 저장
+// 매장 상세 (마이페이지 › 내 매장): 매장 이름 · 급여일 · 사업장 규모 · 쉬는 날(요일 · 공휴일) · 직원별 시급 → 저장
 
 // 급여일: 1~28일 · 말일(31) — BE 가 받는 값만 (29 · 30일은 11/10 회의에서 정하기)
 const DAYS = [...Array.from({ length: 28 }, (_, i) => i + 1), 31]
@@ -47,6 +48,8 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
   const [name, setName] = useState(store.name)
   const [payday, setPayday] = useState(store.payday)
   const [size, setSize] = useState<StoreSize>(store.size)
+  const [closedWeekdays, setClosedWeekdays] = useState(store.closedWeekdays)
+  const [closedOnHolidays, setClosedOnHolidays] = useState(store.closedOnHolidays)
   const [wages, setWages] = useState<Record<string, string>>(() =>
     Object.fromEntries(members.map((m) => [m.memberId, String(m.hourlyWage)])),
   )
@@ -71,7 +74,13 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
     if (low || !name.trim()) return
     setSaving(true)
     try {
-      await updateStore.mutateAsync({ name: name.trim(), payday, size })
+      await updateStore.mutateAsync({
+        name: name.trim(),
+        payday,
+        size,
+        closedWeekdays,
+        closedOnHolidays,
+      })
       // 시급은 직원마다 저장하고, 못 바꾼 직원(입장 전 등)은 칸을 원래 시급으로 되돌린다
       let failed: unknown = null
       for (const m of members) {
@@ -170,6 +179,15 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
           ]}
           value={size}
           onChange={setSize}
+        />
+      </Section>
+
+      <Section label="쉬는 날">
+        <ClosedDaysField
+          closedWeekdays={closedWeekdays}
+          onClosedWeekdaysChange={setClosedWeekdays}
+          closedOnHolidays={closedOnHolidays}
+          onClosedOnHolidaysChange={setClosedOnHolidays}
         />
       </Section>
 

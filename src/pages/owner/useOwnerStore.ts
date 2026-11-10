@@ -44,6 +44,8 @@ const EMPTY_STORE: OwnerStoreView = {
   size: 'under5',
   bizNo: null,
   staffCount: 0,
+  closedWeekdays: [],
+  closedOnHolidays: false,
   icon: 'moon',
   ...STORE_THEME.moon,
 }

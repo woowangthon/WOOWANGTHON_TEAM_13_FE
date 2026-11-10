@@ -53,6 +53,8 @@ const toOwnerStore = (store: StoreResponse): OwnerStore => ({
   size: store.businessSize === 'FIVE_OR_MORE' ? 'over5' : 'under5',
   bizNo: null,
   staffCount: 0,
+  closedWeekdays: store.closedWeekdays ?? [],
+  closedOnHolidays: store.closedOnHolidays ?? false,
 })
 
 export const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {
@@ -83,6 +85,8 @@ const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerSto
     payday: patch.payday,
     businessSize: patch.size && toBusinessSize(patch.size),
     photoUrl: patch.photoUrl,
+    closedWeekdays: patch.closedWeekdays,
+    closedOnHolidays: patch.closedOnHolidays,
   })
   return toOwnerStore(store)
 }
