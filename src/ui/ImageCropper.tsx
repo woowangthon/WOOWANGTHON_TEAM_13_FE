@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
 
@@ -84,13 +84,20 @@ export function ImageCropper({
   confirmLabel?: string
   hint?: string
 }) {
-  const src = useMemo(() => URL.createObjectURL(file), [file])
-  useEffect(() => () => URL.revokeObjectURL(src), [src])
+  // data URL 로 읽는다 (blob 주소는 StrictMode 정리 단계에서 지워져 사진이 안 뜬다)
+  const [src, setSrc] = useState<string>()
+  const [status, setStatus] = useState<'loading' | 'ready' | 'unsupported'>('loading')
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = () => setSrc(reader.result as string)
+    reader.onerror = () => setStatus('unsupported')
+    reader.readAsDataURL(file)
+    return () => reader.abort()
+  }, [file])
 
   const imageRef = useRef<HTMLImageElement>(null)
   const drag = useRef<{ mode: Corner | 'move'; x: number; y: number; rect: Rect } | null>(null)
   const [rect, setRect] = useState<Rect>(FULL)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'unsupported'>('loading')
   const [working, setWorking] = useState(false)
 
   const start = (event: PointerEvent<HTMLElement>, mode: Corner | 'move') => {
@@ -134,7 +141,7 @@ export function ImageCropper({
         {status === 'unsupported' ? '이 사진은 미리 볼 수 없어서 그대로 보낼게요' : hint}
       </span>
       {status !== 'unsupported' && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-[22px] bg-ink p-5">
+        <div className="flex min-h-[200px] items-center justify-center overflow-hidden rounded-[22px] bg-ink p-5">
           <div className="relative touch-none select-none">
             <img
               ref={imageRef}
