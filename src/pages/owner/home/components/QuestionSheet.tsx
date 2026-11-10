@@ -64,7 +64,7 @@ export function QuestionSheet({
             “{question.question}”
           </h2>
           <span className="text-[13px] text-muted-foreground">
-            {question.staffName} · 매뉴얼에 없음 · {formatTime(question.askedAt)}
+            {question.staffName} · {formatTime(question.askedAt)}
           </span>
         </div>
 
