@@ -1,12 +1,17 @@
 import { ArrowRight, BookOpen, Check, Coffee, UserPlus } from 'lucide-react'
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useState, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
-import { useCreateStore } from '@/pages/owner/api/stores'
-import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
+import { useCreateStore, useSaveOwnerShifts, useSaveStorePhoto } from '@/pages/owner/api/stores'
 import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
+import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
+import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
+import { AddressField } from '@/pages/owner/store/components/AddressField'
+import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
+import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
+import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
@@ -15,8 +20,11 @@ import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님): ① 사업자 확인 → ② 매장 이름 · 주소 · 직원 수 → 등록 완료
-// 역할 선택에서 [사장님]을 고르면 여기로 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
+// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님) 5단계 (11/11 고정 스케줄 개편)
+//   ① 사업자 확인 → ② 매장 이름 · 주소(검색) · 규모 → ③ 근무 타임(시간 · 인원) · 휴무 → ④ 사장님 근무(건너뛰기)
+//   → [④ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ⑤ 매장 사진(건너뛰기) → 등록 완료
+// 매장 사진은 매장이 생긴 뒤에만 올릴 수 있어서(BE) 맨 끝이다
+// 역할 선택에서 [사장님]을 고르거나 마이페이지 [매장 추가]로 여기 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
 
 // 사업장 규모는 5인 미만 · 이상 두 가지 (BE businessSize, 매장 상세와 같은 기준)
 const SIZES: { label: string; size: StoreSize }[] = [
@@ -24,36 +32,98 @@ const SIZES: { label: string; size: StoreSize }[] = [
   { label: '5인 이상', size: 'over5' },
 ]
 
+type Step = 'biz' | 'info' | 'shifts' | 'owner' | 'photo'
+const STEP_TOTAL = 5
+
+const initialRows = (): ShiftRow[] =>
+  DEFAULT_SHIFT_TEMPLATES.map((t, i) => ({ ...t, key: `row_${i}` }))
+
+type OwnerShift = { templateName: string; weekday: number }
+
 export default function StoreCreatePage() {
   const navigate = useNavigate()
+  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로
+  const from = (useLocation().state as { from?: string } | null)?.from ?? '/role'
   const create = useCreateStore()
+  const saveShifts = useSaveOwnerShifts()
+  const savePhoto = useSaveStorePhoto()
   const { setCurrentStoreId } = useOwnerStore()
-  const [name, setName] = useState('')
-  const [address, setAddress] = useState('')
-  const [sizeLabel, setSizeLabel] = useState(SIZES[0].label)
-  const [created, setCreated] = useState<OwnerStore | null>(null)
-  const [step, setStep] = useState<'biz' | 'store'>('biz')
+  const [step, setStep] = useState<Step>('biz')
   const [verificationId, setVerificationId] = useState<number | null>(null)
+  const [name, setName] = useState('')
+  /** 주소 검색에서 고른 도로명 주소 + 상세 주소 */
+  const [address, setAddress] = useState('')
+  const [addressDetail, setAddressDetail] = useState('')
+  const [sizeLabel, setSizeLabel] = useState(SIZES[0].label)
+  const [rows, setRows] = useState<ShiftRow[]>(initialRows)
+  const [closedWeekdays, setClosedWeekdays] = useState<number[]>([])
+  const [closedOnHolidays, setClosedOnHolidays] = useState(false)
+  /** 사장님 근무 칸: cellKey(줄 key, 요일) */
+  const [ownerCells, setOwnerCells] = useState<Set<string>>(new Set())
+  const [photo, setPhoto] = useState<File | null>(null)
+  /** ④ 끝에서 만든 매장 (다시 시도해도 두 번 만들지 않게) */
+  const [created, setCreated] = useState<OwnerStore | null>(null)
+  const [done, setDone] = useState(false)
   const size = SIZES.find((s) => s.label === sizeLabel)?.size ?? 'under5'
+  const rowsError = shiftTemplatesError(rows)
 
-  const submit = () =>
+  // 빠진 타임 · 휴무 요일의 사장님 근무 칸은 버린다
+  const ownerShifts: OwnerShift[] = rows.flatMap((row) =>
+    [0, 1, 2, 3, 4, 5, 6]
+      .filter((day) => ownerCells.has(cellKey(row.key, day)) && !closedWeekdays.includes(day))
+      .map((weekday) => ({ templateName: row.name.trim(), weekday })),
+  )
+
+  const enterStore = (store: OwnerStore) => {
+    setCurrentStoreId(store.storeId)
+    // 로그인 사용자 매장 목록에 사장님 매장을 넣어 화면 보호(역할)를 통과하게 한다
+    const { me, setMe } = useAuthStore.getState()
+    if (me && !me.stores.some((s) => s.storeId === store.storeId)) {
+      setMe({
+        ...me,
+        stores: [...me.stores, { storeId: store.storeId, storeName: store.name, role: 'owner' }],
+      })
+    }
+  }
+
+  // 사장님 근무 저장 → ⑤ 사진. 실패해도 매장은 있으니 다시 시도하거나 건너뛸 수 있다
+  const saveOwner = (store: OwnerStore, shifts: OwnerShift[]) => {
+    if (shifts.length === 0) return setStep('photo')
+    saveShifts.mutate(
+      { storeId: store.storeId, shifts },
+      {
+        onSuccess: () => setStep('photo'),
+        onError: (error) =>
+          toastApiError(error, '내 근무를 저장하지 못했어요. 다시 시도해 주세요', () =>
+            saveOwner(store, shifts),
+          ),
+      },
+    )
+  }
+
+  // ④ [다음] · [건너뛰기]: 매장 만들기(처음 한 번) → 사장님 근무
+  const submit = (shifts: OwnerShift[]) => {
+    if (created) return saveOwner(created, shifts)
     create.mutate(
-      { name: name.trim(), address: address.trim(), size, businessVerificationId: verificationId! },
+      {
+        name: name.trim(),
+        address: [address, addressDetail.trim()].filter(Boolean).join(' '),
+        size,
+        businessVerificationId: verificationId!,
+        shiftTemplates: rows.map((r) => ({
+          name: r.name.trim(),
+          start: r.start,
+          end: r.end,
+          headcount: r.headcount,
+        })),
+        closedWeekdays,
+        closedOnHolidays,
+      },
       {
         onSuccess: (store) => {
-          setCurrentStoreId(store.storeId)
-          // 로그인 사용자 매장 목록에 사장님 매장을 넣어 화면 보호(역할)를 통과하게 한다
-          const { me, setMe } = useAuthStore.getState()
-          if (me) {
-            setMe({
-              ...me,
-              stores: [
-                ...me.stores,
-                { storeId: store.storeId, storeName: store.name, role: 'owner' },
-              ],
-            })
-          }
+          enterStore(store)
           setCreated(store)
+          saveOwner(store, shifts)
         },
         onError: (error) => {
           // 사업자 확인 결과를 못 쓰면(400) 확인부터 다시
@@ -62,101 +132,218 @@ export default function StoreCreatePage() {
             setStep('biz')
             return toast.error('사업자 확인을 다시 해 주세요')
           }
-          toastApiError(error, '등록하지 못했어요. 다시 시도해 주세요', submit)
+          toastApiError(error, '등록하지 못했어요. 다시 시도해 주세요', () => submit(shifts))
         },
       },
     )
+  }
 
-  if (created)
+  const finishPhoto = () => {
+    if (!photo || !created) return setDone(true)
+    savePhoto.mutate(
+      { storeId: created.storeId, file: photo },
+      {
+        onSuccess: (store) => {
+          setCreated(store)
+          setDone(true)
+        },
+        onError: (error) => {
+          const status = error instanceof ApiError ? error.status : 0
+          if (status === 413) return toast.error('10MB 이하 사진으로 다시 골라 주세요')
+          if (status === 415) return toast.error('JPG · PNG · WebP 사진만 넣을 수 있어요')
+          toastApiError(error, '사진을 저장하지 못했어요. 다시 시도해 주세요', finishPhoto)
+        },
+      },
+    )
+  }
+
+  if (done && created)
     return <CreateDone store={created} onStart={() => navigate('/owner', { replace: true })} />
+
+  const pending = create.isPending || saveShifts.isPending
 
   if (step === 'biz')
     return (
-      <AuthFrame className="gap-[22px]">
-        <OnboardingHeader step={1} onBack={() => navigate('/role')} />
-        <StepTitle step={1} title="사업자 확인" />
+      <StepFrame step={1} title="사업자 확인" onBack={() => navigate(from)}>
         <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
         <Button
           className="mt-auto h-14 text-base"
           disabled={verificationId === null}
-          onClick={() => setStep('store')}
+          onClick={() => setStep('info')}
         >
           다음
         </Button>
-      </AuthFrame>
+        {/* 개발 서버에서만: 사업자번호 없이 다음 단계 확인용 (진짜 BE 는 매장 만들 때 400) */}
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            onClick={() => {
+              setVerificationId(1)
+              setStep('info')
+            }}
+            className="-mt-2 self-center p-0 text-xs font-semibold text-subtle underline"
+          >
+            [개발용] 사업자 확인 건너뛰기
+          </button>
+        )}
+      </StepFrame>
+    )
+
+  if (step === 'info')
+    return (
+      <StepFrame step={2} title="매장 정보" onBack={() => setStep('biz')}>
+        <div className="flex flex-col gap-2.5">
+          <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+            <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="달빛 카페"
+              className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+            />
+          </label>
+          <AddressField
+            address={address}
+            onAddressChange={setAddress}
+            detail={addressDetail}
+            onDetailChange={setAddressDetail}
+          />
+          <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+            <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
+            <div
+              className="mt-0.5 grid grid-cols-2 gap-1.5"
+              role="radiogroup"
+              aria-label="사업장 규모"
+            >
+              {SIZES.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  role="radio"
+                  aria-checked={sizeLabel === s.label}
+                  onClick={() => setSizeLabel(s.label)}
+                  className={cn(
+                    'h-[42px] rounded-[14px] text-sm font-bold whitespace-nowrap',
+                    sizeLabel === s.label ? 'bg-brand text-white' : 'bg-background text-foreground',
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <span className="px-2 text-xs text-muted-foreground">
+            직원 수 기준 · 주휴 · 가산 수당 계산에 반영돼요
+          </span>
+        </div>
+        <Button
+          className="mt-auto h-14 text-base"
+          disabled={!name.trim() || !address.trim()}
+          onClick={() => setStep('shifts')}
+        >
+          다음
+        </Button>
+      </StepFrame>
+    )
+
+  if (step === 'shifts')
+    return (
+      <StepFrame step={3} title="근무 타임 · 휴무" onBack={() => setStep('info')}>
+        <ShiftTemplateStep
+          rows={rows}
+          onRowsChange={setRows}
+          closedWeekdays={closedWeekdays}
+          onClosedWeekdaysChange={setClosedWeekdays}
+          closedOnHolidays={closedOnHolidays}
+          onClosedOnHolidaysChange={setClosedOnHolidays}
+          error={rowsError}
+        />
+        <Button
+          className="mt-auto h-14 shrink-0 text-base"
+          disabled={!!rowsError}
+          onClick={() => setStep('owner')}
+        >
+          다음
+        </Button>
+      </StepFrame>
+    )
+
+  if (step === 'owner')
+    return (
+      <StepFrame step={4} title="사장님 근무" onBack={() => setStep(created ? 'photo' : 'shifts')}>
+        <span className="px-1 text-[13px] text-muted-foreground">
+          사장님도 근무하는 요일 · 타임을 눌러 주세요. 같은 날 여러 타임도 돼요
+        </span>
+        <WeekShiftGrid
+          rows={rows.map((r) => ({ key: r.key, label: r.name, sub: `${r.start}~${r.end}` }))}
+          value={ownerCells}
+          onChange={setOwnerCells}
+          closedWeekdays={closedWeekdays}
+        />
+        <div className="mt-auto grid grid-cols-2 gap-2">
+          <Button
+            variant="soft"
+            className="h-14 text-base"
+            disabled={pending}
+            onClick={() => submit([])}
+          >
+            건너뛰기
+          </Button>
+          <Button
+            className="h-14 text-base"
+            disabled={pending || ownerShifts.length === 0}
+            onClick={() => submit(ownerShifts)}
+          >
+            {pending ? '등록 중…' : '다음'}
+          </Button>
+        </div>
+      </StepFrame>
     )
 
   return (
-    <AuthFrame className="gap-[22px]">
-      <OnboardingHeader step={1} onBack={() => setStep('biz')} />
-      <StepTitle step={2} title="매장 등록" />
-
-      <div className="flex flex-col gap-2.5">
-        <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-          <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="달빛 카페"
-            className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-          <span className="text-xs font-bold text-muted-foreground">매장 주소</span>
-          <input
-            value={address}
-            onChange={(event) => setAddress(event.target.value)}
-            placeholder="서울 마포구 와우산로21길 8"
-            className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
-          />
-        </label>
-        <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-          <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
-          <div
-            className="mt-0.5 grid grid-cols-2 gap-1.5"
-            role="radiogroup"
-            aria-label="사업장 규모"
-          >
-            {SIZES.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                role="radio"
-                aria-checked={sizeLabel === s.label}
-                onClick={() => setSizeLabel(s.label)}
-                className={cn(
-                  'h-[42px] rounded-[14px] text-sm font-bold whitespace-nowrap',
-                  sizeLabel === s.label ? 'bg-brand text-white' : 'bg-background text-foreground',
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <span className="px-2 text-xs text-muted-foreground">
-          직원 수 기준 · 주휴 · 가산 수당 계산에 반영돼요
-        </span>
-      </div>
-
-      <Button
-        className="mt-auto h-14 text-base"
-        disabled={!name.trim() || !address.trim() || create.isPending}
-        onClick={submit}
-      >
-        시작하기
-      </Button>
-    </AuthFrame>
+    <StepFrame step={5} title="매장 사진" onBack={() => setDone(true)}>
+      <StorePhotoStep value={photo} onChange={setPhoto} />
+      {photo ? (
+        <Button
+          className="mt-auto h-14 text-base"
+          disabled={savePhoto.isPending}
+          onClick={finishPhoto}
+        >
+          {savePhoto.isPending ? '올리는 중…' : '완료'}
+        </Button>
+      ) : (
+        <Button variant="soft" className="mt-auto h-14 text-base" onClick={() => setDone(true)}>
+          건너뛰기
+        </Button>
+      )}
+    </StepFrame>
   )
 }
 
-/** 제목 위 "사장님 · 1 / 2" (위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라 단계는 여기서 보여 준다) */
-function StepTitle({ step, title }: { step: 1 | 2; title: string }) {
+/** 단계 화면 틀: 위쪽 뒤로 + 제목 위 "사장님 · 3 / 5" */
+function StepFrame({
+  step,
+  title,
+  onBack,
+  children,
+}: {
+  step: number
+  title: string
+  onBack: () => void
+  children: ReactNode
+}) {
   return (
-    <div className="flex flex-col gap-2 px-1 pt-1.5">
-      <span className="text-[13px] font-medium text-muted-foreground">사장님 · {step} / 2</span>
-      <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">{title}</h1>
-    </div>
+    <AuthFrame className="gap-[22px]">
+      {/* 위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라(민지 부품) 단계는 제목 위에서 보여 준다 */}
+      <OnboardingHeader step={1} onBack={onBack} />
+      <div className="flex flex-col gap-2 px-1 pt-1.5">
+        <span className="text-[13px] font-medium text-muted-foreground">
+          사장님 · {step} / {STEP_TOTAL}
+        </span>
+        <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">{title}</h1>
+      </div>
+      {children}
+    </AuthFrame>
   )
 }
 
@@ -172,8 +359,14 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
   return (
     <AuthFrame className="gap-[22px]">
       <section
-        className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] texture p-6 text-white"
-        style={{ backgroundColor: theme.color }}
+        className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
+        style={{
+          backgroundColor: theme.color,
+          // 매장 사진을 넣었으면 글씨가 보이게 어둡게 깔고 사진을 보여 준다
+          backgroundImage: store.photoUrl
+            ? `linear-gradient(rgba(20,28,22,0.25), rgba(20,28,22,0.65)), url(${store.photoUrl})`
+            : undefined,
+        }}
       >
         <span
           className="flex size-14 items-center justify-center rounded-full bg-white"

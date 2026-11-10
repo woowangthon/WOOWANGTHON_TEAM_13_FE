@@ -4,11 +4,15 @@ import {
   deleteStore,
   getOwnerStores,
   getProfile,
+  getShiftTemplates,
+  putFixedSchedule,
   updateProfile,
   updateStore,
+  uploadStorePhoto,
   verifyBizNo,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
+import { apiFetch } from '@/lib/apiClient'
 import { useAuthStore, type Me } from '@/lib/authStore'
 import type {
   BizVerification,
@@ -16,6 +20,7 @@ import type {
   BusinessSize,
   NewStore,
   OwnerStore,
+  ShiftTemplate,
   StoreResponse,
   StoreSize,
   StoreUpdate,
@@ -64,6 +69,9 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
     address: input.address,
     businessSize: toBusinessSize(input.size),
     businessVerificationId: input.businessVerificationId,
+    shiftTemplates: input.shiftTemplates.map((t, i) => ({ ...t, sortOrder: i })),
+    closedWeekdays: input.closedWeekdays,
+    closedOnHolidays: input.closedOnHolidays,
   })
   return toOwnerStore(store)
 }
@@ -75,6 +83,7 @@ const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerSto
     name: patch.name,
     payday: patch.payday,
     businessSize: patch.size && toBusinessSize(patch.size),
+    photoUrl: patch.photoUrl,
   })
   return toOwnerStore(store)
 }
@@ -130,11 +139,92 @@ export function useUpdateOwnerProfile() {
   })
 }
 
+const fetchShiftTemplates = async (storeId: string): Promise<ShiftTemplate[]> => {
+  const { templates } = isRealApi('stores')
+    ? await http.get<{ templates: ShiftTemplate[] }>(`/stores/${storeId}/shift-templates`)
+    : await getShiftTemplates(storeId)
+  return templates
+}
+
+/*
+ * 사장님 본인 고정 근무 저장 (온보딩 ④): 매장을 막 만들어서 고정 스케줄에는 사장님만 있다.
+ * 근무 타임은 이름으로 고르고(매장 만들기 전이라 아이디가 없음), 사장님 userId 는 근무자 목록의 owner
+ * PUT /fixed-schedule 은 매장 전체를 바꾸므로 직원이 생긴 뒤에는 쓰지 않는다
+ * 매장과 함께 만든 것이라 진짜/가짜는 'stores'를 따른다
+ */
+const saveOwnerShifts = async (
+  storeId: string,
+  shifts: { templateName: string; weekday: number }[],
+) => {
+  const templates = await fetchShiftTemplates(storeId)
+  const idOf = (name: string) => templates.find((t) => t.name === name)?.templateId
+  if (!isRealApi('stores')) {
+    const assignments = shifts.map((s) => ({
+      templateId: idOf(s.templateName)!,
+      weekday: s.weekday,
+      userId: 'owner',
+    }))
+    return putFixedSchedule(storeId, assignments)
+  }
+  const { workers } = await http.get<{ workers: { userId: string; role: 'owner' | 'staff' }[] }>(
+    `/stores/${storeId}/schedule-workers`,
+  )
+  const ownerId = workers.find((w) => w.role === 'owner')?.userId
+  await apiFetch(`/stores/${storeId}/fixed-schedule`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      assignments: shifts.map((s) => ({
+        templateId: idOf(s.templateName),
+        weekday: s.weekday,
+        assigneeUserId: ownerId,
+      })),
+    }),
+  })
+}
+
+// 매장 사진: 올려서 주소를 받고(POST /stores/{storeId}/photo, 파일 칸 image) 매장 photoUrl 로 저장
+const saveStorePhoto = async (storeId: string, file: File): Promise<OwnerStore> => {
+  if (!isRealApi('stores')) {
+    const { photoUrl } = await uploadStorePhoto(storeId, file)
+    return updateStore(storeId, { photoUrl })
+  }
+  const form = new FormData()
+  form.append('image', file)
+  const { photoUrl } = await apiFetch<{ photoUrl: string }>(`/stores/${storeId}/photo`, {
+    method: 'POST',
+    body: form,
+  })
+  return patchStore(storeId, { photoUrl })
+}
+
 /** 매장 등록 (온보딩 · 마이페이지 매장 추가) */
 export function useCreateStore() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: postStore,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
+  })
+}
+
+/** 사장님 본인 고정 근무 (온보딩 ④) */
+export function useSaveOwnerShifts() {
+  return useMutation({
+    mutationFn: ({
+      storeId,
+      shifts,
+    }: {
+      storeId: string
+      shifts: { templateName: string; weekday: number }[]
+    }) => saveOwnerShifts(storeId, shifts),
+  })
+}
+
+/** 매장 사진 올리기 (온보딩 ⑤) */
+export function useSaveStorePhoto() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ storeId, file }: { storeId: string; file: File }) =>
+      saveStorePhoto(storeId, file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.stores }),
   })
 }

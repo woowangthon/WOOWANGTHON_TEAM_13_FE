@@ -8,7 +8,7 @@ import { Button } from '@/ui/Button'
 import { Input } from '@/ui/Input'
 import { toast } from '@/ui/toastStore'
 
-// 사업자 확인 (매장 등록 ① 단계 · 마이페이지 매장 추가): 번호 · 대표자 이름 · 개업일 → 국세청 진위확인
+// 사업자 확인 (매장 등록 ① 단계 — 온보딩 · 마이페이지 [매장 추가] 둘 다 이 화면): 번호 · 대표자 이름 · 개업일 → 국세청 진위확인
 // VERIFIED 면 onVerified(확인 번호), 칸을 고치면 다시 확인해야 해서 onVerified(null)
 
 // BE 오류는 영어 문장이라 상태별로 화면 문구를 고른다

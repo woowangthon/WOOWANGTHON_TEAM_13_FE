@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, Pencil, X } from 'lucide-react'
+import { ChevronRight, LogOut, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
@@ -6,13 +6,7 @@ import { signOut } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
 import { toastApiError } from '@/lib/api/errors'
 import { useMembers } from '@/pages/owner/api/members'
-import {
-  useCreateStore,
-  useDeleteStore,
-  useOwnerProfile,
-  useUpdateOwnerProfile,
-} from '@/pages/owner/api/stores'
-import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
+import { useDeleteStore, useOwnerProfile, useUpdateOwnerProfile } from '@/pages/owner/api/stores'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
@@ -22,13 +16,12 @@ import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { Header } from '@/ui/Header'
-import { Input } from '@/ui/Input'
 import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · 추가 + 사업자번호 확인) · 로그아웃 · 탈퇴
+// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · [매장 추가] → 매장 등록 5단계) · 로그아웃 · 탈퇴
 export default function OwnerMyPage() {
   const navigate = useNavigate()
   const close = useCloseTo('/owner')
@@ -71,7 +64,15 @@ export default function OwnerMyPage() {
             />
           ))
         )}
-        <AddStore onAdded={(id) => setCurrentStoreId(id)} />
+        {/* 매장 추가는 온보딩과 같은 5단계로 (사업자 확인 · 근무 타임 · 사진까지) */}
+        <Link
+          to="/owner/store/new"
+          state={{ from: '/owner/me' }}
+          className="flex h-[54px] items-center justify-center gap-1.5 rounded-full border-[1.5px] border-dashed border-line text-sm font-bold text-[#6B7068]"
+        >
+          <Plus className="size-[18px]" />
+          매장 추가
+        </Link>
       </section>
 
       <div className="mt-1.5 flex flex-col gap-2.5">
@@ -244,68 +245,6 @@ function StoreRow({
             <X className="size-5" />
           </button>
         ))}
-    </div>
-  )
-}
-
-/** 매장 추가: 이름 · 주소 + 사업자 확인(국세청 진위확인) → 추가 */
-function AddStore({ onAdded }: { onAdded: (storeId: string) => void }) {
-  const [name, setName] = useState('')
-  const [address, setAddress] = useState('')
-  const [verificationId, setVerificationId] = useState<number | null>(null)
-  /** 추가한 뒤 사업자 칸을 비우려고 바꾸는 키 */
-  const [formKey, setFormKey] = useState(0)
-  const create = useCreateStore()
-
-  const add = () =>
-    create.mutate(
-      {
-        name: name.trim(),
-        address: address.trim(),
-        size: 'under5',
-        businessVerificationId: verificationId!,
-      },
-      {
-        onSuccess: (store) => {
-          toast(`${store.name} 매장을 추가했어요`)
-          setName('')
-          setAddress('')
-          setVerificationId(null)
-          setFormKey((k) => k + 1)
-          onAdded(store.storeId)
-        },
-        onError: (error) => toastApiError(error, '추가하지 못했어요. 다시 시도해 주세요', add),
-      },
-    )
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Input
-        variant="card"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        placeholder="매장 이름"
-        aria-label="새 매장 이름"
-      />
-      <Input
-        variant="card"
-        value={address}
-        onChange={(event) => setAddress(event.target.value)}
-        placeholder="매장 주소"
-        aria-label="새 매장 주소"
-      />
-      <BizVerifyForm
-        key={formKey}
-        verified={verificationId !== null}
-        onVerified={setVerificationId}
-      />
-      <Button
-        className="text-sm"
-        disabled={!name.trim() || !address.trim() || verificationId === null || create.isPending}
-        onClick={add}
-      >
-        매장 추가
-      </Button>
     </div>
   )
 }
