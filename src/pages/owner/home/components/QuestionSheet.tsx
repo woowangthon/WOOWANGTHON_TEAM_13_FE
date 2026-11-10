@@ -4,6 +4,7 @@ import { toastApiError } from '@/lib/api/errors'
 import { formatTime } from '@/lib/format'
 import { useAnswerQuestion } from '@/pages/owner/api/home'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
+import { questionSentence } from '@/pages/owner/components/questionText'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -61,7 +62,7 @@ export function QuestionSheet({
             )}
           </div>
           <h2 className="m-0 text-[22px] leading-[1.4] font-extrabold tracking-[-0.02em] break-keep">
-            “{question.question}”
+            {questionSentence(question.question)}
           </h2>
           <span className="text-[13px] text-muted-foreground">
             {question.staffName} · {formatTime(question.askedAt)}

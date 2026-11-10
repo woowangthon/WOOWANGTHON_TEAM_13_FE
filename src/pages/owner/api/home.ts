@@ -11,6 +11,7 @@ import { http, isRealApi } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
 import { formatTime } from '@/lib/format'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
+import { questionSentence } from '@/pages/owner/components/questionText'
 import type { OwnerAnswer, OwnerNotification, OwnerQuestionItem } from '@/pages/owner/api/types'
 
 /*
@@ -45,7 +46,7 @@ const fetchNotifications = async (): Promise<{ notifications: OwnerNotification[
         storeId: store.storeId,
         storeName: store.name,
         kind: 'question',
-        title: q.title,
+        title: questionSentence(q.question, 14),
         sub: `${q.staffName} · ${formatTime(q.askedAt)}`,
         questionId: q.questionId,
       })),
