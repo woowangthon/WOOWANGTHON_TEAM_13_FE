@@ -3,16 +3,20 @@ import {
   createShiftTemplate,
   deleteShiftTemplate,
   getFixedSchedule,
+  getOwnerCalendar,
   getOwnerReceivedRequests,
   getScheduleWorkers,
   getShiftTemplates,
+  putDailySchedule,
   putFixedSchedule,
+  resetDailySchedule,
   respondOwnerRequest,
   updateShiftTemplate,
 } from '@/api/mocks/owner/schedule'
+import { scheduleKeys } from '@/lib/api/schedule'
 import { http, isRealApi } from '@/lib/api/source'
-import { apiFetch } from '@/lib/apiClient'
-import type { ScheduleWorker } from '@/lib/api/types'
+import type { ScheduleCalendar, ScheduleWorker } from '@/lib/api/types'
+import { ApiError, apiFetch } from '@/lib/apiClient'
 import type {
   FixedAssignment,
   OwnerSubstituteRequest,
@@ -206,6 +210,77 @@ export function useRespondOwnerRequest(storeId: string) {
             `${base(storeId)}/substitute-requests/${requestId}/${accept ? 'accept' : 'reject'}`,
           )
         : respondOwnerRequest(storeId, requestId, accept),
+    onSettled: refresh,
+  })
+}
+
+// ── 사장님 근무 달력 · 하루 단위 근무 조정 (BE #38) ──
+
+/**
+ * 사장님 근무 달력: 진짜면 /schedule-calendar (민지 useScheduleCalendar 와 같은 API),
+ * 가짜면 알바 가짜 달력 위에 사장님이 하루 조정한 근무를 덮는다 (api/mocks/owner/schedule).
+ * 키는 민지 달력 키 뒤에 'owner' — 근무를 바꾸면 ['stores', storeId, 'schedule-calendar']로 같이 다시 불린다
+ */
+export function useOwnerCalendar(storeId: string, startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: [...scheduleKeys.calendar(storeId, startDate, endDate), 'owner'],
+    queryFn: async (): Promise<ScheduleCalendar> => {
+      if (!real()) return getOwnerCalendar(storeId, startDate, endDate)
+      try {
+        return await http.get<ScheduleCalendar>(
+          `${base(storeId)}/schedule-calendar?startDate=${startDate}&endDate=${endDate}`,
+        )
+      } catch (error) {
+        // 근무표를 아직 안 만든 매장 (없으면 빈 달력)
+        if (error instanceof ApiError && error.status === 404)
+          return { startDate, endDate, shifts: [] }
+        throw error
+      }
+    },
+    enabled: !!storeId,
+  })
+}
+
+/**
+ * 하루 근무 시간을 자유롭게 바꿀 수 있는지 — BE 하루 조정에 start · end 칸이 생기면(은교님께 요청 11/11) true 로.
+ * 그 전에는 진짜 모드에서 근무 타임 시간으로만 저장한다 (가짜 서버는 바꾼 시간 그대로)
+ */
+const DAILY_TIME_IN_BE = false
+export const canSetDailyTime = () => !real() || DAILY_TIME_IN_BE
+
+/** 그날 남길 근무 전체로 바꾸기 (추가 · 담당자 · 시간 바꾸기 · 빼기). 고정 근무표는 그대로, 그날 대기 중 대타는 취소된다 */
+export function useSaveDailySchedule(storeId: string) {
+  const refresh = useRefreshSchedule(storeId)
+  return useMutation({
+    mutationFn: async ({
+      date,
+      shifts,
+    }: {
+      date: string
+      shifts: { templateId: string; assigneeUserId: string; start: string; end: string }[]
+    }) => {
+      if (!real()) return putDailySchedule(storeId, date, shifts)
+      await apiFetch(`${base(storeId)}/schedule-calendar/${date}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          shifts: shifts.map(({ start, end, ...s }) =>
+            DAILY_TIME_IN_BE ? { ...s, start, end } : s,
+          ),
+        }),
+      })
+    },
+    onSettled: refresh,
+  })
+}
+
+/** 그날 하루 조정을 지우고 고정 근무로 되돌리기 */
+export function useResetDailySchedule(storeId: string) {
+  const refresh = useRefreshSchedule(storeId)
+  return useMutation({
+    mutationFn: (date: string) =>
+      real()
+        ? http.delete<void>(`${base(storeId)}/schedule-calendar/${date}`)
+        : resetDailySchedule(storeId, date),
     onSettled: refresh,
   })
 }

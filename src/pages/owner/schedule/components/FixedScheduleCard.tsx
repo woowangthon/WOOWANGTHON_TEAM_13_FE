@@ -18,7 +18,7 @@ import { Button } from '@/ui/Button'
 import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
 
-// 고정 근무표: 사람마다 매주 근무(타임별 요일) + [고치기] → 요일 × 타임 칸 (같은 날 여러 타임 가능)
+// 고정 근무표: 사람마다 매주 근무(타임별 요일) + [수정] → 요일 × 타임 칸 (같은 날 여러 타임 가능)
 // 코드로 입장하기 전 직원도 초대에 근무를 정해 두고 고칠 수 있다 (BE #38 PATCH /invitations/{id}, 입장하면 고정 스케줄로) · 쉬는 요일은 막힘
 
 /** "오픈 월 · 화 · 수 / 마감 금" */
@@ -33,7 +33,7 @@ function summary(mine: WeekShift[], templates: ShiftTemplate[]) {
   return parts.join(' / ')
 }
 
-/** [고치기] 대상: 입장한 사람(사장님 · 직원)이나 입장 전 직원(초대) */
+/** [수정] 대상: 입장한 사람(사장님 · 직원)이나 입장 전 직원(초대) */
 type EditTarget =
   | { kind: 'worker'; name: string; worker: ScheduleWorker; shifts: WeekShift[] }
   | { kind: 'invited'; name: string; member: Member; shifts: WeekShift[] }
@@ -112,11 +112,11 @@ export function FixedScheduleCard({
       <button
         type="button"
         onClick={onEdit}
-        aria-label={`${name} 근무 고치기`}
+        aria-label={`${name} 근무 수정`}
         disabled={templates.length === 0}
         className="shrink-0 p-0 text-[13px] font-bold text-brand disabled:text-faint"
       >
-        고치기
+        수정
       </button>
     </div>
   )

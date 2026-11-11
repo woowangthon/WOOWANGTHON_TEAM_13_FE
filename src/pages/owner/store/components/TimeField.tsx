@@ -18,12 +18,15 @@ export function TimeField({
   value,
   onChange,
   label,
+  disabled,
 }: {
   /** HH:MM */
   value: string
   onChange: (value: string) => void
   /** 예: "오픈 시작" */
   label: string
+  /** 못 바꾸게 (눌러도 휠이 안 열림) */
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [hour, setHour] = useState(value.slice(0, 2))
@@ -43,8 +46,9 @@ export function TimeField({
       <button
         type="button"
         onClick={openSheet}
+        disabled={disabled}
         aria-label={`${label} ${value}`}
-        className="h-10 rounded-xl bg-background px-3 text-[15px] font-semibold tabular-nums"
+        className="h-10 rounded-xl bg-background px-3 text-[15px] font-semibold tabular-nums disabled:opacity-50"
       >
         {value}
       </button>
