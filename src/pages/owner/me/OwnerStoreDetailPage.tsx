@@ -22,8 +22,8 @@ import { cn } from '@/ui/utils'
 
 // 매장 상세 (마이페이지 › 내 매장): 매장 이름 · 급여일 · 사업장 규모 · 쉬는 날(요일 · 공휴일) · 직원별 시급 → 저장
 
-// 급여일: 1~28일 · 말일(31) — BE 가 받는 값만 (29 · 30일은 11/10 회의에서 정하기)
-const DAYS = [...Array.from({ length: 28 }, (_, i) => i + 1), 31]
+// 급여일: 1~30일 · 말일(31) — BE 마이그레이션 17로 1~31 을 받는다 (31 은 짧은 달에도 마지막 날)
+const DAYS = [...Array.from({ length: 30 }, (_, i) => i + 1), 31]
 const ROW = 44
 
 export default function OwnerStoreDetailPage() {
