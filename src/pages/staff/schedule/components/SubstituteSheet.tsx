@@ -34,12 +34,13 @@ export function SubstituteSheet({
   const me = myUserId()
 
   const workers = (workersQuery.data?.workers ?? [])
-    .filter((w) => w.userId !== me && w.memberId !== null)
+    // BE 는 사장님을 memberId null 로 준다. 그 밖에 memberId 가 없는 사람은 퇴사한 직원이라 뺀다
+    .filter((w) => w.userId !== me && (w.memberId !== null || w.role === 'owner'))
     .sort((a, b) => (a.role === b.role ? 0 : a.role === 'owner' ? 1 : -1))
   const target = workers.find((w) => w.userId === targetId)
 
   const send = () => {
-    if (!target) return
+    if (!target || shift.assignmentId === null) return
     create.mutate(
       { assignmentId: shift.assignmentId, date: shift.date, targetUserId: target.userId },
       {

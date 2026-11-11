@@ -21,6 +21,10 @@ import type {
 
 // 가짜 서버: 근무 API (docs/07 7) — 공유 근무 달력 + (BE 에서 없어진) 근무 가능 시간. 시연 날짜는 매장마다 다르다 (달빛 카페 11/20 · 오후의 커피 11/21)
 
+/** 실제 BE 와 같게: 사장님은 구성원(member)이 아니라서 memberId null */
+const mockMemberId = (worker: { userId: string; role: ScheduleWorker['role'] }) =>
+  worker.role === 'owner' ? null : `mbr_${worker.userId}`
+
 /**
  * GET /stores/{storeId}/schedule-calendar?startDate=&endDate= — 요일마다 반복되는 고정 근무를 날짜별로 펼치고, 대타 칸은 사람만 바꾼다.
  * 시연의 '나'(userId 'me')는 로그인한 사람의 userId 로 바꿔서 돌려준다 (로그인 없이 볼 때는 usr_jieun)
@@ -49,7 +53,7 @@ export async function getScheduleCalendar(
     return worker
       ? {
           userId: idOf(worker.userId),
-          memberId: `mbr_${worker.userId}`,
+          memberId: mockMemberId(worker),
           name: worker.name,
           role: worker.role,
         }
@@ -144,7 +148,7 @@ function workerIn(storeId: string, userId: string, myUserId: string): ScheduleWo
   const worker = storeSchedules[storeId]?.workers.find((w) => w.userId === userId)
   const id = userId === 'me' ? myUserId : userId
   return worker
-    ? { userId: id, memberId: `mbr_${worker.userId}`, name: worker.name, role: worker.role }
+    ? { userId: id, memberId: mockMemberId(worker), name: worker.name, role: worker.role }
     : { userId: id, memberId: null, name: '퇴사한 직원', role: 'staff' }
 }
 

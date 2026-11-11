@@ -4,6 +4,7 @@ import {
   myUserId,
   scheduleToday,
   shiftHours,
+  shiftKey,
   toMySchedule,
   useScheduleCalendar,
 } from '@/lib/api/schedule'
@@ -184,7 +185,7 @@ export function ScheduleMonth() {
                     // 시간 · 이름이 한 줄에 들어가면 한 줄("15 지은"), 안 들어가면 이름이 아랫줄로 ("15" / "김민수")
                     return (
                       <span
-                        key={`${shift.assignmentId}|${shift.date}`}
+                        key={shiftKey(shift)}
                         className={cn(
                           'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
                           isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
@@ -242,12 +243,12 @@ export function ScheduleMonth() {
           ) : (
             selectedShifts.map((shift) => {
               const mine = isMine(shift)
-              // 대타 요청은 내 근무 · 오늘 이후만
-              const canRequest = mine && shift.date >= todayKey
+              // 대타 요청은 내 근무 · 오늘 이후만. 하루 조정한 근무(assignmentId null)는 BE 가 막는다
+              const canRequest = mine && shift.date >= todayKey && shift.assignmentId !== null
               const pendingSent = canRequest ? pendingSentOf(shift) : undefined
               return (
                 <div
-                  key={`${shift.assignmentId}|${shift.date}`}
+                  key={shiftKey(shift)}
                   className={cn(
                     'flex flex-col gap-3 rounded-[20px] px-4 py-3.5',
                     mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',

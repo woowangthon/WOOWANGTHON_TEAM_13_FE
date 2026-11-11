@@ -318,7 +318,7 @@ export interface NotificationFeed {
 
 // ── 근무 (docs/07 7, P1) ──
 
-/** 근무하는 사람 (알바생 · 사장님). 퇴사한 사람은 memberId null · name "퇴사한 직원" */
+/** 근무하는 사람 (알바생 · 사장님). 사장님은 memberId null, 퇴사한 사람도 memberId null · name "퇴사한 직원" */
 export interface ScheduleWorker {
   userId: string
   memberId: string | null
@@ -328,8 +328,8 @@ export interface ScheduleWorker {
 
 /** 공유 근무 달력의 근무 한 칸 (그날 · 그 시간 · 그 사람) */
 export interface CalendarShift {
-  /** 고정 근무 배정 ID (요일마다 반복). 날짜와 함께 써야 한 칸이 정해진다 */
-  assignmentId: string
+  /** 고정 근무 배정 ID (요일마다 반복). 날짜와 함께 써야 한 칸이 정해진다. 하루 조정한 근무는 null (대타 요청 불가) */
+  assignmentId: string | null
   templateId: string
   date: string
   /** 근무 이름 (오픈 · 마감 …) */
@@ -341,6 +341,10 @@ export interface CalendarShift {
   assignee: ScheduleWorker
   /** 대타로 바뀐 칸 */
   substituted: boolean
+  /** 하루 조정한 근무의 ID (BE #38). 고정 근무는 null */
+  dailyShiftId?: string | null
+  /** 사장님이 그날만 조정한 근무 */
+  manuallyAdjusted?: boolean
 }
 
 /** 대타 요청 상태: 대기 · 수락됨 · 거절됨 · 취소됨 */
