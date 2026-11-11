@@ -20,7 +20,7 @@ export function StaffFrame({
     <div className="min-h-dvh bg-canvas pt-(--offline-banner,0px)" style={brand}>
       <div
         className={cn(
-          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[18px] bg-background px-4 pt-3.5 pb-[130px]',
+          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[18px] bg-background px-4 pt-3.5 pb-[calc(130px+env(safe-area-inset-bottom))]',
           className,
         )}
       >

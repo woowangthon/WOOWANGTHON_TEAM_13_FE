@@ -47,7 +47,7 @@ const fetchRequests = (storeId: string, box: SubstituteBox, status?: SubstituteS
       )
     : getSubstituteRequests(storeId, box, myUserId(), status)
 
-/** 대타로 고를 수 있는 사람 (나 · 사장님 포함 — 화면에서 나를 뺀다). 시트를 열 때만 부른다 */
+/** 근무표의 사람 목록 (나 · 사장님 포함). 대타 시트는 나를 빼고 고르고, 알바 홈은 인수인계 작성자의 직원 이름을 찾는다 */
 export function useScheduleWorkers(storeId: string, enabled = true) {
   return useQuery({
     queryKey: substituteKeys.workers(storeId),

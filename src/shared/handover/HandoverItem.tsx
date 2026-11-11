@@ -15,6 +15,8 @@ interface HandoverItemProps {
   subText: string
   /** 지난 날짜처럼 체크할 수 없을 때 */
   disabled?: boolean
+  /** 오른쪽 작은 글씨 (예: 하늘 · 07:36). 안 주면 태그 색 점 */
+  meta?: string
   onToggle: () => void
 }
 
@@ -24,6 +26,7 @@ export function HandoverItem({
   faded,
   subText,
   disabled,
+  meta,
   onToggle,
 }: HandoverItemProps) {
   return (
@@ -62,10 +65,17 @@ export function HandoverItem({
         </span>
         <span className="text-xs text-subtle">{subText}</span>
       </span>
-      <span
-        className="size-[7px] shrink-0 rounded-full"
-        style={{ background: faded ? '#CFC8BA' : HANDOVER_TAG_COLOR[item.tag] }}
-      />
+      {meta ? (
+        // 한 줄로만 (긴 이름은 …), 항목 글자가 대신 줄바꿈된다
+        <span className="max-w-[42%] shrink-0 truncate text-xs font-medium text-subtle tabular-nums">
+          {meta}
+        </span>
+      ) : (
+        <span
+          className="size-[7px] shrink-0 rounded-full"
+          style={{ background: faded ? '#CFC8BA' : HANDOVER_TAG_COLOR[item.tag] }}
+        />
+      )}
     </button>
   )
 }

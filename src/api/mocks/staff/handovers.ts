@@ -15,8 +15,8 @@ export interface HandoverDay {
   items: HandoverItem[]
 }
 
-/** 매장별 · 날짜(일)별 인수인계. 오늘 것은 체크할 수 있다 */
-export const handoverDays: Record<string, Record<number, HandoverDay>> = {
+/** 매장별 · 날짜(일)별 인수인계 (하루에 여러 명이 남기면 배열). 오늘 것은 체크할 수 있다 */
+export const handoverDays: Record<string, Record<number, HandoverDay | HandoverDay[]>> = {
   dalbit: {
     16: {
       from: '지은 · 23:10',
@@ -43,15 +43,25 @@ export const handoverDays: Record<string, Record<number, HandoverDay>> = {
         { id: 'd19b', tag: '재고', text: '딸기청 2병 남음' },
       ],
     },
-    20: {
-      from: '민수 · 14:50',
-      summary: '꽃집 외상 오늘 계산 · 딸기청 1병 남음',
-      items: [
-        { id: 'h1', tag: '외상', text: '꽃집 사장님 아이스 아메리카노 1잔 · 오늘 계산' },
-        { id: 'h2', tag: '재고', text: '딸기청 1병 남음' },
-        { id: 'h3', tag: '기타', text: '제빙기 소음 · 사장님께 전달됨' },
-      ],
-    },
+    20: [
+      {
+        from: '민수 · 14:50',
+        summary: '꽃집 외상 오늘 계산 · 딸기청 1병 남음',
+        items: [
+          { id: 'h1', tag: '외상', text: '꽃집 사장님 아이스 아메리카노 1잔 · 오늘 계산' },
+          { id: 'h2', tag: '재고', text: '딸기청 1병 남음' },
+          { id: 'h3', tag: '기타', text: '제빙기 소음 · 사장님께 전달됨' },
+        ],
+      },
+      {
+        from: '도윤 · 08:05',
+        summary: '원두 1봉 남음 · 영수증 용지 교체',
+        items: [
+          { id: 'h4', tag: '재고', text: '원두(하우스 블렌드) 1봉 남음 · 내일 오전 입고 예정' },
+          { id: 'h5', tag: '기타', text: '포스기 영수증 용지 교체함' },
+        ],
+      },
+    ],
   },
   afternoon: {
     17: {
