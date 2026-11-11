@@ -241,7 +241,14 @@ export function useOwnerCalendar(storeId: string, startDate: string, endDate: st
   })
 }
 
-/** 그날 남길 근무 전체로 바꾸기 (추가 · 담당자 바꾸기 · 빼기). 고정 근무표는 그대로, 그날 대기 중 대타는 취소된다 */
+/**
+ * 하루 근무 시간을 자유롭게 바꿀 수 있는지 — BE 하루 조정에 start · end 칸이 생기면(은교님께 요청 11/11) true 로.
+ * 그 전에는 진짜 모드에서 근무 타임 시간으로만 저장한다 (가짜 서버는 바꾼 시간 그대로)
+ */
+const DAILY_TIME_IN_BE = false
+export const canSetDailyTime = () => !real() || DAILY_TIME_IN_BE
+
+/** 그날 남길 근무 전체로 바꾸기 (추가 · 담당자 · 시간 바꾸기 · 빼기). 고정 근무표는 그대로, 그날 대기 중 대타는 취소된다 */
 export function useSaveDailySchedule(storeId: string) {
   const refresh = useRefreshSchedule(storeId)
   return useMutation({
@@ -250,12 +257,16 @@ export function useSaveDailySchedule(storeId: string) {
       shifts,
     }: {
       date: string
-      shifts: { templateId: string; assigneeUserId: string }[]
+      shifts: { templateId: string; assigneeUserId: string; start: string; end: string }[]
     }) => {
       if (!real()) return putDailySchedule(storeId, date, shifts)
       await apiFetch(`${base(storeId)}/schedule-calendar/${date}`, {
         method: 'PUT',
-        body: JSON.stringify({ shifts }),
+        body: JSON.stringify({
+          shifts: shifts.map(({ start, end, ...s }) =>
+            DAILY_TIME_IN_BE ? { ...s, start, end } : s,
+          ),
+        }),
       })
     },
     onSettled: refresh,

@@ -301,7 +301,7 @@ export async function getOwnerCalendar(
 export async function putDailySchedule(
   storeId: string,
   workDate: string,
-  shifts: { templateId: string; assigneeUserId: string }[],
+  shifts: { templateId: string; assigneeUserId: string; start?: string; end?: string }[],
 ): Promise<void> {
   await wait()
   const schedule = scheduleOf(storeId)
@@ -320,8 +320,9 @@ export async function putDailySchedule(
       templateId: t.templateId,
       date: workDate,
       name: t.name,
-      start: t.start,
-      end: t.end,
+      // 시간을 바꿨으면 그 시간 (BE start · end 칸 요청 중)
+      start: s.start ?? t.start,
+      end: s.end ?? t.end,
       role: '',
       assignee: workerOf(schedule, s.assigneeUserId),
       substituted: false,
