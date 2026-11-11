@@ -1,8 +1,10 @@
 import {
   handoverDays,
   mockSummarize,
+  type HandoverDay,
   type HandoverTag as MockTag,
 } from '@/api/mocks/staff/handovers'
+import { storeSchedules } from '@/api/mocks/staff/schedule'
 import { findStaffStore } from '@/api/mocks/staff/stores'
 import { ApiError } from '@/lib/apiClient'
 import { useAuthStore } from '@/lib/authStore'
@@ -40,30 +42,46 @@ function currentUser(): UserRef {
   return me ? { userId: me.userId, name: me.nickname } : { userId: 'usr_jieun', name: '지은' }
 }
 
+/** 작성자 이름 → 가짜 근무표의 userId (홈이 근무표 직원 이름을 찾을 수 있게). '나'는 시연 알바생 */
+function authorId(storeId: string, name: string) {
+  const id = storeSchedules[storeId]?.workers.find((w) => w.name.startsWith(name))?.userId
+  return id === 'me' ? 'usr_jieun' : (id ?? `usr_${name}`)
+}
+
 /** 가짜 데이터(handovers.ts)의 날짜별 인수인계 → 노트 */
 function seed(storeId: string): HandoverNote[] {
   const { today } = findStaffStore(storeId)
-  return Object.entries(handoverDays[storeId] ?? {}).map(([day, d]) => {
-    const [name, time] = d.from.split(' · ')
-    const createdAt = `${dateKey(new Date(today.getFullYear(), today.getMonth(), Number(day)))}T${time}:00+09:00`
-    return {
-      noteId: `hnd_${storeId}_${day}`,
-      author: { userId: `usr_${name}`, name },
-      createdAt,
-      updatedAt: createdAt,
-      rawText: d.items.map((item) => item.text).join('\n'),
-      noIssue: d.items.length === 0,
-      summary: d.summary,
-      items: d.items.map((item) => ({
-        itemId: item.id,
-        tag: TAG[item.tag],
-        text: item.text,
-        checked: false,
-        checkedBy: null,
-        checkedAt: null,
-      })),
-    }
-  })
+  return Object.entries(handoverDays[storeId] ?? {}).flatMap(([day, value]) =>
+    [value].flat().map((d, i) => toNote(storeId, today, Number(day), d, i)),
+  )
+}
+
+function toNote(
+  storeId: string,
+  today: Date,
+  day: number,
+  d: HandoverDay,
+  i: number,
+): HandoverNote {
+  const [name, time] = d.from.split(' · ')
+  const createdAt = `${dateKey(new Date(today.getFullYear(), today.getMonth(), day))}T${time}:00+09:00`
+  return {
+    noteId: i === 0 ? `hnd_${storeId}_${day}` : `hnd_${storeId}_${day}_${i}`,
+    author: { userId: authorId(storeId, name), name },
+    createdAt,
+    updatedAt: createdAt,
+    rawText: d.items.map((item) => item.text).join('\n'),
+    noIssue: d.items.length === 0,
+    summary: d.summary,
+    items: d.items.map((item) => ({
+      itemId: item.id,
+      tag: TAG[item.tag],
+      text: item.text,
+      checked: false,
+      checkedBy: null,
+      checkedAt: null,
+    })),
+  }
 }
 
 function storeNotes(storeId: string) {
