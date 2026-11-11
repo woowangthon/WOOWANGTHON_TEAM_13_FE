@@ -106,7 +106,7 @@ export type StoreUpdate = Partial<
 /** BE 사업장 규모 (화면 StoreSize: under5 · over5) */
 export type BusinessSize = 'UNDER_FIVE' | 'FIVE_OR_MORE'
 
-/** BE 매장 응답 (GET · POST · PATCH /stores). 급여일은 1~28 · 31(말일), 안 정했으면 null */
+/** BE 매장 응답 (GET · POST · PATCH /stores). 급여일은 1~31(31 = 말일), 안 정했으면 null */
 export interface StoreResponse {
   storeId: string
   name: string
@@ -128,6 +128,8 @@ export interface InvitationResponse {
   code: string
   staffName: string
   hourlyWage: number
+  /** 입장하면 들어갈 고정 근무 (BE #38) */
+  schedule?: WeekShift[]
   createdAt: string
 }
 

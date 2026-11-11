@@ -14,7 +14,7 @@ export default function ScheduleDraftPage() {
       <WorkHeader segment="schedule" />
       <ReceivedRequests storeId={store.storeId} />
       <WorkCalendar key={store.storeId} storeId={store.storeId} today={today} closed={store} />
-      <FixedScheduleCard storeId={store.storeId} />
+      <FixedScheduleCard storeId={store.storeId} closedWeekdays={store.closedWeekdays} />
       <ShiftTemplatesCard storeId={store.storeId} />
     </div>
   )
