@@ -98,6 +98,10 @@ export function shiftHours(shift: Pick<CalendarShift, 'start' | 'end'>) {
   return Math.max(0, minutes(shift.end) - minutes(shift.start)) / 60
 }
 
+/** 달력 한 칸의 고유 키: 고정 근무는 assignmentId, 하루 조정한 근무는 dailyShiftId (BE 는 둘 중 하나만 준다) */
+export const shiftKey = (shift: CalendarShift) =>
+  `${shift.dailyShiftId ?? shift.assignmentId}|${shift.date}`
+
 const overlaps = (
   a: Pick<CalendarShift, 'start' | 'end'>,
   b: Pick<CalendarShift, 'start' | 'end'>,
@@ -115,7 +119,7 @@ export function toMySchedule(calendar: ScheduleCalendar, today: Date, myId: stri
   const shifts: Shift[] = calendar.shifts
     .filter((shift) => shift.assignee.userId === myId)
     .map((shift) => ({
-      shiftId: `${shift.assignmentId}|${shift.date}`,
+      shiftId: shiftKey(shift),
       date: shift.date,
       start: shift.start,
       end: shift.end,
