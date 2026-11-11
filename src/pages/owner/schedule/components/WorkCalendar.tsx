@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { shiftHours, useScheduleCalendar } from '@/lib/api/schedule'
+import { shiftHours, shiftKey, useScheduleCalendar } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
 import { addDays, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
@@ -13,6 +13,7 @@ import { cn } from '@/ui/utils'
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 사장님 근무(내 근무)는 진한 매장 색, 대타는 점선 테두리.
 // 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
 // 사람 칩으로 한 사람만 보기 · 매장 쉬는 날(쉬는 요일 · 공휴일 휴무)은 "휴무" (근무 블록 숨김) · 공휴일은 빨간 날짜
+// 사장님이 그날만 조정한 근무(BE #38, assignmentId null · dailyShiftId)는 쉬는 날에도 보이고 "조정" 표시
 // 하루만 담당자 바꾸기는 BE 가 담당자 본인의 대타 요청만 받아서 이번엔 없다 (팀에 물어볼 것)
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -36,6 +37,10 @@ const hourText = (time: string) => String(Number(time.slice(0, 2)))
 /** 칸이 좁아서 사장님은 "사장"으로만 (아래 카드에는 이름 그대로) */
 const blockName = (shift: CalendarShift) =>
   shift.assignee.role === 'owner' ? '사장' : shift.assignee.name.trim()
+/** 쉬는 날에는 사장님이 그날만 넣은 근무만 보인다 (BE 도 휴무일 고정 근무는 빼고 조정 근무는 준다) */
+const shownOn = (closedDay: boolean, shifts: CalendarShift[]) =>
+  closedDay ? shifts.filter((s) => s.manuallyAdjusted) : shifts
+
 /** 사장님 화면이라 '내 근무' = 사장님 근무 */
 const isMine = (shift: CalendarShift) => shift.assignee.role === 'owner'
 
@@ -78,7 +83,7 @@ export function WorkCalendar({
   }
   const selectedKey = toDateKey(selected)
   const selectedClosed = isClosedDay(selected, selectedKey, closed)
-  const selectedShifts = selectedClosed ? [] : (byDate.get(selectedKey) ?? [])
+  const selectedShifts = shownOn(selectedClosed, byDate.get(selectedKey) ?? [])
 
   return (
     <section className="flex flex-col gap-2.5">
@@ -158,7 +163,7 @@ export function WorkCalendar({
                 const key = toDateKey(day)
                 const dayClosed = isClosedDay(day, key, closed)
                 const holiday = HOLIDAYS[key]
-                const shifts = dayClosed ? [] : (byDate.get(key) ?? [])
+                const shifts = shownOn(dayClosed, byDate.get(key) ?? [])
                 const inMonth = day.getMonth() === view.month - 1
                 const isToday = isSameDay(day, today)
                 const isSelected = isSameDay(day, selected)
@@ -168,7 +173,7 @@ export function WorkCalendar({
                     type="button"
                     onClick={() => setSelected(day)}
                     aria-pressed={isSelected}
-                    aria-label={`${formatDate(day)}${holiday ? ` ${holiday}` : ''} ${dayClosed ? '휴무' : `근무 ${shifts.length}개`}`}
+                    aria-label={`${formatDate(day)}${holiday ? ` ${holiday}` : ''}${dayClosed ? ' 휴무' : ''} 근무 ${shifts.length}개`}
                     className={cn(
                       'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
                       !inMonth && 'opacity-40',
@@ -193,7 +198,7 @@ export function WorkCalendar({
                       const name = blockName(shift)
                       return (
                         <span
-                          key={`${shift.assignmentId}|${shift.assignee.userId}`}
+                          key={shiftKey(shift)}
                           className={cn(
                             'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
                             isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
@@ -256,7 +261,7 @@ export function WorkCalendar({
               const mine = isMine(shift)
               return (
                 <div
-                  key={`${shift.assignmentId}|${shift.assignee.userId}`}
+                  key={shiftKey(shift)}
                   className={cn(
                     'flex items-center gap-3 rounded-[20px] px-4 py-3.5',
                     mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',
@@ -278,6 +283,16 @@ export function WorkCalendar({
                           )}
                         >
                           대타
+                        </span>
+                      )}
+                      {shift.manuallyAdjusted && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-px text-[11px] font-bold',
+                            mine ? 'bg-white text-brand' : 'bg-accent text-accent-foreground',
+                          )}
+                        >
+                          조정
                         </span>
                       )}
                     </span>

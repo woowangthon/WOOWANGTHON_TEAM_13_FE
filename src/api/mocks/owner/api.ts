@@ -47,6 +47,7 @@ import type {
   RecipeScanDraft,
   ScheduleDraft,
   StoreUpdate,
+  WeekShift,
   WorkShift,
 } from '@/pages/owner/api/types'
 
@@ -220,6 +221,19 @@ export async function createMember(storeId: string, input: NewMember): Promise<M
     schedule: input.schedule ?? [],
   }
   db.members.push(member)
+  return { ...member }
+}
+
+/** PATCH /stores/{storeId}/invitations/{invitationId} — 입장 전 직원의 고정 근무 고치기 (BE #38) */
+export async function updateInviteSchedule(
+  memberId: string,
+  schedule: WeekShift[],
+): Promise<Member> {
+  await wait()
+  const member = db.members.find((m) => m.memberId === memberId)
+  if (!member || member.status !== 'invited')
+    fail(409, 'INVITATION_NOT_EDITABLE', '이미 입장했거나 취소된 초대예요')
+  member.schedule = schedule
   return { ...member }
 }
 

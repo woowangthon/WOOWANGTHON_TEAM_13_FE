@@ -77,7 +77,7 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
   return toOwnerStore(store)
 }
 
-// 이름 · 급여일 · 사업장 규모 (BE #27). 급여일은 1~28 · 31(말일)만 받는다
+// 이름 · 급여일 · 사업장 규모 · 쉬는 날 (BE #27 · #38). 급여일은 1~31 (31 = 말일)
 const patchStore = async (storeId: string, patch: StoreUpdate): Promise<OwnerStore> => {
   if (!isRealApi('stores')) return updateStore(storeId, patch)
   const store = await http.patch<StoreResponse>(`/stores/${storeId}`, {
