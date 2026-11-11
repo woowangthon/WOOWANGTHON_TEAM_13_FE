@@ -33,6 +33,17 @@ export const HANDOVER_ITEM_MAX = 500
 export const HANDOVER_SUMMARY_MAX = 1000
 export const HANDOVER_ITEMS_MAX = 50
 
+/**
+ * 하루 인수인계 AI 요약 (알바 홈 맨 위 카드 1개). 하루 합친 요약 BE(연서님)가 아직 없어서
+ * 지금은 그날 노트들의 요약을 한 줄씩 모은다. BE 가 생기면 이 함수만 그 값으로 바꾼다
+ */
+export function dayHandoverSummary(notes: HandoverNote[]): string {
+  return notes
+    .map((note) => note.summary.trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
 const real = () => isRealApi('handover')
 const notesPath = (storeId: string) => `/stores/${storeId}/handover-notes`
 

@@ -8,9 +8,11 @@ interface HandoverListProps {
   items: HandoverItemData[]
   live: boolean
   onToggle: (item: HandoverItemData) => void
+  /** 항목 오른쪽 작은 글씨 (예: 작성자 · 시간). 안 주면 지금처럼 태그 색 점 */
+  meta?: (item: HandoverItemData) => string | undefined
 }
 
-export function HandoverList({ items, live, onToggle }: HandoverListProps) {
+export function HandoverList({ items, live, onToggle, meta }: HandoverListProps) {
   return items.map((item) => {
     const done = live ? item.checked : true
     const tag = HANDOVER_TAG_LABEL[item.tag]
@@ -22,6 +24,7 @@ export function HandoverList({ items, live, onToggle }: HandoverListProps) {
         faded={live && done}
         subText={live ? tag : `${tag} · 처리됨`}
         disabled={!live}
+        meta={meta?.(item)}
         onToggle={() => onToggle(item)}
       />
     )

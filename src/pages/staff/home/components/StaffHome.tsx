@@ -1,10 +1,11 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
+import { dayHandoverSummary, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
 import { availabilityEnabled, shiftLabel, useMySchedule } from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
-import type { Shift } from '@/lib/api/types'
+import { useScheduleWorkers } from '@/lib/api/substitute'
+import type { Shift, UserRef } from '@/lib/api/types'
 import { addDays, fromDateKey, isSameDay, todayInKst, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { ShiftBanner } from '@/pages/staff/home/components/ShiftBanner'
@@ -208,7 +209,16 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
   )
 }
 
-// 노트마다 AI 요약 카드 + 항목 (최신 순). 오늘만 체크할 수 있다
+/**
+ * 작성자 이름: 노트의 author.name 은 프로필 이름(예: 류민지)이라, 매장 직원 이름(예: 하늘)을 근무표 사람 목록에서 찾는다.
+ * 못 찾으면(목록을 아직 못 받았거나 나간 사람) author.name. 사장님은 목록 이름 그대로
+ */
+function useStaffName(storeId: string) {
+  const workers = useScheduleWorkers(storeId).data?.workers
+  return (author: UserRef) => workers?.find((w) => w.userId === author.userId)?.name ?? author.name
+}
+
+// 하루 AI 요약 카드 1개 + 그날 모든 항목 한 목록 (노트 순서 · 항목 순서). 항목 오른쪽에 작성자 · 시간. 오늘만 체크할 수 있다
 function HandoverSection({
   store,
   today,
@@ -232,6 +242,11 @@ function HandoverSection({
 
   const notes = notesQuery.data?.notes ?? []
   const withItems = notes.filter((note) => !note.noIssue && note.items.length > 0)
+  // 노트 구분 없이 한 목록 (노트 순서 · 항목 순서 그대로). 체크할 때 쓸 noteId 와 항목 오른쪽 "작성자 · 시간"
+  const items = withItems.flatMap((note) => note.items)
+  const noteOf = new Map(withItems.flatMap((note) => note.items.map((item) => [item.itemId, note])))
+  const authorName = useStaffName(store.id)
+  const authors = new Set(withItems.map((note) => note.author.userId)).size
 
   const title = live ? '오늘의 인수인계' : `${formatDate(selectedDate)} 인수인계`
 
@@ -258,23 +273,28 @@ function HandoverSection({
           onRetry={() => notesQuery.refetch()}
         />
       ) : withItems.length > 0 ? (
-        withItems.map((note) => (
-          <div key={note.noteId} className="flex flex-col gap-2.5">
-            <AiSummaryCard
-              from={`${note.author.name} · ${formatTime(note.createdAt)}`}
-              summary={note.summary}
-              done={live ? note.items.filter((item) => item.checked).length : note.items.length}
-              total={note.items.length}
-            />
-            <HandoverList
-              items={note.items}
-              live={live}
-              onToggle={(item) =>
+        <div className="flex flex-col gap-2.5">
+          <AiSummaryCard
+            from={`${authors}명이 남김`}
+            summary={dayHandoverSummary(withItems)}
+            done={live ? items.filter((item) => item.checked).length : items.length}
+            total={items.length}
+          />
+          <HandoverList
+            items={items}
+            live={live}
+            meta={(item) => {
+              const note = noteOf.get(item.itemId)
+              return note && `${authorName(note.author)} · ${formatTime(note.createdAt)}`
+            }}
+            onToggle={(item) => {
+              const note = noteOf.get(item.itemId)
+              if (note) {
                 confirm.mutate({ noteId: note.noteId, itemId: item.itemId, checked: !item.checked })
               }
-            />
-          </div>
-        ))
+            }}
+          />
+        </div>
       ) : live && notes.length === 0 ? (
         <EmptyGuide
           message="오늘 남긴 인수인계가 없어요"

@@ -2,8 +2,9 @@ import { Card } from '@/ui/Card'
 
 // 공용 보기 부품: 인수인계 AI 요약 결과 · 사장/알바 화면이 함께 사용 — 담당: 민지
 interface AiSummaryCardProps {
-  /** 작성자 · 시간 (예: 지은 · 23:10) */
+  /** 카드 위 작은 글씨 (예: 2명이 남김) */
   from: string
+  /** 요약 (줄바꿈하면 줄마다 나눠서 보여 준다) */
   summary: string
   /** 처리한 항목 수 / 전체 항목 수 */
   done: number
@@ -20,7 +21,9 @@ export function AiSummaryCard({ from, summary, done, total }: AiSummaryCardProps
           {from}
         </span>
       </div>
-      <p className="m-0 text-sm leading-[1.65] text-balance break-keep opacity-90">{summary}</p>
+      <p className="m-0 text-sm leading-[1.65] text-balance whitespace-pre-line break-keep opacity-90">
+        {summary}
+      </p>
       <div className="mt-1.5 flex items-center gap-3">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
           <div
