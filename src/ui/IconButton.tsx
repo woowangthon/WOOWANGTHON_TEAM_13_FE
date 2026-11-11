@@ -2,9 +2,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/ui/utils'
 
-// 동그란 아이콘 버튼 (뒤로 · 원형 화살표 · 보내기) — 담당: 나현. aria-label 필수
+// 동그란 아이콘 버튼 (뒤로 · 원형 화살표 · 보내기) — 담당: 나현. aria-label 필수. 누르면 살짝 작아지고 어두워진다
 const iconButtonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed',
+  'inline-flex shrink-0 items-center justify-center rounded-full transition-[color,background-color,transform,filter] duration-100 enabled:active:scale-[0.97] enabled:active:brightness-95 motion-reduce:enabled:active:scale-100 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
