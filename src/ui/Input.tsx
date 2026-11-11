@@ -2,9 +2,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import type { InputHTMLAttributes } from 'react'
 import { cn } from '@/ui/utils'
 
-// 입력창 — 담당: 나현. white: 시트 안 / card: 배경 위 알약
+// 입력창 — 담당: 나현. white: 시트 안 / card: 배경 위 알약. 글자 16px (아이폰에서 누르면 화면이 확대되지 않게)
 const inputVariants = cva(
-  'h-[52px] min-w-0 border-none px-4 text-[15px] text-foreground placeholder:text-subtle',
+  'h-[52px] min-w-0 border-none px-4 text-base text-foreground placeholder:text-subtle',
   {
     variants: {
       variant: {

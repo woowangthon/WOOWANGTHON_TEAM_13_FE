@@ -3,6 +3,7 @@ import { NavLink } from 'react-router'
 import { cn } from '@/ui/utils'
 
 // 하단 탭 — 담당: 나현. 아이콘 + 활성 점, 가운데 + 버튼(fab)
+// 아이폰 홈 바와 겹치지 않게 바닥에서 max(12px, safe-area) 띄운다 (index.html viewport-fit=cover)
 export interface BottomNavItem {
   to: string
   label: string
@@ -29,7 +30,7 @@ export function BottomNav({ items, fab, pathname }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-3 left-1/2 z-20 grid w-[calc(100%-24px)] max-w-[436px] -translate-x-1/2 items-center rounded-[30px] bg-card/95 px-2 py-[9px] shadow-float backdrop-blur-md"
+      className="fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 z-20 grid w-[calc(100%-24px)] max-w-[436px] -translate-x-1/2 items-center rounded-[30px] bg-card/95 px-2 py-[9px] shadow-float backdrop-blur-md"
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
       {left.map((item) => (
@@ -62,7 +63,7 @@ function NavTab({ item, pathname }: { item: BottomNavItem; pathname: string }) {
       className={({ isActive }) =>
         cn(
           'relative flex flex-col items-center gap-[5px] pt-2 pb-1',
-          isActive || extra ? 'text-foreground' : 'text-faint',
+          isActive || extra ? 'text-foreground' : 'text-subtle',
         )
       }
     >
@@ -77,7 +78,7 @@ function NavTab({ item, pathname }: { item: BottomNavItem; pathname: string }) {
                 className="absolute top-[5px] right-[calc(50%-16px)] size-2 rounded-full border-2 border-card bg-destructive"
               />
             )}
-            <span className="text-[11px] font-semibold whitespace-nowrap">{item.label}</span>
+            <span className="text-xs font-semibold whitespace-nowrap">{item.label}</span>
             <span
               className={cn('size-[5px] rounded-full', active ? 'bg-brand' : 'bg-transparent')}
             />

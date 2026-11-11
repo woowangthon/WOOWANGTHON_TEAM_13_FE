@@ -2,9 +2,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/ui/utils'
 
-// 버튼 — 담당: 나현. 모든 버튼은 알약 모양(rounded-full)이다.
+// 버튼 — 담당: 나현. 모든 버튼은 알약 모양(rounded-full)이다. 누르면 살짝 작아지고 어두워진다 (11/12)
 const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full font-bold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-100 [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full font-bold whitespace-nowrap transition-[color,background-color,transform,filter] duration-100 enabled:active:scale-[0.97] enabled:active:brightness-95 motion-reduce:enabled:active:scale-100 disabled:cursor-not-allowed disabled:opacity-100 [&_svg]:shrink-0',
   {
     variants: {
       variant: {

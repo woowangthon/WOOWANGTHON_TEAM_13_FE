@@ -2,6 +2,8 @@
  * 전역 스타일 — 담당: 나현 (디자인 시스템)
  * 색은 아래 :root 토큰으로만 바꾼다. 화면에서는 bg-card, text-muted-foreground, bg-brand 처럼 토큰 이름으로 쓴다.
  * --brand 는 매장마다 다르다 (달빛 카페 #2A4536 · 오후의 커피 #6E3B26). 화면 틀에서 style 로 덮어쓴다.
+ * 가독성(11/12): 글자색은 배경 위 대비 4.5:1 이상 (muted-foreground 5.4 · subtle 4.6). faint 는 비활성 · 꾸밈 전용, 읽을 글자에는 쓰지 않는다.
+ * 모서리: 카드 rounded-card(24) · 카드 안 덩어리 rounded-inner(18) · 버튼 rounded-full
  */
 
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
@@ -18,7 +20,7 @@
   --brand-soft: #e3e8dc;
 
   --canvas: #e6e0d5; /* 앱 바깥 배경 */
-  --background: #f1ece3; /* 앱 배경 */
+  --background: #f1ece3; /* 앱 배경 (index.html · vite.config · 채팅 입력 그라데이션에도 같은 값) */
   --foreground: #1f2a24;
   --card: #fbf8f3;
   --card-foreground: #1f2a24;
@@ -29,9 +31,9 @@
   --secondary: #ede7dc; /* 연한 버튼 */
   --secondary-foreground: #1f2a24;
   --muted: #e7e1d6; /* 세그먼트 바탕 · 시스템 말풍선 */
-  --muted-foreground: #7b8078;
-  --subtle: #8a8e86; /* 보조 설명 */
-  --faint: #a3a69e; /* 비활성 */
+  --muted-foreground: #5c6159; /* 보조 글자 — 배경 위 대비 5.4 (예전 #7b8078 은 3.4) */
+  --subtle: #666b63; /* 보조 설명 · 입력칸 안내 — 대비 4.6 (예전 #8a8e86 은 2.8) */
+  --faint: #8a8e86; /* 비활성 · 꾸밈 (읽을 글자에는 쓰지 않기) */
   --line: #cfc8ba; /* 선 · 빈 체크박스 */
   --accent: #e3e8dc;
   --accent-foreground: #2e4438;
@@ -60,6 +62,9 @@
   --radius-md: 1.125rem;
   --radius-lg: var(--radius);
   --radius-xl: 1.75rem;
+  /* 모서리 3단계: rounded-card · rounded-inner · rounded-full(버튼) */
+  --radius-card: 1.5rem;
+  --radius-inner: 1.125rem;
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
   --color-canvas: var(--canvas);
@@ -127,6 +132,12 @@
   body,
   #root {
     min-height: 100%;
+  }
+
+  /* 모바일: 누를 때 회색 번쩍임 없애기 · 두 번 탭 확대 막기 (스크롤 · 두 손가락 확대는 그대로) */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   body {
