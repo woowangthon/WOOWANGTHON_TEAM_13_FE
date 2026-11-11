@@ -1,7 +1,7 @@
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
-import type { CalendarShift } from '@/lib/api/types'
+import type { CalendarShift, ScheduleWorker } from '@/lib/api/types'
 import { ApiError } from '@/lib/apiClient'
 import { toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
@@ -20,8 +20,8 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 import { WheelPicker } from '@/ui/WheelPicker'
 
-// 하루 근무 고치기 (BE #38 PUT /schedule-calendar/{workDate}): 그날만 근무를 넣고 · 바꾸고 · 뺀다. 고정 근무표는 그대로
-// 줄을 누르면 펼쳐져서 타임(누르면 그 타임 시간) · 시작 ~ 끝 시간 휠 · 사람 휠로 고친다
+// 하루 근무 수정 (BE #38 PUT /schedule-calendar/{workDate}): 그날만 근무를 넣고 · 바꾸고 · 뺀다. 고정 근무표는 그대로
+// 줄을 누르면 펼쳐져서 타임 칩(누르면 그 타임 시간) + 한 줄에 시작 ~ 끝 시간 · 담당자 (누르면 휠)
 // 시간은 BE start · end 칸이 생기기 전까지 진짜 모드에서 잠긴다 (canSetDailyTime)
 // 저장하면 그날 대기 중인 대타 요청은 BE 가 취소한다. 그날 조정한 근무가 있으면 [고정 근무로 되돌리기] (DELETE)
 
@@ -137,7 +137,7 @@ export function DailyShiftSheet({
   const ready = rows.every((r) => r.templateId && r.assigneeUserId) && !duplicated && !badTime
 
   return (
-    <BottomSheet open onClose={onClose} label={`${formatDate(date)} 근무 고치기`} closeButton>
+    <BottomSheet open onClose={onClose} label={`${formatDate(date)} 근무 수정`} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
@@ -223,6 +223,7 @@ export function DailyShiftSheet({
                           </button>
                         ))}
                       </div>
+                      {/* 한 줄: 시작 ~ 끝 시간 · 담당자 (누르면 휠) */}
                       <div className="flex items-center gap-1.5 text-[15px] font-semibold">
                         <TimeField
                           value={r.start}
@@ -237,22 +238,18 @@ export function DailyShiftSheet({
                           label={`${nameOf(r)} 끝`}
                           disabled={!timeEditable}
                         />
+                        <PersonField
+                          workers={workers}
+                          value={r.assigneeUserId}
+                          onChange={(assigneeUserId) => setRow(r.key, { assigneeUserId })}
+                          label={`${nameOf(r)} 담당자`}
+                        />
                       </div>
                       {!timeEditable && (
                         <span className="text-xs text-muted-foreground">
                           시간 바꾸기는 곧 돼요. 지금은 타임 시간으로 저장해요
                         </span>
                       )}
-                      <WheelPicker
-                        label="담당자"
-                        options={workers.map((w) => ({
-                          value: w.userId,
-                          label: w.role === 'owner' ? `${w.name} (사장님)` : w.name,
-                        }))}
-                        value={r.assigneeUserId}
-                        onChange={(assigneeUserId) => setRow(r.key, { assigneeUserId })}
-                        className="bg-background"
-                      />
                     </div>
                   )}
                 </div>
@@ -287,5 +284,60 @@ export function DailyShiftSheet({
         )}
       </div>
     </BottomSheet>
+  )
+}
+
+/** 담당자 고르기: 이름을 누르면 시트에서 사람 휠을 스크롤해서 고른다 (시간 TimeField 와 같은 방식) */
+function PersonField({
+  workers,
+  value,
+  onChange,
+  label,
+}: {
+  workers: ScheduleWorker[]
+  value: string
+  onChange: (userId: string) => void
+  label: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [picked, setPicked] = useState(value)
+  const nameOf = (w: ScheduleWorker) => (w.role === 'owner' ? `${w.name} (사장님)` : w.name)
+  const current = workers.find((w) => w.userId === value)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setPicked(value || workers[0]?.userId || '')
+          setOpen(true)
+        }}
+        aria-label={`${label} ${current ? nameOf(current) : '고르기'}`}
+        className="flex h-10 min-w-0 flex-1 items-center justify-between gap-1 rounded-xl bg-background px-3 text-[15px] font-semibold"
+      >
+        <span className="truncate">{current ? nameOf(current) : '사람 고르기'}</span>
+        <ChevronDown className="size-4 shrink-0 text-faint" />
+      </button>
+      <BottomSheet open={open} onClose={() => setOpen(false)} label={label} closeButton>
+        <div className="flex flex-col gap-4">
+          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">{label}</h2>
+          <WheelPicker
+            label="담당자"
+            options={workers.map((w) => ({ value: w.userId, label: nameOf(w) }))}
+            value={picked}
+            onChange={setPicked}
+          />
+          <Button
+            className="h-[54px]"
+            onClick={() => {
+              onChange(picked)
+              setOpen(false)
+            }}
+          >
+            확인
+          </Button>
+        </div>
+      </BottomSheet>
+    </>
   )
 }

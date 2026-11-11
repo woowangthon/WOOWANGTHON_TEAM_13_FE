@@ -16,7 +16,7 @@ import { cn } from '@/ui/utils'
 // 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
 // 사람 칩으로 한 사람만 보기 · 매장 쉬는 날(쉬는 요일 · 공휴일 휴무)은 "휴무" (근무 블록 숨김) · 공휴일은 빨간 날짜
 // 사장님이 그날만 조정한 근무(BE #38, assignmentId null · dailyShiftId)는 쉬는 날에도 보이고 "조정" 표시
-// 날짜 카드 [고치기] → 그날만 근무 추가 · 담당자 바꾸기 · 빼기 (DailyShiftSheet, BE #38)
+// 날짜 카드 [수정] → 그날만 근무 추가 · 담당자 바꾸기 · 빼기 (DailyShiftSheet, BE #38)
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -87,7 +87,7 @@ export function WorkCalendar({
   const selectedKey = toDateKey(selected)
   const selectedClosed = isClosedDay(selected, selectedKey, closed)
   const selectedShifts = shownOn(selectedClosed, byDate.get(selectedKey) ?? [])
-  // 하루 근무 고치기는 사람 칩과 상관없이 그날 근무 전체로
+  // 하루 근무 수정은 사람 칩과 상관없이 그날 근무 전체로
   const selectedAll = shownOn(
     selectedClosed,
     all.filter((s) => s.date === selectedKey),
@@ -266,10 +266,10 @@ export function WorkCalendar({
             <button
               type="button"
               onClick={() => setEditingDay(true)}
-              aria-label={`${formatDate(selected)} 근무 고치기`}
+              aria-label={`${formatDate(selected)} 근무 수정`}
               className="shrink-0 p-0 text-[13px] font-bold text-brand"
             >
-              고치기
+              수정
             </button>
           </div>
           {selectedShifts.length === 0 ? (

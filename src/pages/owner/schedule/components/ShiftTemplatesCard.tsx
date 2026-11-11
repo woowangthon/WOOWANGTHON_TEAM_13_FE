@@ -11,7 +11,7 @@ import { Button } from '@/ui/Button'
 import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
 
-// 근무 타임 (오픈 · 미들 · 마감 …): 시간 · 인원 보기 + [고치기] → 매장 등록 ③과 같은 화면 (휠 · 인원 · 추가 · 빼기)
+// 근무 타임 (오픈 · 미들 · 마감 …): 시간 · 인원 보기 + [수정] → 매장 등록 ③과 같은 화면 (휠 · 인원 · 추가 · 빼기)
 export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
   const query = useShiftTemplates(storeId)
   const [editing, setEditing] = useState(false)
@@ -25,10 +25,10 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            aria-label="근무 타임 고치기"
+            aria-label="근무 타임 수정"
             className="p-0 text-[13px] font-bold text-brand"
           >
-            고치기
+            수정
           </button>
         )}
       </div>
@@ -40,7 +40,7 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
         <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 shadow-soft">
           {templates.length === 0 ? (
             <span className="py-3.5 text-sm text-muted-foreground">
-              아직 근무 타임이 없어요. [고치기]로 만들어 주세요
+              아직 근무 타임이 없어요. [수정]으로 만들어 주세요
             </span>
           ) : (
             templates.map((t) => (
@@ -103,7 +103,7 @@ function EditSheet({
     )
 
   return (
-    <BottomSheet open onClose={onClose} label="근무 타임 고치기" closeButton>
+    <BottomSheet open onClose={onClose} label="근무 타임 수정" closeButton>
       <div className="flex flex-col gap-4">
         <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">근무 타임</h2>
         <ShiftTemplateStep rows={rows} onRowsChange={setRows} error={error} />
