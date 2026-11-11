@@ -3,8 +3,9 @@ import {
   type MockStoreSchedule,
   type MockWeeklyShift,
 } from '@/api/mocks/staff/schedule'
+import { getScheduleCalendar } from '@/api/mocks/staff/api/schedule'
 import { ApiError } from '@/lib/apiClient'
-import type { ScheduleWorker } from '@/lib/api/types'
+import type { CalendarShift, ScheduleCalendar, ScheduleWorker } from '@/lib/api/types'
 import type {
   FixedAssignment,
   ShiftTemplate,
@@ -270,4 +271,93 @@ export async function respondOwnerRequest(storeId: string, requestId: string, ac
     })
   }
   request.status = accept ? 'ACCEPTED' : 'REJECTED'
+}
+
+// ── 하루 단위 근무 조정 (BE #38 PUT · DELETE /schedule-calendar/{workDate}) ──
+// 사장님 달력에만 덮어 보인다 (알바 가짜 근무표는 민지 가짜 서버라 그대로)
+
+const dayOverrides: Record<string, Record<string, CalendarShift[]>> = {}
+
+const minutesOf = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5))
+
+/** GET /stores/{storeId}/schedule-calendar (사장님) — 고정 근무(알바 가짜 달력) 위에 하루 조정을 덮는다 */
+export async function getOwnerCalendar(
+  storeId: string,
+  startDate: string,
+  endDate: string,
+): Promise<ScheduleCalendar> {
+  // 'me'(지은)를 그대로 두어 사장님 근무자 목록의 userId 와 맞춘다
+  const base = await getScheduleCalendar(storeId, startDate, endDate, 'me')
+  const overrides = dayOverrides[storeId] ?? {}
+  const days = Object.keys(overrides).filter((d) => d >= startDate && d <= endDate)
+  const shifts = [
+    ...base.shifts.filter((s) => !days.includes(s.date)),
+    ...days.flatMap((d) => overrides[d]),
+  ].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
+  return { ...base, shifts }
+}
+
+/** PUT /stores/{storeId}/schedule-calendar/{workDate} — 그날 남길 근무 전체로 바꾼다 */
+export async function putDailySchedule(
+  storeId: string,
+  workDate: string,
+  shifts: { templateId: string; assigneeUserId: string }[],
+): Promise<void> {
+  await wait()
+  const schedule = scheduleOf(storeId)
+  const templates = templatesOf(storeId)
+  const next: CalendarShift[] = shifts.map((s, i) => {
+    const t = templates.find((x) => x.templateId === s.templateId)
+    if (!t) {
+      throw new ApiError(422, {
+        code: 'INVALID_SHIFT_TEMPLATE',
+        message: '다른 매장의 템플릿이 포함되어 있어요',
+        detail: null,
+      })
+    }
+    return {
+      assignmentId: null,
+      templateId: t.templateId,
+      date: workDate,
+      name: t.name,
+      start: t.start,
+      end: t.end,
+      role: '',
+      assignee: workerOf(schedule, s.assigneeUserId),
+      substituted: false,
+      dailyShiftId: `day_${workDate}_${i}`,
+      manuallyAdjusted: true,
+    }
+  })
+  // 같은 사람 시간이 겹치면 409 (BE 와 같은 규칙)
+  for (const a of next) {
+    for (const b of next) {
+      if (
+        a !== b &&
+        a.assignee.userId === b.assignee.userId &&
+        minutesOf(a.start) < minutesOf(b.end) &&
+        minutesOf(b.start) < minutesOf(a.end)
+      ) {
+        throw new ApiError(409, {
+          code: 'DAILY_SCHEDULE_TIME_CONFLICT',
+          message: '같은 구성원의 근무 시간이 겹쳐요',
+          detail: null,
+        })
+      }
+    }
+  }
+  dayOverrides[storeId] = { ...dayOverrides[storeId], [workDate]: next }
+}
+
+/** DELETE /stores/{storeId}/schedule-calendar/{workDate} — 고정 근무로 되돌린다 (조정이 없으면 404) */
+export async function resetDailySchedule(storeId: string, workDate: string): Promise<void> {
+  await wait()
+  if (!dayOverrides[storeId]?.[workDate]) {
+    throw new ApiError(404, {
+      code: 'DAILY_SCHEDULE_NOT_FOUND',
+      message: '조정한 근무가 없어요',
+      detail: null,
+    })
+  }
+  delete dayOverrides[storeId][workDate]
 }

@@ -1,9 +1,11 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { shiftHours, shiftKey, useScheduleCalendar } from '@/lib/api/schedule'
+import { shiftHours, shiftKey } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
 import { addDays, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { useOwnerCalendar } from '@/pages/owner/api/fixedSchedule'
+import { DailyShiftSheet } from '@/pages/owner/schedule/components/DailyShiftSheet'
 import { HOLIDAYS, isClosedDay } from '@/pages/owner/store/holidays'
 import { LoadError } from '@/shared/LoadError'
 import { Spinner } from '@/ui/Spinner'
@@ -14,7 +16,7 @@ import { cn } from '@/ui/utils'
 // 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
 // 사람 칩으로 한 사람만 보기 · 매장 쉬는 날(쉬는 요일 · 공휴일 휴무)은 "휴무" (근무 블록 숨김) · 공휴일은 빨간 날짜
 // 사장님이 그날만 조정한 근무(BE #38, assignmentId null · dailyShiftId)는 쉬는 날에도 보이고 "조정" 표시
-// 하루만 담당자 바꾸기는 BE 가 담당자 본인의 대타 요청만 받아서 이번엔 없다 (팀에 물어볼 것)
+// 날짜 카드 [고치기] → 그날만 근무 추가 · 담당자 바꾸기 · 빼기 (DailyShiftSheet, BE #38)
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -58,7 +60,8 @@ export function WorkCalendar({
   const [selected, setSelected] = useState<Date>(today)
   const [person, setPerson] = useState('all')
   const { start, end, days } = monthGrid(view.year, view.month)
-  const query = useScheduleCalendar(storeId, toDateKey(start), toDateKey(end))
+  const query = useOwnerCalendar(storeId, toDateKey(start), toDateKey(end))
+  const [editingDay, setEditingDay] = useState(false)
 
   const move = (step: number) => {
     const next = new Date(view.year, view.month - 1 + step, 1)
@@ -84,6 +87,11 @@ export function WorkCalendar({
   const selectedKey = toDateKey(selected)
   const selectedClosed = isClosedDay(selected, selectedKey, closed)
   const selectedShifts = shownOn(selectedClosed, byDate.get(selectedKey) ?? [])
+  // 하루 근무 고치기는 사람 칩과 상관없이 그날 근무 전체로
+  const selectedAll = shownOn(
+    selectedClosed,
+    all.filter((s) => s.date === selectedKey),
+  )
 
   return (
     <section className="flex flex-col gap-2.5">
@@ -246,12 +254,24 @@ export function WorkCalendar({
             </div>
           </div>
 
-          <h3 className="m-0 mt-1.5 px-1 text-lg font-extrabold tracking-[-0.02em]">
-            {formatDate(selected)} 근무
-            {HOLIDAYS[selectedKey] && (
-              <span className="ml-2 text-sm font-bold text-[#C0574A]">{HOLIDAYS[selectedKey]}</span>
-            )}
-          </h3>
+          <div className="mt-1.5 flex items-center justify-between gap-2 px-1">
+            <h3 className="m-0 text-lg font-extrabold tracking-[-0.02em]">
+              {formatDate(selected)} 근무
+              {HOLIDAYS[selectedKey] && (
+                <span className="ml-2 text-sm font-bold text-[#C0574A]">
+                  {HOLIDAYS[selectedKey]}
+                </span>
+              )}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setEditingDay(true)}
+              aria-label={`${formatDate(selected)} 근무 고치기`}
+              className="shrink-0 p-0 text-[13px] font-bold text-brand"
+            >
+              고치기
+            </button>
+          </div>
           {selectedShifts.length === 0 ? (
             <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
               {selectedClosed ? '매장이 쉬는 날이에요' : '이날은 근무가 없어요'}
@@ -320,6 +340,15 @@ export function WorkCalendar({
             })
           )}
         </>
+      )}
+      {editingDay && (
+        <DailyShiftSheet
+          key={selectedKey}
+          storeId={storeId}
+          date={selected}
+          shifts={selectedAll}
+          onClose={() => setEditingDay(false)}
+        />
       )}
     </section>
   )
