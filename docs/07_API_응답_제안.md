@@ -818,7 +818,8 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 ```
 | 필드 | 뜻 |
 | --- | --- |
-| `assignmentId` | 요일마다 반복되는 고정 근무 배정 ID → **`assignmentId` + `date`** 가 한 칸 |
+| `assignmentId` | 요일마다 반복되는 고정 근무 배정 ID → **`assignmentId` + `date`** 가 한 칸. 하루 조정한 근무는 `null` (대타 요청 불가) |
+| `dailyShiftId` · `manuallyAdjusted` | BE #38: 하루 조정한 근무는 `dailyShiftId` 있음 · `manuallyAdjusted: true`, 고정 근무는 `null` · `false`. FE 는 `dailyShiftId ?? assignmentId` + `date` 로 칸을 구분해요 |
 | `name` · `role` | 근무 이름(오픈 · 마감) · 역할 메모(없으면 `""`) |
 | `assignee` | 그날 일하는 사람. 사장님이면 `role: "owner"`, 퇴사한 사람은 `memberId: null` · `name: "퇴사한 직원"` |
 | `substituted` | 그날만 대타로 바뀐 칸 |
@@ -832,7 +833,7 @@ FE (`src/lib/api/schedule.ts`):
 
 | API | 요청 · 응답 |
 | --- | --- |
-| `GET /stores/{storeId}/schedule-workers` | `{ workers: [{ userId, memberId, name, role }] }` — 대타로 고를 사람 (나 · 사장님 포함, FE가 나를 빼요) |
+| `GET /stores/{storeId}/schedule-workers` | `{ workers: [{ userId, memberId, name, role }] }` — 대타로 고를 사람 (나 · 사장님 포함, FE가 나를 빼요). 사장님은 `memberId: null` |
 | `POST /stores/{storeId}/substitute-requests` | `{ assignmentId, date, targetUserId }` → `201` 요청 1개 |
 | `GET /stores/{storeId}/substitute-requests?box=received\|sent&status=` | `{ requests: [{ requestId, status, date, assignmentId, shiftName, start, end, requester, target, isRead, createdAt, respondedAt }] }`. `status`: `PENDING` · `ACCEPTED` · `REJECTED` · `CANCELLED`. **받은 목록을 부르면 읽음 처리** |
 | `POST …/substitute-requests/{requestId}/accept` · `/reject` | 요청 1개. 수락하면 그날 그 근무가 받은 사람 이름으로 바뀌어요 (`schedule-calendar`의 `substituted: true`) |
