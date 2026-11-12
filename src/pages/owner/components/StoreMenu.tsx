@@ -10,9 +10,11 @@ interface StoreMenuProps {
   store: OwnerStoreView
   stores: OwnerStoreView[]
   onSelect: (store: OwnerStoreView) => void
+  /** 위 줄 가운데 로고와 맞추려고 너비를 오른쪽(알림 + 프로필)과 같게 · 긴 이름은 … (데스크톱은 다 보임) */
+  compact?: boolean
 }
 
-export function StoreMenu({ store, stores, onSelect }: StoreMenuProps) {
+export function StoreMenu({ store, stores, onSelect, compact }: StoreMenuProps) {
   const [open, setOpen] = useState(false)
   const Icon = STORE_ICON[store.icon]
 
@@ -23,13 +25,22 @@ export function StoreMenu({ store, stores, onSelect }: StoreMenuProps) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full bg-card py-1.5 pr-2.5 pl-1.5 text-[15px] font-bold"
+        aria-label={`매장 바꾸기, 지금 ${store.name}`}
+        className={cn(
+          'flex items-center gap-2 rounded-full bg-card py-1.5 pr-2.5 pl-1.5 text-[15px] font-bold',
+          compact &&
+            'h-[42px] w-full gap-1 pr-1 pl-1.5 text-xs lg:w-auto lg:gap-2 lg:pr-2.5 lg:pl-1.5 lg:text-[15px]',
+        )}
       >
-        <StoreAvatar color={store.color} size={30}>
-          <Icon className="size-4" fill="currentColor" />
-        </StoreAvatar>
-        {store.name}
-        <ChevronDown className="size-5 text-muted-foreground" />
+        <span className="shrink-0">
+          <StoreAvatar color={store.color} size={compact ? 26 : 30}>
+            <Icon className="size-4" fill="currentColor" />
+          </StoreAvatar>
+        </span>
+        <span className="min-w-0 flex-1 truncate text-left">{store.name}</span>
+        <ChevronDown
+          className={cn('size-5 shrink-0 text-muted-foreground', compact && 'size-4 lg:size-5')}
+        />
       </button>
       {open && (
         <>

@@ -55,9 +55,12 @@ export default function OwnerLayout() {
 
   return (
     <OwnerFrame colors={store}>
-      <header className="flex items-center justify-between gap-2.5 px-0.5 py-1">
+      {/* 위 줄: 왼쪽 매장 바꾸기 · 가운데 로고 · 오른쪽 알림 + 프로필 — 좌우 칸 너비를 같게(92px) 해서 로고가 가운데
+          데스크톱은 로고가 왼쪽 메뉴에 있어서 가운데 로고를 빼고 매장 이름도 다 보인다 */}
+      <header className="grid grid-cols-[92px_1fr_92px] items-center gap-2 px-0.5 py-1 lg:flex lg:justify-between">
         {stores.length > 0 ? (
           <StoreMenu
+            compact
             store={store}
             stores={stores}
             onSelect={(next) => {
@@ -68,7 +71,12 @@ export default function OwnerLayout() {
         ) : (
           <span />
         )}
-        <div className="flex items-center gap-2">
+        <img
+          src="/logo-crewbean.png"
+          alt="crewBean"
+          className="h-[26px] w-auto justify-self-center lg:hidden"
+        />
+        <div className="flex items-center justify-end gap-2">
           {/* 알림은 전체 화면 (알바 알림과 같은 모양) */}
           <Link
             to="/owner/notifications"
