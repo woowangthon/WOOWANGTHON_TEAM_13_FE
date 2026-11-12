@@ -55,7 +55,7 @@ export default function OwnerLayout() {
 
   return (
     <OwnerFrame colors={store}>
-      {/* 위 줄: 왼쪽 매장 바꾸기 · 가운데 로고 · 오른쪽 알림 + 프로필 — 좌우 칸 너비를 같게(92px) 해서 로고가 가운데
+      {/* 위 줄: 왼쪽 매장 바꾸기 · 가운데 로고 · 오른쪽 알림 + 프로필 — 좌우 칸 너비를 같게(92px) 해서 로고(124px)가 가운데 · 버튼 36px
           데스크톱은 로고가 왼쪽 메뉴에 있어서 가운데 로고를 빼고 매장 이름도 다 보인다 */}
       <header className="grid grid-cols-[92px_1fr_92px] items-center gap-2 px-0.5 py-1 lg:flex lg:justify-between">
         {stores.length > 0 ? (
@@ -74,25 +74,25 @@ export default function OwnerLayout() {
         <img
           src="/logo-crewbean.png"
           alt="crewBean"
-          className="h-[26px] w-auto justify-self-center lg:hidden"
+          className="w-[124px] justify-self-center lg:hidden"
         />
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5 lg:gap-2">
           {/* 알림은 전체 화면 (알바 알림과 같은 모양) */}
           <Link
             to="/owner/notifications"
             aria-label={hasNotification ? '알림, 새 알림 있음' : '알림'}
             // IconButton(card · md)과 같은 모양 — 주소로 가서 Link
-            className="relative inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-card text-foreground transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
+            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-foreground lg:size-[42px] transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
           >
-            <Bell className="size-[22px]" />
+            <Bell className="size-[19px] lg:size-[22px]" />
             {hasNotification && (
-              <span className="absolute top-2.5 right-[11px] size-2 rounded-full border-2 border-card bg-destructive" />
+              <span className="absolute top-2 right-[9px] size-2 rounded-full border-2 border-background bg-destructive lg:top-2.5 lg:right-[11px]" />
             )}
           </Link>
           <Link
             to="/owner/me"
             aria-label="마이페이지"
-            className="flex size-[42px] items-center justify-center rounded-full bg-brand text-base font-extrabold text-background"
+            className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-background lg:size-[42px] lg:text-base"
           >
             {initial}
           </Link>

@@ -29,17 +29,17 @@ export function StoreMenu({ store, stores, onSelect, compact }: StoreMenuProps) 
         className={cn(
           'flex items-center gap-2 rounded-full bg-card py-1.5 pr-2.5 pl-1.5 text-[15px] font-bold',
           compact &&
-            'h-[42px] w-full gap-1 pr-1 pl-1.5 text-xs lg:w-auto lg:gap-2 lg:pr-2.5 lg:pl-1.5 lg:text-[15px]',
+            'h-9 w-full gap-1 bg-background py-1 pr-1.5 pl-1 text-xs lg:h-auto lg:w-auto lg:gap-2 lg:py-1.5 lg:pr-2.5 lg:pl-1.5 lg:text-[15px]',
         )}
       >
         <span className="shrink-0">
-          <StoreAvatar color={store.color} size={compact ? 26 : 30}>
-            <Icon className="size-4" fill="currentColor" />
+          <StoreAvatar color={store.color} size={compact ? 24 : 30}>
+            <Icon className={compact ? 'size-3.5 lg:size-4' : 'size-4'} fill="currentColor" />
           </StoreAvatar>
         </span>
         <span className="min-w-0 flex-1 truncate text-left">{store.name}</span>
         <ChevronDown
-          className={cn('size-5 shrink-0 text-muted-foreground', compact && 'size-4 lg:size-5')}
+          className={cn('size-5 shrink-0 text-muted-foreground', compact && 'size-3 lg:size-5')}
         />
       </button>
       {open && (
