@@ -14,7 +14,8 @@ export default function OwnerHandoverPage() {
   const setWriting = (on: boolean) => setParams(on ? { write: '1' } : {}, { replace: !on })
 
   return (
-    <div className="flex flex-col gap-4">
+    // 데스크톱은 가운데 좁은 칸 (한 줄 목록이라 너무 길어지지 않게)
+    <div className="flex flex-col gap-4 lg:mx-auto lg:w-full lg:max-w-[760px]">
       <div className="flex items-end justify-between gap-2.5 px-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>

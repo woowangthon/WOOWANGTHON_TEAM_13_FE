@@ -103,7 +103,7 @@ export default function OwnerPayrollPage() {
           hint="알바생이 근무하면 직원별 급여가 여기에 보여요"
         />
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+        <ul className="m-0 flex list-none flex-col gap-2.5 p-0 lg:grid lg:grid-cols-2 lg:gap-3">
           {members.map((m, i) => (
             <li key={m.memberId}>
               <button

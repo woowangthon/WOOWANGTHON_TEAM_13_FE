@@ -35,7 +35,7 @@ export default function OwnerMyPage() {
   }
 
   return (
-    <OwnerFrame colors={store} className="gap-[22px] pb-10">
+    <OwnerFrame colors={store} narrow className="gap-[22px] pb-10">
       <Header title="마이페이지" onBack={close} />
 
       {profile.data ? (

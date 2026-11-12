@@ -86,7 +86,7 @@ export default function OwnerNotificationsPage() {
   const manyStores = stores.length > 1
 
   return (
-    <OwnerFrame colors={store} className="gap-4 pb-10">
+    <OwnerFrame colors={store} narrow className="gap-4 pb-10">
       <Header title="알림" onBack={close} />
 
       {query.isError ? (

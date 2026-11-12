@@ -57,7 +57,7 @@ export function MemberBoard() {
           }
         />
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+        <ul className="m-0 flex list-none flex-col gap-2.5 p-0 lg:grid lg:grid-cols-2 lg:gap-3">
           {members.map((member, i) => {
             const active = member.status === 'active'
             return (
