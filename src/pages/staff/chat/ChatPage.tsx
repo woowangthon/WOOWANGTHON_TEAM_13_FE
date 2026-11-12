@@ -9,7 +9,7 @@ import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
-import { Card } from '@/ui/Card'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
@@ -103,42 +103,46 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col gap-3.5 pb-[90px]">
-      {/* 위에 붙어 있고, 스크롤하면 작아져서 대화 공간을 넓힌다 */}
-      <Card
-        variant="dark"
+    <div className="flex flex-col gap-4 pb-[90px]">
+      {/* 얇은 머리: 화면 이름 + 보조 한 줄. 위에 붙어 있고, 스크롤하면 한 줄로 줄어 대화 공간을 넓힌다.
+          ✦ 는 "AI 가 답하는 화면" 표시로 여기 한 곳만 (말풍선마다 반복하지 않는다 — docs/08 7) */}
+      <header
         className={cn(
-          'sticky top-[calc(var(--offline-banner,0px)+max(14px,env(safe-area-inset-top))+52px)] z-10 flex-row items-center transition-[padding,gap] duration-200',
-          compact ? 'gap-2.5 px-4 py-2.5' : 'gap-3.5 p-5',
+          'sticky top-[calc(var(--offline-banner,0px)+max(14px,env(safe-area-inset-top))+52px)] z-10 -mx-4 flex bg-white px-5 transition-[padding] duration-200 motion-reduce:transition-none',
+          compact
+            ? 'items-center gap-2 border-b border-line/60 py-2.5'
+            : 'flex-col gap-1 border-b border-transparent pt-1 pb-2',
         )}
       >
-        <span
+        <h1
           className={cn(
-            'flex shrink-0 items-center justify-center rounded-full bg-white/15 transition-[width,height] duration-200',
-            compact ? 'size-[34px]' : 'size-[50px]',
+            'm-0 flex items-center gap-1.5 font-extrabold tracking-[-0.03em]',
+            compact ? 'text-base leading-[1.4]' : 'text-[26px] leading-[1.25]',
           )}
         >
-          <Sparkles className={compact ? 'size-[18px]' : 'size-6'} fill="currentColor" />
-        </span>
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className={cn('m-0 font-bold', compact ? 'text-[17px]' : 'text-[21px]')}>AI 사수</h1>
-          {!compact && (
-            <span className="text-xs leading-normal opacity-80">
-              {store.name} 매뉴얼 기준으로 답해요
-            </span>
+          <Sparkles
+            aria-hidden="true"
+            className={cn('shrink-0 text-brand', compact ? 'size-4' : 'size-5')}
+            fill="currentColor"
+          />
+          AI 사수
+        </h1>
+        <span
+          className={cn(
+            'truncate text-[13px] font-medium text-muted-foreground',
+            compact && 'ml-auto',
           )}
-        </div>
-        {compact && (
-          <span className="ml-auto truncate text-xs opacity-80">{store.name} 매뉴얼 기준</span>
-        )}
-      </Card>
+        >
+          {compact ? `${store.name} 매뉴얼 기준` : `${store.name} 매뉴얼 기준으로 답해요`}
+        </span>
+      </header>
 
       {chat.isPending ? (
-        <Spinner />
+        <ChatSkeleton />
       ) : chat.isError ? (
         <LoadError what="대화를" error={chat.error} onRetry={chat.retry} />
       ) : (
-        <div className="flex flex-col gap-3.5" aria-live="polite">
+        <div className="flex flex-col gap-3" aria-live="polite">
           {/* 이전 대화: 불러오는 동안 작은 Spinner, 화면이 짧아 스크롤이 안 되면 버튼으로 */}
           {hasOlder &&
             (loadingOlder ? (
@@ -147,7 +151,7 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={loadOlderKeepingPlace}
-                className="self-center rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+                className="self-center rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground"
               >
                 이전 대화 더 보기
               </button>
@@ -179,5 +183,19 @@ export default function ChatPage() {
 
       <ChatInput value={draft} onChange={setDraft} onSend={submit} chips={chat.suggestions} />
     </div>
+  )
+}
+
+// 첫 로딩 뼈대: AI · 나 · AI 말풍선 자리 (ChatBubble 과 같은 자리 · 모서리 20/6)
+function ChatSkeleton() {
+  return (
+    <SkeletonGroup label="대화를 불러오는 중" className="flex flex-col gap-3">
+      <Skeleton shape="line" className="mt-1 w-12" />
+      <Skeleton className="h-12 w-56 rounded-[6px_20px_20px_20px]" />
+      <Skeleton className="h-12 w-48 self-end rounded-[20px_20px_6px_20px]" />
+      <Skeleton shape="line" className="mt-1 w-12" />
+      <Skeleton className="h-20 w-64 rounded-[6px_20px_20px_20px]" />
+      <Skeleton className="h-8 w-36 rounded-full" />
+    </SkeletonGroup>
   )
 }
