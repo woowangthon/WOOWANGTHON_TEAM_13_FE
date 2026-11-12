@@ -109,7 +109,7 @@ function Stat({ label, value, strong }: { label: string; value: string; strong?:
     <div
       className={cn(
         'flex flex-col gap-1.5 rounded-[18px] px-4 py-3.5',
-        strong ? 'texture bg-brand text-white' : 'bg-white',
+        strong ? 'texture bg-brand text-white shadow-soft' : 'bg-white shadow-soft',
       )}
     >
       <span className={cn('text-xs', strong ? 'opacity-80' : 'text-muted-foreground')}>
