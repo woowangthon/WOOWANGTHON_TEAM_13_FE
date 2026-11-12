@@ -8,8 +8,10 @@ import { storeSchedules } from '@/api/mocks/staff/schedule'
 import { findStaffStore } from '@/api/mocks/staff/stores'
 import { ApiError } from '@/lib/apiClient'
 import { useAuthStore } from '@/lib/authStore'
+import { dayHandoverSummary } from '@/lib/api/handover'
 import type {
   HandoverConfirmation,
+  HandoverDaySummary,
   HandoverDraft,
   HandoverNote,
   HandoverNoteList,
@@ -95,6 +97,15 @@ export async function getHandoverNotes(storeId: string, date: string): Promise<H
     .filter((note) => note.createdAt.startsWith(date))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   return { date, notes: list }
+}
+
+/** GET /stores/{storeId}/handover-summary?date= — 가짜 서버는 AI 대신 노트 요약을 한 줄씩 모은다 (BE 와 같은 모양) */
+export async function getHandoverDaySummary(
+  storeId: string,
+  date: string,
+): Promise<HandoverDaySummary> {
+  const { notes } = await getHandoverNotes(storeId, date)
+  return { date, summary: dayHandoverSummary(notes) || null, noteCount: notes.length }
 }
 
 /** POST /stores/{storeId}/handover-drafts — 저장하지 않고 정리 결과만 */

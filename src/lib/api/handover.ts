@@ -3,13 +3,16 @@ import {
   confirmHandoverItem,
   createHandoverDraft,
   createHandoverNote,
+  getHandoverDaySummary,
   getHandoverNotes,
 } from '@/api/mocks/staff/api/handover'
 import { notificationKeys } from '@/lib/api/notifications'
 import { http, isRealApi } from '@/lib/api/source'
-import { toastApiError } from '@/lib/api/errors'
+import { shouldRetry, toastApiError } from '@/lib/api/errors'
+import { ApiError } from '@/lib/apiClient'
 import type {
   HandoverConfirmation,
+  HandoverDaySummary,
   HandoverDraft,
   HandoverNote,
   HandoverNoteList,
@@ -24,6 +27,9 @@ import type {
 export const handoverKeys = {
   all: (storeId: string) => ['stores', storeId, 'handover-notes'] as const,
   notes: (storeId: string, date: string) => ['stores', storeId, 'handover-notes', date] as const,
+  /** 하루 AI 요약 — all 아래라 인수인계를 저장하면 같이 새로 불러온다 (체크 · 해제로는 안 부른다) */
+  daySummary: (storeId: string, date: string) =>
+    ['stores', storeId, 'handover-notes', 'day-summary', date] as const,
 }
 
 /** 인수인계 줄글 최대 글자 수 (BE 검증: 정리하기 text · 남기기 rawText 2000자) */
@@ -34,8 +40,8 @@ export const HANDOVER_SUMMARY_MAX = 1000
 export const HANDOVER_ITEMS_MAX = 50
 
 /**
- * 하루 인수인계 AI 요약 (알바 홈 맨 위 카드 1개). 하루 합친 요약 BE(연서님)가 아직 없어서
- * 지금은 그날 노트들의 요약을 한 줄씩 모은다. BE 가 생기면 이 함수만 그 값으로 바꾼다
+ * 노트 요약을 한 줄씩 모은 하루 요약 — 가짜 서버의 하루 요약이자, BE 하루 요약(useHandoverDaySummary)을
+ * 불러오는 중 · 실패(503 AI_UNAVAILABLE 등) · null 일 때 알바 홈 카드가 대신 보여 주는 문구
  */
 export function dayHandoverSummary(notes: HandoverNote[]): string {
   return notes
@@ -57,6 +63,12 @@ const postDraft = (storeId: string, text: string) =>
     : createHandoverDraft(storeId, text)
 const postNote = (storeId: string, body: NewHandoverNote) =>
   real() ? http.post<HandoverNote>(notesPath(storeId), body) : createHandoverNote(storeId, body)
+const fetchDaySummary = (storeId: string, date: string) =>
+  real()
+    ? http.get<HandoverDaySummary>(
+        `/stores/${storeId}/handover-summary?date=${encodeURIComponent(date)}`,
+      )
+    : getHandoverDaySummary(storeId, date)
 // 항목별 체크는 docs/07 6-7 제안 모양. BE 가 다르게 정하면 이 함수 안쪽만 바꾼다
 const postConfirmation = (storeId: string, noteId: string, body: HandoverConfirmation) =>
   real()
@@ -68,6 +80,24 @@ export function useHandoverNotes(storeId: string, date: string) {
   return useQuery({
     queryKey: handoverKeys.notes(storeId, date),
     queryFn: () => fetchNotes(storeId, date),
+  })
+}
+
+/** AI 가 못 쓰는 상태(503 AI_UNAVAILABLE)는 다시 해도 같아서 바로 대체 문구로 */
+const isAiUnavailable = (error: unknown) =>
+  error instanceof ApiError && error.code === 'AI_UNAVAILABLE'
+
+/**
+ * 그날 인수인계 전체 AI 요약 (BE #41). 실패해도 에러 토스트 없이(meta.silent) 화면이 dayHandoverSummary 로 대신한다.
+ * 같은 내용이면 BE 가 캐시로 돌려줘서 자주 불러도 AI 호출은 늘지 않는다
+ */
+export function useHandoverDaySummary(storeId: string, date: string) {
+  return useQuery({
+    queryKey: handoverKeys.daySummary(storeId, date),
+    queryFn: () => fetchDaySummary(storeId, date),
+    enabled: !!storeId,
+    meta: { silent: true },
+    retry: (failureCount, error) => !isAiUnavailable(error) && shouldRetry(failureCount, error),
   })
 }
 

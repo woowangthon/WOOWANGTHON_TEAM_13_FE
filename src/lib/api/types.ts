@@ -184,6 +184,15 @@ export interface HandoverNoteList {
   notes: HandoverNote[]
 }
 
+/** GET /stores/{storeId}/handover-summary?date= (BE #41): 그날 인수인계 전체 AI 요약. 인수인계가 없으면 summary null · noteCount 0 */
+export interface HandoverDaySummary {
+  date: string
+  /** 2~4문장 */
+  summary: string | null
+  /** 요약에 쓴 노트 수 (특이사항 없음 포함, 그날 노트 전부) */
+  noteCount: number
+}
+
 export interface HandoverDraftItem {
   tag: HandoverTag
   text: string

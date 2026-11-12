@@ -790,6 +790,22 @@ FE 제안: 이 API로 **항목 하나씩** 체크 · 해제할 수 있게 해 �
 
 ---
 
+### 6-8. `GET /stores/{storeId}/handover-summary?date=YYYY-MM-DD` (하루 AI 요약, BE #41)
+
+그날 인수인계 전체를 AI 가 2~4문장으로 요약해요. 저장하지 않고, 같은 내용이면 BE 메모리 캐시로 돌려줘서 자주 불러도 AI 호출은 늘지 않아요.
+
+```json
+{ "date": "2026-11-20", "summary": "꽃집 외상 한 잔은 오늘 계산하고, 딸기청과 원두가 한 개씩 남아 주문이 필요해요.", "noteCount": 2 }
+```
+
+| 필드 | 설명 |
+| --- | --- |
+| `summary` | 2~4문장. 그날 인수인계가 없으면 `null` |
+| `noteCount` | 그날 노트 수 (특이사항 없음 포함). 없으면 `0` |
+
+- AI 를 못 쓰면 `503 { code: "AI_UNAVAILABLE" }`
+- FE (알바 홈 · `useHandoverDaySummary`): 요약 카드 본문에 쓰고, **불러오는 중 · 실패 · `null` 이면 노트 summary 를 한 줄씩 모은 글**(`dayHandoverSummary`)을 보여 줘요. 실패해도 에러 토스트 없음(`meta.silent`), `AI_UNAVAILABLE` 은 재시도 안 함. `noteCount` 가 화면의 노트 수와 다르면(다른 사람이 막 남김) 노트 요약을 보여 주고 다시 불러요. 인수인계를 저장하면 같이 새로 부르고, 체크 · 해제로는 안 불러요
+
 ## 7. 근무 (P1)
 근무 가능 시간 입력 · 내 근무표 (docs/03 A5). 담당: 은교
 
