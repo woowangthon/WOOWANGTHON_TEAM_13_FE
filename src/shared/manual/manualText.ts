@@ -16,12 +16,20 @@ const NEXT_NUMBER = /\s+\d+[).]\s+/
  * 예) "1) 불·음악 켜기 2) 머신 예열 15분 3) 우유 확인" → "불·음악 켜기 외 2단계"
  */
 export function manualPreview(body: string) {
+  const { lines, numbered } = manualLines(body)
+  const first = lines[0] ?? ''
+  return numbered && lines.length > 1 ? `${first} 외 ${lines.length - 1}단계` : first
+}
+
+/**
+ * 내용을 줄(단계)로 나눈다. 번호 · 글머리표는 뺀다. numbered: 번호 · 글머리표로 시작하는 글인지
+ * 예) "1) 불·음악 켜기 2) 머신 예열 15분" → { lines: ['불·음악 켜기', '머신 예열 15분'], numbered: true }
+ */
+export function manualLines(body: string) {
   const lines = body
     .split(/\n+/)
     .flatMap((line) => (LEADING_MARK.test(line) ? line.split(NEXT_NUMBER) : [line]))
     .map((line) => line.replace(LEADING_MARK, '').trim())
     .filter(Boolean)
-  const first = lines[0] ?? ''
-  const numbered = LEADING_MARK.test(body)
-  return numbered && lines.length > 1 ? `${first} 외 ${lines.length - 1}단계` : first
+  return { lines, numbered: LEADING_MARK.test(body) }
 }
