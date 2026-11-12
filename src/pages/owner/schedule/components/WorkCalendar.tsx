@@ -7,12 +7,16 @@ import { formatDate } from '@/lib/format'
 import { useOwnerCalendar } from '@/pages/owner/api/fixedSchedule'
 import { DailyShiftSheet } from '@/pages/owner/schedule/components/DailyShiftSheet'
 import { HOLIDAYS, isClosedDay } from '@/pages/owner/store/holidays'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { usePersonColor } from '@/pages/staff/schedule/personColor'
+
 import { LoadError } from '@/shared/LoadError'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무 달력 (고정 근무 + 대타 반영, BE /schedule-calendar) — 알바 근무표(민지 ScheduleMonth)와 같은 모양
-// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로. 사장님 근무(내 근무)는 진한 매장 색, 대타는 점선 테두리.
+// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름)으로: 사람마다 파스텔 바탕 + 글자색만(민지 personColor, 알바 근무표와 같은 색),
+// 사장님 근무(내 근무)는 굵게, 대타는 1px 점선 테두리. 다른 달 날짜는 빈칸 (민지 #99 · #100 · #102와 같게)
 // 날짜를 누르면 아래에 그날 근무 카드. ‹ › 로 달 이동, 한 번에 6주(≤ BE 63일)를 불러온다
 // 사람 칩으로 한 사람만 보기 · 매장 쉬는 날(쉬는 요일 · 공휴일 휴무)은 "휴무" (근무 블록 숨김) · 공휴일은 빨간 날짜
 // 사장님이 그날만 조정한 근무(BE #38, assignmentId null · dailyShiftId)는 쉬는 날에도 보이고 "조정" 표시
@@ -43,6 +47,9 @@ const blockName = (shift: CalendarShift) =>
 const shownOn = (closedDay: boolean, shifts: CalendarShift[]) =>
   closedDay ? shifts.filter((s) => s.manuallyAdjusted) : shifts
 
+/** 대타 칸 점선 테두리 색: 그 사람 글자색을 살짝 투명하게 (outline 이라 블록 크기 · 글자 위치는 다른 블록과 같다) */
+const dashedColor = (fg: string) => `color-mix(in srgb, ${fg} 70%, transparent)`
+
 /** 사장님 화면이라 '내 근무' = 사장님 근무 */
 const isMine = (shift: CalendarShift) => shift.assignee.role === 'owner'
 
@@ -65,6 +72,8 @@ export function WorkCalendar({
   const { start, end, days } = monthGrid(view.year, view.month)
   const query = useOwnerCalendar(storeId, toDateKey(start), toDateKey(end))
   const [editingDay, setEditingDay] = useState(false)
+  // 사람별 파스텔 색 (근무표 사람 목록 순서 — 알바 화면과 같은 색)
+  const colorOf = usePersonColor(storeId)
 
   const move = (step: number) => {
     const next = new Date(view.year, view.month - 1 + step, 1)
@@ -82,6 +91,14 @@ export function WorkCalendar({
   const people = [...new Map(all.map((s) => [s.assignee.userId, s.assignee])).values()].sort(
     (a, b) => (a.role === b.role ? 0 : a.role === 'owner' ? -1 : 1),
   )
+  // 이 달에 근무하는 사람 (범례 색 점 + 이름)
+  const monthPeople = [
+    ...new Map(
+      all
+        .filter((s) => Number(s.date.slice(5, 7)) === view.month)
+        .map((s) => [s.assignee.userId, s.assignee] as const),
+    ).values(),
+  ]
   const byDate = new Map<string, CalendarShift[]>()
   for (const shift of all) {
     if (person !== 'all' && shift.assignee.userId !== person) continue
@@ -146,10 +163,8 @@ export function WorkCalendar({
               >
                 {p.userId !== 'all' && (
                   <span
-                    className={cn(
-                      'size-2 rounded-full',
-                      p.role === 'owner' ? 'bg-brand' : 'bg-brand-soft ring-1 ring-line',
-                    )}
+                    className="size-2.5 rounded-full shadow-[inset_0_0_0_1px_currentColor]"
+                    style={{ background: colorOf(p.userId)[0], color: colorOf(p.userId)[1] }}
                   />
                 )}
                 {p.name}
@@ -181,6 +196,16 @@ export function WorkCalendar({
                   const inMonth = day.getMonth() === view.month - 1
                   const isToday = isSameDay(day, today)
                   const isSelected = isSameDay(day, selected)
+                  // 다른 달 칸은 빈칸 (숫자 · 블록 없음, 누를 수 없음)
+                  if (!inMonth) {
+                    return (
+                      <div
+                        key={key}
+                        aria-hidden="true"
+                        className="min-h-[78px] border-t border-[#F0EBE2]"
+                      />
+                    )
+                  }
                   return (
                     <button
                       key={key}
@@ -190,7 +215,7 @@ export function WorkCalendar({
                       aria-label={`${formatDate(day)}${holiday ? ` ${holiday}` : ''}${dayClosed ? ' 휴무' : ''} 근무 ${shifts.length}개`}
                       className={cn(
                         'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
-                        !inMonth && 'opacity-40',
+
                         isSelected && 'rounded-[10px] bg-background',
                       )}
                     >
@@ -210,17 +235,21 @@ export function WorkCalendar({
                       )}
                       {shifts.slice(0, MAX_BLOCKS).map((shift) => {
                         const name = blockName(shift)
+                        const [bg, fg] = colorOf(shift.assignee.userId)
+                        // 파스텔 바탕 + 글자색만. 사장님 근무는 굵게, 대타는 1px 점선(outline: 안쪽으로 그려 크기 그대로)
                         return (
                           <span
                             key={shiftKey(shift)}
                             className={cn(
-                              'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
-                              isMine(shift)
-                                ? 'bg-brand text-white'
-                                : 'bg-brand-soft text-foreground',
-                              shift.substituted &&
-                                'outline-1 -outline-offset-1 outline-current outline-dashed',
+                              'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[4px] px-[2px] py-px text-[10px] leading-[1.3]',
+                              isMine(shift) ? 'font-extrabold' : 'font-medium',
+                              shift.substituted && 'outline-1 -outline-offset-1 outline-dashed',
                             )}
+                            style={{
+                              background: bg,
+                              color: fg,
+                              outlineColor: shift.substituted ? dashedColor(fg) : undefined,
+                            }}
                           >
                             <span className="shrink-0 tabular-nums">{hourText(shift.start)}</span>
                             <span
@@ -243,22 +272,38 @@ export function WorkCalendar({
                   )
                 })}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="size-2.5 rounded-[3px] bg-brand" />내 근무
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="size-2.5 rounded-[3px] bg-brand-soft" />
-                  다른 사람
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
-                  대타
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="size-2.5 rounded-[3px] bg-muted" />
-                  휴무
-                </span>
+              <div className="flex flex-col gap-1.5 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-1">
+                    <LegendBlock bold />내 근무(굵게)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <LegendBlock substituted />
+                    대타(점선)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2.5 rounded-[3px] bg-muted" />
+                    휴무
+                  </span>
+                </div>
+                {/* 이 달에 근무하는 사람 색 (4명이 넘으면 색이 반복돼서 이름을 같이) */}
+                <ul
+                  aria-label="사람별 색"
+                  className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0"
+                >
+                  {monthPeople.map((p) => {
+                    const [bg, fg] = colorOf(p.userId)
+                    return (
+                      <li key={p.userId} className="flex items-center gap-1 text-foreground">
+                        <span
+                          className="size-2.5 rounded-full shadow-[inset_0_0_0_1px_currentColor]"
+                          style={{ background: bg, color: fg }}
+                        />
+                        {p.name}
+                      </li>
+                    )
+                  })}
+                </ul>
               </div>
             </div>
           </>
@@ -300,42 +345,36 @@ export function WorkCalendar({
                   <div
                     key={shiftKey(shift)}
                     className={cn(
-                      'flex items-center gap-3 rounded-[20px] px-4 py-3.5',
-                      mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',
+                      // 사장님 근무도 연한 카드 + 매장 색 테두리 (알바 근무표와 같게)
+                      'flex items-center gap-3 rounded-[20px] bg-card px-4 py-3.5 shadow-soft',
+                      mine &&
+                        'shadow-[inset_0_0_0_1.5px_var(--brand),0_8px_24px_rgba(40,46,36,0.06)]',
                     )}
                   >
+                    <PersonInitial
+                      name={shift.assignee.name}
+                      color={colorOf(shift.assignee.userId)}
+                    />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="flex items-center gap-1.5">
                         <span className="text-base font-extrabold">{shift.assignee.name}</span>
                         {mine && (
-                          <span className="rounded-full bg-white/20 px-2 py-px text-[11px] font-bold">
+                          <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
                             나
                           </span>
                         )}
                         {shift.substituted && (
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-px text-[11px] font-bold',
-                              mine ? 'bg-white text-brand' : 'bg-warm text-warm-foreground',
-                            )}
-                          >
+                          <span className="rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
                             대타
                           </span>
                         )}
                         {shift.manuallyAdjusted && (
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-px text-[11px] font-bold',
-                              mine ? 'bg-white text-brand' : 'bg-accent text-accent-foreground',
-                            )}
-                          >
+                          <span className="rounded-full bg-accent px-2 py-px text-[11px] font-bold text-accent-foreground">
                             조정
                           </span>
                         )}
                       </span>
-                      <span
-                        className={cn('text-[13px]', mine ? 'opacity-80' : 'text-muted-foreground')}
-                      >
+                      <span className="text-[13px] text-muted-foreground">
                         {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
                       </span>
                     </span>
@@ -343,12 +382,7 @@ export function WorkCalendar({
                       <span className="text-[15px] font-bold tabular-nums">
                         {shift.start} – {shift.end}
                       </span>
-                      <span
-                        className={cn(
-                          'text-xs tabular-nums',
-                          mine ? 'opacity-80' : 'text-muted-foreground',
-                        )}
-                      >
+                      <span className="text-xs text-muted-foreground tabular-nums">
                         {shiftHours(shift)}시간
                       </span>
                     </span>
@@ -369,5 +403,26 @@ export function WorkCalendar({
         />
       )}
     </section>
+  )
+}
+
+/** 범례용 작은 블록 (회색): 내 근무 = 굵은 글자, 대타 = 점선 테두리 (알바 근무표와 같은 견본) */
+function LegendBlock({ bold, substituted }: { bold?: boolean; substituted?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'rounded-[3px] px-[4px] py-px text-[9px] leading-[1.3]',
+        bold ? 'font-extrabold' : 'font-medium',
+        substituted && 'outline-1 -outline-offset-1 outline-dashed',
+      )}
+      style={{
+        background: 'var(--muted)',
+        color: 'var(--muted-foreground)',
+        outlineColor: substituted ? dashedColor('var(--muted-foreground)') : undefined,
+      }}
+    >
+      9
+    </span>
   )
 }
