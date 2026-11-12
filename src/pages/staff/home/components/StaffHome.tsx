@@ -1,4 +1,3 @@
-import { ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
@@ -243,7 +242,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
   return (
     <Link
       to="/staff/schedule"
-      aria-label={`오늘 근무 ${shift.start} – ${shift.end} · 근무 보기`}
+      aria-label={`오늘 근무 · ${shiftLabel(shift)} ${shift.start} – ${shift.end} · 근무 보기`}
       className={cn(
         'relative isolate block min-h-44 overflow-hidden rounded-3xl bg-brand texture',
         PRESSABLE,
@@ -264,35 +263,22 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
           style={{ background: store.photoShade }}
         />
       )}
-      {/* 높이는 첫 화면의 1/4 정도(176px~). 위: 칩 · › / 아래: 근무 시간(40px, 화면의 큰 숫자 하나 — 한 줄로 넓게) · 같이 일하는 사람 */}
+      {/* 높이는 첫 화면의 1/4 정도(176px~). 왼쪽 위: 근무 시간(화면 제목 단계 26px) / 아래: 같이 일하는 사람. 카드 전체가 근무 탭 링크라 › 버튼은 없음.
+          사진 위쪽은 어둡게 하지 않아서 시간 글자에만 기본 글자 그림자(text-shadow-lg) */}
       <div className="relative flex min-h-44 flex-col justify-between gap-4 p-5 text-white">
-        <div className="flex items-center justify-between gap-3">
-          {/* 사진 위에서는 사장님 홈 매장 카드처럼 검정 반투명, 사진이 없으면 매장 색 위 흰 반투명 */}
-          <span
-            className={cn(
-              'rounded-full px-3 py-1.5 text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
-              showPhoto ? 'bg-black/35' : 'bg-white/15',
-            )}
-          >
-            오늘 근무 · {shiftLabel(shift)}
-          </span>
-          <span
-            aria-hidden="true"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-foreground"
-          >
-            <ChevronRight className="size-5" />
-          </span>
-        </div>
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums">
-            {shift.start} – {shift.end}
-          </span>
-          {shift.crew.length > 0 && (
-            <span className="text-[13px] font-medium text-balance break-keep text-white/85">
-              {shift.crew.join(' · ')}
-            </span>
+        <span
+          className={cn(
+            'text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums',
+            showPhoto && 'text-shadow-lg',
           )}
-        </div>
+        >
+          {shift.start} – {shift.end}
+        </span>
+        {shift.crew.length > 0 && (
+          <span className="text-[13px] font-medium text-balance break-keep text-white/85">
+            {shift.crew.join(' · ')}
+          </span>
+        )}
       </div>
     </Link>
   )

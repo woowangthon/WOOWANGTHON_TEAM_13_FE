@@ -5,7 +5,7 @@ import { cn } from '@/ui/utils'
 
 /*
  * 공용 보기 부품: 요일 줄 주 이동 · 사장/알바 홈이 함께 사용 — 담당: 민지
- * 요일 줄(children)과 한 줄에 [‹] 월 화 수 목 금 토 일 [›]. 화살표는 32px 옅은 테두리 동그라미.
+ * 요일 줄(children)과 한 줄에 [‹] 월 화 수 목 금 토 일 [›]. 화살표는 동그라미 · 테두리 없이 아이콘(20px, muted)만, 누르는 곳은 32px.
  * 이번 주가 아니면 요일 줄 아래 가운데 작은 글자 버튼 [이번 주로] (이번 주면 그 줄 자체가 없다)
  *
  * 사용 예:
@@ -30,18 +30,18 @@ export function WeekNav({
   className?: string
 }) {
   const arrow = cn(
-    'flex size-8 shrink-0 items-center justify-center rounded-full border border-line/40 bg-card text-muted-foreground',
+    'flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand/60',
     PRESSABLE,
   )
   return (
     <div className={cn('flex flex-col items-center gap-1', className)}>
       <div className="flex w-full items-center gap-1">
         <button type="button" aria-label="저번 주" onClick={() => onMove(-1)} className={arrow}>
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-5" />
         </button>
         <div className="min-w-0 flex-1">{children}</div>
         <button type="button" aria-label="다음 주" onClick={() => onMove(1)} className={arrow}>
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-5" />
         </button>
       </div>
       {!thisWeek && (
