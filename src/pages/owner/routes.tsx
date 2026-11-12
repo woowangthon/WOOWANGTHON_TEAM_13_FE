@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router'
 import BizVerifyPage from '@/pages/owner/store/BizVerifyPage'
+import OwnerGuidePage from '@/pages/owner/guide/OwnerGuidePage'
 import ManualEditPage from '@/pages/owner/manual/ManualEditPage'
 import ManualManagePage from '@/pages/owner/manual/ManualManagePage'
 import MemberAddPage from '@/pages/owner/members/MemberAddPage'
@@ -20,8 +21,9 @@ import StoreCreatePage from '@/pages/owner/store/StoreCreatePage'
 
 // 사장 화면 주소 — 담당: 나현
 export const ownerRoutes: RouteObject[] = [
-  // 하단 탭 없이 전체 화면 (매장 등록 온보딩 · 마이페이지 · 매장 상세)
+  // 하단 탭 없이 전체 화면 (매장 등록 온보딩 · 앱 사용법 · 마이페이지 · 매장 상세)
   { path: '/owner/store/new', element: <StoreCreatePage /> },
+  { path: '/owner/guide', element: <OwnerGuidePage /> },
   { path: '/owner/me', element: <OwnerMyPage /> },
   { path: '/owner/stores/:storeId', element: <OwnerStoreDetailPage /> },
   {
