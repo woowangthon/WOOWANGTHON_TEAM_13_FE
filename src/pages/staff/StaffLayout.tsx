@@ -53,7 +53,7 @@ export default function StaffLayout() {
         className={cn(
           'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 flex items-center justify-between gap-2.5 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
           scrolled &&
-            'bg-background/80 shadow-[0_1px_0_rgba(40,46,36,0.06)] backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-background',
+            'bg-white/80 shadow-[0_1px_0_rgba(40,46,36,0.06)] backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-white',
         )}
       >
         <button

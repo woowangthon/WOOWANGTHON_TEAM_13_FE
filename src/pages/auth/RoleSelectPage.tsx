@@ -61,7 +61,7 @@ export default function RoleSelectPage() {
   }
 
   return (
-    <AuthFrame>
+    <AuthFrame tone="white">
       <OnboardingHeader step={0} onBack={back} />
 
       <div className="flex flex-col gap-[22px]">

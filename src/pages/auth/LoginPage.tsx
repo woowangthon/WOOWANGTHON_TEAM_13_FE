@@ -37,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthFrame className="gap-[22px]">
+    <AuthFrame tone="white" className="gap-[22px]">
       <section className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-[32px] p-[22px] text-white">
         <img src={loginPhoto} alt="" className="absolute inset-0 -z-10 size-full object-cover" />
         <div

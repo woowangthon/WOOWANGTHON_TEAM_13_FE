@@ -14,7 +14,7 @@ interface ChatInputProps {
 
 export function ChatInput({ value, onChange, onSend, chips }: ChatInputProps) {
   return (
-    <div className="fixed bottom-[92px] left-1/2 z-[15] flex w-full max-w-[460px] -translate-x-1/2 flex-col gap-2 bg-[linear-gradient(rgba(241,236,227,0),#F1ECE3_32%)] px-4 pt-3 pb-1.5">
+    <div className="fixed bottom-[92px] left-1/2 z-[15] flex w-full max-w-[460px] -translate-x-1/2 flex-col gap-2 bg-linear-to-b from-white/0 to-white to-32% px-4 pt-3 pb-1.5">
       <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
         {chips.map((chip) => (
           <Chip key={chip} onClick={() => onSend(chip)}>

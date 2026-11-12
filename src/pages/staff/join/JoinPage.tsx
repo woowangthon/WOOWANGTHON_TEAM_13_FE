@@ -146,7 +146,7 @@ export default function JoinPage() {
   }
 
   return (
-    <AuthFrame>
+    <AuthFrame tone="white">
       <OnboardingHeader step={1} onBack={() => navigate('/role')} />
 
       <form
@@ -241,7 +241,7 @@ function JoinDone({
   const { store, staffName } = invite
   const theme = STORE_THEME[themeKey]
   return (
-    <AuthFrame className="gap-[22px]">
+    <AuthFrame tone="white" className="gap-[22px]">
       <section
         className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-[32px] p-6 text-white"
         style={{ background: theme.color }}
