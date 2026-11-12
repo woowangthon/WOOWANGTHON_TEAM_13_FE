@@ -87,7 +87,9 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
             from={`${authors}명이 남김`}
             summary={aiSummary ?? dayHandoverSummary(withItems)}
           />
+          {/* 카드 한 장 안의 할 일 목록 (알바 홈과 같은 모양, 민지 #108) */}
           <HandoverList
+            variant="list"
             items={items}
             live={live}
             meta={(item) => {
