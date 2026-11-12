@@ -12,7 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { signOut } from '@/lib/auth'
 import { useOwnerQuestions } from '@/pages/owner/api/home'
 import { AddMenuSheet } from '@/pages/owner/components/AddMenuSheet'
@@ -63,11 +63,15 @@ export function OwnerSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[256px] flex-col gap-7 border-r border-line/60 bg-card px-5 pt-7 pb-6 lg:flex">
-      {/* 원두 캐릭터 아이콘 + 글자 로고 */}
-      <div className="flex items-center gap-2 px-2">
+      {/* 원두 캐릭터 아이콘 + 글자 로고 — 누르면 홈 */}
+      <Link
+        to="/owner"
+        aria-label="crewBean 홈으로"
+        className="flex items-center gap-2 self-start px-2"
+      >
         <img src="/logo-bean.png" alt="" className="h-10 w-auto" />
-        <img src="/logo-crewbean.png" alt="crewBean" className="h-8 w-auto" />
-      </div>
+        <img src="/logo-crewbean.png" alt="" className="h-8 w-auto" />
+      </Link>
 
       <button
         type="button"
@@ -129,13 +133,26 @@ function SideLink({
         cn(
           'relative flex h-11 items-center gap-3 rounded-[14px] px-3.5 text-[15px] transition-colors',
           isActive || extra
-            ? 'bg-brand-soft font-extrabold text-brand'
+            ? // 지금 화면: 본문과 같은 흰색으로 메뉴 오른쪽 끝(경계선)까지 이어진 탭 — 왼쪽만 둥글게 + 위 · 아래 안쪽 곡선
+              '-mr-[21px] rounded-r-none bg-white font-extrabold text-brand'
             : 'font-semibold text-muted-foreground hover:bg-background hover:text-foreground',
         )
       }
     >
       {({ isActive }) => (
         <>
+          {(isActive || extra) && (
+            <>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-3.5 right-0 size-3.5 bg-[radial-gradient(circle_at_0_0,transparent_14px,#fff_14.5px)]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-0 -bottom-3.5 size-3.5 bg-[radial-gradient(circle_at_0_100%,transparent_14px,#fff_14.5px)]"
+              />
+            </>
+          )}
           <item.icon className="size-5" strokeWidth={isActive || extra ? 2.4 : 1.9} />
           {item.label}
           {item.badge && !isActive && (
