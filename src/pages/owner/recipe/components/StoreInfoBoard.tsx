@@ -1,11 +1,11 @@
-import { Camera, Plus, Search } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Camera, CircleHelp, Plus, Search } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { MANUAL_TEMPLATES, OWNER_CATEGORIES } from '@/api/mocks/owner/data'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
 import { RecipeGuide } from '@/pages/owner/recipe/components/RecipeGuide'
-import { GUIDE_HIGHLIGHT, useRecipeGuide } from '@/pages/owner/recipe/components/useRecipeGuide'
+import { hasSeenRecipeGuide } from '@/pages/owner/recipe/components/recipeGuideSteps'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { MANUAL_ICON } from '@/shared/icons'
@@ -17,7 +17,6 @@ import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { Tabs } from '@/ui/Tabs'
-import { cn } from '@/ui/utils'
 
 // 매장 정보 탭: 레시피(포스기처럼 카테고리 → 메뉴) · 매뉴얼(카드 + 추천 템플릿)
 // 보기는 알바 화면과 같은 훅(lib/api)이라 사장님이 바꾸면 알바 화면에도 그대로 보인다
@@ -27,12 +26,28 @@ export type StoreInfoSegment = 'recipe' | 'manual'
 export function StoreInfoBoard({ segment }: { segment: StoreInfoSegment }) {
   const { store } = useOwnerStore()
   const navigate = useNavigate()
+  // 레시피 단계별 코치마크: 레시피 탭에 처음 들어오면 한 번 자동으로 · [?] 로 다시 보기(본 기록 무시)
+  // (레시피 · 매뉴얼은 주소가 달라 화면이 새로 그려지므로 처음 값으로 정한다)
+  const [guideOpen, setGuideOpen] = useState(() => segment === 'recipe' && !hasSeenRecipeGuide())
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-2.5 px-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>
-          <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.03em]">매장 정보</h1>
+          <h1 className="m-0 flex items-center gap-1.5 text-[28px] font-extrabold tracking-[-0.03em]">
+            매장 정보
+            {segment === 'recipe' && (
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                aria-label="사용 가이드 다시 보기"
+                title="사용 가이드 다시 보기"
+                className="flex size-8 items-center justify-center rounded-full text-subtle transition-colors hover:bg-card hover:text-foreground"
+              >
+                <CircleHelp className="size-5" />
+              </button>
+            )}
+          </h1>
         </div>
         <Tabs
           options={[
@@ -48,6 +63,7 @@ export function StoreInfoBoard({ segment }: { segment: StoreInfoSegment }) {
       ) : (
         <ManualSection storeId={store.storeId} />
       )}
+      {guideOpen && segment === 'recipe' && <RecipeGuide onClose={() => setGuideOpen(false)} />}
     </div>
   )
 }
@@ -57,8 +73,6 @@ function RecipeSection({ storeId }: { storeId: string }) {
   const [params, setParams] = useSearchParams()
   const query = useRecipes(storeId)
   const all = query.data?.recipes ?? []
-  // 처음 한 번: 사진으로 추가 · 직접 추가 안내 (보는 동안 두 버튼을 강조)
-  const guide = useRecipeGuide()
 
   // 사장님은 빈 카테고리도 보여야 메뉴를 넣을 수 있어서 기본 6개 + 사장님이 만든 이름
   const names = [
@@ -105,16 +119,12 @@ function RecipeSection({ storeId }: { storeId: string }) {
         <Link
           to={{ pathname: '/owner/recipes/scan', search: params.toString() }}
           aria-label="사진으로 추가"
-          className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-foreground text-white',
-            guide.show && GUIDE_HIGHLIGHT,
-          )}
+          data-guide="camera"
+          className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-foreground text-white"
         >
           <Camera className="size-5" />
         </Link>
       </div>
-
-      {guide.show && <RecipeGuide onDismiss={guide.dismiss} />}
 
       {query.isPending ? (
         <Spinner />
@@ -133,10 +143,8 @@ function RecipeSection({ storeId }: { storeId: string }) {
             </h2>
             <Link
               to={{ pathname: '/owner/recipes/new', search: q ? '' : `cat=${category}` }}
-              className={cn(
-                'flex items-center gap-1 rounded-full px-1.5 py-1 text-[13px] font-bold text-brand',
-                guide.show && GUIDE_HIGHLIGHT,
-              )}
+              data-guide="add"
+              className="flex items-center gap-1 rounded-full px-1.5 py-1 text-[13px] font-bold text-brand"
             >
               <Plus className="size-4" />
               추가
