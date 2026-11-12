@@ -29,7 +29,7 @@ import { cn } from '@/ui/utils'
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로: 사람마다 파스텔 바탕 + 글자색만(personColor), 내 근무는 굵게, 대타는 1px 점선 테두리.
 // 보고 있는 달의 날짜만 보여 주고 다른 달 칸은 빈칸 (‹ › 로 넘겼을 때만 그 달).
-// 날짜를 누르면 아래에 그날 근무 목록 — 앱 일정 목록처럼 카드 한 장 안 줄(시간 · 사람 색 세로 줄 · 이름, ScheduleRow) (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중") + 같은 카드 아래 그날 보낸 대타 요청. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
+// 날짜를 누르면 아래에 그날 근무 목록 — 앱 일정 목록처럼 카드 · 구분선 없이 흰 화면 위 줄(시간 · 사람 색 세로 줄 · 이름, ScheduleRow, 줄 사이 20px) (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중") + 그 아래 그날 보낸 대타 요청. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -284,12 +284,9 @@ export function ScheduleMonth() {
         <section className="flex flex-col gap-3">
           <SectionHeader title={`${formatDate(selected)} 근무`} />
           {selectedShifts.length === 0 && <EmptyGuide message="이날은 근무가 없어요" />}
-          {/* 앱 일정 목록처럼: 카드 한 장 안에 근무 줄 + 얇은 구분선 (docs/08 6-2), 그 아래 같은 카드 안 "보낸 대타 요청" */}
+          {/* 앱 일정 목록처럼: 카드 · 구분선 없이 흰 화면 위에 근무 줄, 줄 사이 20px (docs/08 6-2), 그 아래 "보낸 대타 요청" */}
           {(selectedShifts.length > 0 || sentOfDay.length > 0) && (
-            <div
-              ref={dayListRef}
-              className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card"
-            >
+            <div ref={dayListRef} className="flex flex-col gap-5 px-1 pt-1">
               {selectedShifts.map((shift) => {
                 const mine = isMine(shift)
                 // 대타 요청은 내 근무 · 오늘 이후만. 하루 조정한 근무(assignmentId null)는 BE 가 막는다
