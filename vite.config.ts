@@ -22,7 +22,13 @@ export default defineConfig({
         // 앱 배경색(canvas)과 맞춰서 시작 화면 · 상태 바가 흰 띠로 보이지 않게
         background_color: '#F1ECE3',
         theme_color: '#F1ECE3',
-        icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
+        // 홈 화면 · 설치 아이콘 (public/, 나현). maskable 은 넣지 않는다: 지금 아이콘은 배경이 투명하고
+        // 캐릭터가 가장자리(안전 영역 80% 밖)까지 있어서, 안드로이드가 동그랗게 자르면 모자 · 발이 잘린다
+        icons: [
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
       },
     }),
   ],
