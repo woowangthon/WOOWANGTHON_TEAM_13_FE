@@ -7,9 +7,9 @@ import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
 import { LoadError } from '@/shared/LoadError'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
 import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
-import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
@@ -102,9 +102,13 @@ export default function StaffLayout() {
         </span>
       </header>
 
-      {/* 매장 정보를 받기 전에는 화면 대신 Spinner (매장 색 · 데이터가 섞여 보이지 않게) */}
+      {/* 매장 정보를 받기 전에는 화면 대신 뼈대 (매장 색 · 데이터가 섞여 보이지 않게) */}
       {isPending ? (
-        <Spinner />
+        <SkeletonGroup label="내 매장을 불러오는 중" className="flex flex-col gap-4">
+          <Skeleton shape="line" className="mx-1 h-6 w-32" />
+          <Skeleton className="h-44 rounded-3xl" />
+          <Skeleton className="h-28 rounded-3xl" />
+        </SkeletonGroup>
       ) : error ? (
         <LoadError what="내 매장을" error={error} onRetry={retry} />
       ) : (

@@ -383,8 +383,9 @@ function PayCalendar({
   return (
     <>
       <section className="flex flex-col gap-3 rounded-3xl border border-line/60 bg-card px-2 pt-4 pb-3">
+        {/* 달은 위 달 이동 줄("2026년 11월")에 있어서 여기서는 화면 읽기용 제목만, 보이는 건 근무 · 예정 일수 */}
         <div className="flex items-baseline justify-between gap-3 px-2.5">
-          <h2 className="m-0 text-base leading-[1.4] font-bold">{payMonth.month}월</h2>
+          <h2 className="sr-only">{payMonth.month}월 근무</h2>
           <span className="text-[13px] font-bold whitespace-nowrap text-foreground tabular-nums">
             근무 {workedCount}일 · 예정 {plannedCount}일
           </span>
