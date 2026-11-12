@@ -14,6 +14,7 @@ import { Toaster } from '@/ui/Toast'
 
 // 사장 화면 공통 틀 — 담당: 나현 (디자인: 사장님 v3)
 // 상단: 매장 고르기 · 알림 · 마이페이지 / 하단 탭: 홈 · 매장 정보 · + 추가 · 직원 · 근무
+// 데스크톱(lg): 하단 탭 대신 왼쪽 메뉴 (OwnerFrame → OwnerSidebar), 위 줄은 그대로
 
 export default function OwnerLayout() {
   const { store, stores, setCurrentStoreId, isPending, error, retry } = useOwnerStore()
@@ -92,11 +93,14 @@ export default function OwnerLayout() {
 
       {isPending ? <Spinner /> : error ? <LoadError error={error} onRetry={retry} /> : <Outlet />}
 
-      <BottomNav
-        items={navItems}
-        pathname={pathname}
-        fab={{ label: '추가', icon: Plus, onClick: () => setAdding(true) }}
-      />
+      {/* 데스크톱은 왼쪽 메뉴(OwnerSidebar)가 대신한다 */}
+      <div className="lg:hidden">
+        <BottomNav
+          items={navItems}
+          pathname={pathname}
+          fab={{ label: '추가', icon: Plus, onClick: () => setAdding(true) }}
+        />
+      </div>
       <Toaster />
 
       <AddMenuSheet open={adding} onClose={() => setAdding(false)} />
