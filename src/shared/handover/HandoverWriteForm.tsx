@@ -60,7 +60,7 @@ interface HandoverWriteFormProps {
   saving?: boolean
   /**
    * 모양. default = 지금 모양(사장님 시트) · note = 메모지 카드 (알바 시트, docs/08 챕터 4):
-   * 흰 카드 + 옅은 테두리 + 오른쪽 위 살짝 접힌 모서리 · 위에 noteMeta 한 줄 · 예시 안내 문구 ·
+   * 각진 흰 카드 + 옅은 테두리 + 오른쪽 위 살짝 접힌 면 · 위에 noteMeta 한 줄 · 예시 안내 문구 ·
    * 정리 중 뼈대 · 결과 항목도 같은 카드 안에 줄로 이어짐 · ✦ 없음
    */
   variant?: 'default' | 'note'
@@ -222,11 +222,12 @@ export function HandoverWriteForm({
         </h2>
 
         {/* 메모지 카드: 맨 위 날짜 · 매장 → (쓰기) 입력칸 / (정리 중) 뼈대 / (결과) 항목 줄.
-            오른쪽 위 모서리만 살짝 접힌 모양 — 바깥 반은 시트 바탕색(card)으로 모서리를 덮고, 안쪽 반은 접힌 뒷면(muted) + 아주 옅은 그림자 */}
-        <div className="relative flex flex-col overflow-hidden rounded-3xl rounded-tr-none border border-line/60 bg-white">
+            진짜 메모장처럼 각진 모서리. 오른쪽 위에는 접혀 내려온 면(옅은 회색 삼각형) 하나만 — 카드 테두리 안쪽에 붙여서
+            위 · 오른쪽 테두리가 접힌 면 위로 그대로 이어지고, 접힌 선(빗변)에는 아주 옅은 그림자 */}
+        <div className="relative flex flex-col overflow-hidden border border-line/60 bg-white">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -top-px -right-px size-7 bg-linear-to-bl from-card from-50% to-muted to-50% drop-shadow-xs"
+            className="pointer-events-none absolute top-0 right-0 size-7 bg-linear-to-bl from-transparent from-50% to-muted to-50% drop-shadow-xs"
           />
           {noteMeta && (
             <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">

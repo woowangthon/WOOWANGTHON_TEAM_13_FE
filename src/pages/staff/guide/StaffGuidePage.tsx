@@ -223,7 +223,7 @@ function RecipePicture() {
   )
 }
 
-/** 인수인계 남기기: 실제 시트(HandoverWriteForm variant="note")와 같은 메모지 카드(오른쪽 위 접힌 모서리) — 쓴 글 → AI 정리 결과가 같은 카드 안에 */
+/** 인수인계 남기기: 실제 시트(HandoverWriteForm variant="note")와 같은 메모지 카드(각진 모서리 · 오른쪽 위 접힌 면) — 쓴 글 → AI 정리 결과가 같은 카드 안에 */
 function WritePicture() {
   const items = [
     item('w1', 'stock', '우유 2팩 남음'),
@@ -232,10 +232,10 @@ function WritePicture() {
   return (
     <Phone tab="write">
       <span className="px-1 text-[26px] leading-[1.25] font-extrabold">인수인계 남기기</span>
-      <div className="relative flex flex-col overflow-hidden rounded-3xl rounded-tr-none border border-line/60 bg-white">
+      <div className="relative flex flex-col overflow-hidden border border-line/60 bg-white">
         <span
           aria-hidden="true"
-          className="absolute -top-px -right-px size-7 bg-linear-to-bl from-white from-50% to-muted to-50% drop-shadow-xs"
+          className="absolute top-0 right-0 size-7 bg-linear-to-bl from-transparent from-50% to-muted to-50% drop-shadow-xs"
         />
         <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">
           11/20(금) · 달빛 카페
