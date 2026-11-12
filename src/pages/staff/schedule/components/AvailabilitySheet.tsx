@@ -9,19 +9,20 @@ import {
 } from '@/pages/staff/staffStore'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { LoadError } from '@/shared/LoadError'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Calendar } from '@/ui/Calendar'
 import { Input } from '@/ui/Input'
-import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 근무 가능 시간: 날짜를 누를 때마다 가능 → 불가 → 비움
+// 색은 토큰만 (docs/08 4): 비움 = 흰 칸 + 옅은 테두리 · 가능 = 옅은 매장 색 · 불가 = destructive-soft
 const MARK_STYLE = {
-  0: 'bg-white text-[#1C2420]',
-  1: 'bg-[#D5E0D2] text-[#2A4536]',
-  2: 'bg-[#F2DAD3] text-[#C0463F]',
+  0: 'border border-line/60 bg-white text-foreground',
+  1: 'bg-brand-soft text-brand',
+  2: 'bg-destructive-soft text-destructive-foreground',
 } as const
 const MARK_LABEL = { 0: '비움', 1: '가능', 2: '불가' } as const
 
@@ -64,7 +65,14 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
             onRetry={() => availabilityQuery.refetch()}
           />
         ) : (
-          <Spinner />
+          <SkeletonGroup label="가능 시간을 불러오는 중" className="flex flex-col gap-4">
+            <Skeleton shape="line" className="h-6 w-40" />
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: 35 }, (_, i) => (
+                <Skeleton key={i} shape="circle" className="aspect-square w-full" />
+              ))}
+            </div>
+          </SkeletonGroup>
         )}
       </BottomSheet>
     )
@@ -108,18 +116,20 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
 
   return (
     <BottomSheet open onClose={onClose} label={`${availabilityMonth.month}월 가능 시간`}>
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+          <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
             {availabilityMonth.month}월 가능 시간
           </h2>
-          <span className="text-[13px] text-muted-foreground">탭: 가능 · 불가 · 비움</span>
+          <span className="text-[13px] leading-[1.45] font-medium text-muted-foreground">
+            날짜를 누를 때마다 가능 → 불가 → 비움으로 바뀌어요
+          </span>
         </div>
 
         <Calendar
           year={availabilityMonth.year}
           month={availabilityMonth.month}
-          className="gap-[5px]"
+          className="gap-1"
           renderDay={(day) => {
             const mark = availability[day] ?? 0
             return (
@@ -138,13 +148,13 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
           }}
         />
 
-        <div className="flex gap-3.5 text-xs text-muted-foreground">
+        <div className="flex gap-4 text-xs font-medium text-muted-foreground tabular-nums">
           <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded-full bg-[#D5E0D2]" />
+            <span className="size-3 rounded-full bg-brand-soft" />
             가능 {okCount}일
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded-full bg-[#F2DAD3]" />
+            <span className="size-3 rounded-full bg-destructive-soft" />
             불가 {noCount}일
           </span>
         </div>
@@ -156,7 +166,7 @@ export function AvailabilitySheet({ onClose }: { onClose: () => void }) {
           placeholder="메모 · 희망 횟수"
           aria-label="메모 · 희망 횟수"
         />
-        <Button className="h-[54px]" disabled={submitAvailability.isPending} onClick={submit}>
+        <Button disabled={submitAvailability.isPending} onClick={submit}>
           제출하기
         </Button>
       </div>

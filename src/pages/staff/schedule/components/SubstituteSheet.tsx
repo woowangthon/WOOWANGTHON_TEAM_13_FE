@@ -12,10 +12,11 @@ import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
 import { personColor } from '@/pages/staff/schedule/personColor'
+import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
-import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
@@ -65,8 +66,10 @@ export function SubstituteSheet({
     <BottomSheet open onClose={onClose} label="대타 요청" closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1 pr-10">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">대타 요청</h2>
-          <p className="m-0 text-sm text-muted-foreground tabular-nums">
+          <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
+            대타 요청
+          </h2>
+          <p className="m-0 text-[15px] text-muted-foreground tabular-nums">
             {formatDate(fromDateKey(shift.date))} {shift.name || '근무'} {shift.start} – {shift.end}
           </p>
         </div>
@@ -80,11 +83,19 @@ export function SubstituteSheet({
               onRetry={() => workersQuery.refetch()}
             />
           ) : !workersQuery.data ? (
-            <Spinner className="py-6" />
+            <SkeletonGroup label="함께 일하는 사람을 불러오는 중" className="flex flex-col gap-2">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="flex items-center gap-3 rounded-2xl border border-line/60 bg-white px-4 py-3.5"
+                >
+                  <Skeleton shape="circle" className="size-9" />
+                  <Skeleton shape="line" className="h-4 w-20" />
+                </span>
+              ))}
+            </SkeletonGroup>
           ) : workers.length === 0 ? (
-            <p className="m-0 rounded-[18px] bg-background px-4 py-4 text-sm text-muted-foreground">
-              함께 일하는 사람이 아직 없어요
-            </p>
+            <EmptyGuide message="함께 일하는 사람이 아직 없어요" />
           ) : (
             <div role="radiogroup" aria-label="대신 일할 사람" className="flex flex-col gap-2">
               {workers.map((w) => {
@@ -97,8 +108,9 @@ export function SubstituteSheet({
                     aria-checked={on}
                     onClick={() => setTargetId(w.userId)}
                     className={cn(
-                      'flex items-center justify-between gap-3 rounded-[18px] border-[1.5px] bg-white px-4 py-3.5 text-left transition-colors duration-150',
-                      on ? 'border-brand' : 'border-transparent',
+                      // 크림 시트 위 흰 상자 + 옅은 테두리, 고르면 매장 색 테두리
+                      'flex items-center justify-between gap-3 rounded-2xl border-[1.5px] bg-white px-4 py-3.5 text-left transition-colors duration-150 motion-reduce:transition-none',
+                      on ? 'border-brand' : 'border-line/60',
                     )}
                   >
                     <span className="flex items-center gap-2.5">
@@ -129,7 +141,7 @@ export function SubstituteSheet({
           )}
         </div>
 
-        <Button className="h-[54px]" disabled={!target || create.isPending} onClick={send}>
+        <Button disabled={!target || create.isPending} onClick={send}>
           {target ? `${target.name}님에게 요청 보내기` : '사람을 골라 주세요'}
         </Button>
       </div>

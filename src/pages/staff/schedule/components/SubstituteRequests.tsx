@@ -53,18 +53,19 @@ export function ReceivedSubstitutes() {
       {pending.map((r) => (
         <div
           key={r.requestId}
-          className="flex flex-col gap-3 rounded-[22px] bg-warm px-4 py-4 text-warm-foreground"
+          // 살구 바탕 = 사람이 기다리는 것 (docs/08 4). 아이콘 동그라미 없이 라벨 옆 작은 아이콘
+          className="flex flex-col gap-3 rounded-3xl bg-warm p-4 text-warm-foreground"
         >
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/70">
-              <ArrowLeftRight className="size-[18px]" />
-            </span>
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[13px] font-bold">받은 대타 요청</span>
-              <span className="text-base font-extrabold text-foreground tabular-nums">
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="flex items-center gap-1.5 text-[13px] font-bold">
+                <ArrowLeftRight aria-hidden="true" className="size-4" />
+                받은 대타 요청
+              </span>
+              <span className="text-base leading-[1.4] font-bold text-foreground tabular-nums">
                 {shiftText(r)}
               </span>
-              <span className="text-[13px]">
+              <span className="text-[13px] leading-[1.45] font-medium">
                 {r.requester.name}님이 대신 일해 줄 수 있는지 물어봤어요
               </span>
             </span>
@@ -108,16 +109,16 @@ export function SentSubstitutesOfDay({
 }) {
   if (requests.length === 0) return null
   return (
-    <div className="flex flex-col gap-1 rounded-[20px] bg-card px-4 pt-3 pb-1 shadow-soft">
+    <div className="flex flex-col gap-1 rounded-3xl border border-line/60 bg-card px-4 pt-3 pb-1">
       <span className="text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
       <ul className="m-0 flex list-none flex-col p-0">
         {requests.map((r) => (
           <li
             key={r.requestId}
-            className="flex items-center justify-between gap-3 border-b border-[#F0EBE2] py-2.5 last:border-b-0"
+            className="flex items-center justify-between gap-3 border-b border-line/60 py-2.5 last:border-b-0"
           >
             <span className="flex min-w-0 flex-col gap-1">
-              <span className="text-sm font-bold tabular-nums">
+              <span className="text-[15px] font-bold tabular-nums">
                 {r.shiftName || '근무'} {r.start}–{r.end}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
