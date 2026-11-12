@@ -8,6 +8,7 @@ import { useMembers, useRemoveMember, useUpdateHourlyWage } from '@/pages/owner/
 import type { Member } from '@/pages/owner/api/types'
 import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
 import { MemberBoard } from '@/pages/owner/members/components/MemberBoard'
+import { TaxTypeField } from '@/pages/owner/members/components/TaxTypeField'
 import { WageInput } from '@/pages/owner/members/components/WageInput'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
@@ -15,7 +16,7 @@ import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 직원 상세: 초대코드(복사 · 카톡) · 시급 · 퇴사 처리(입장한 직원은 퇴사 → 바로 차단, 기록은 남김 · 입장 전이면 코드 삭제)
+// 직원 상세: 초대코드(복사 · 카톡) · 시급 · 급여 공제(4대보험 · 3.3% · 없음) · 퇴사 처리(입장한 직원은 퇴사 → 바로 차단, 기록은 남김 · 입장 전이면 코드 삭제)
 export default function MemberDetailPage() {
   const { memberId } = useParams()
   const { store } = useOwnerStore()
@@ -121,6 +122,8 @@ function MemberSheet({
             저장
           </Button>
         </div>
+
+        <TaxTypeField member={member} />
 
         {askRemove ? (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">

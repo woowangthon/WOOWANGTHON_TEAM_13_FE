@@ -4,6 +4,7 @@ import { fromDateKey, toDateKey } from '@/lib/date'
 import { formatDate, formatWon } from '@/lib/format'
 import type { MemberPay } from '@/pages/owner/api/types'
 import { useStorePayrolls } from '@/pages/owner/api/work'
+import { TAX_LABEL } from '@/pages/owner/payroll/tax'
 import { PersonAvatar } from '@/pages/owner/components/PersonAvatar'
 import { WorkHeader } from '@/pages/owner/schedule/components/WorkHeader'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
@@ -15,6 +16,7 @@ import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 직원별 급여 (P1, docs/03 S7): 매장별 · 전체 합계 → 직원 → 주별 근거. 주휴 포함 · 공휴일 가산 없음 · 참고용
+// 합계는 세전(사장님이 쓰는 인건비), 직원 줄 · 시트는 공제(4대보험 · 3.3%, 직원 상세에서 설정) 뒤 실수령까지
 // ◀ ▶ 로 지난달 · 다음 달(확정 근무표 기준 예상)까지 넘겨 본다
 export default function OwnerPayrollPage() {
   const { store, stores, today } = useOwnerStore()
@@ -38,6 +40,7 @@ export default function OwnerPayrollPage() {
   const pending = results.some((r) => r.isPending)
   const members = results.flatMap((r) => r.data?.members ?? [])
   const total = members.reduce((sum, m) => sum + m.total, 0)
+  const deduction = members.reduce((sum, m) => sum + m.deduction, 0)
   const open = members.find((m) => m.memberId === openId)
   const single = scope === 'all' ? null : effective[0]
 
@@ -86,7 +89,10 @@ export default function OwnerPayrollPage() {
         <span className="text-[38px] font-extrabold tracking-[-0.03em]">
           {pending ? '—' : formatWon(total)}
         </span>
-        <span className="text-[13px] opacity-75">{payNote(single)}</span>
+        <span className="text-[13px] opacity-75">
+          {!pending && deduction > 0 && `세전 · 공제 합계 ${formatWon(deduction)} · `}
+          {payNote(single)}
+        </span>
       </Card>
 
       {pending ? (
@@ -116,11 +122,19 @@ export default function OwnerPayrollPage() {
                     )}
                   </span>
                   <span className="text-xs whitespace-nowrap text-muted-foreground">
-                    {m.hours}시간 · 주휴 {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'}
+                    {m.hours}시간 · 주휴 {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'}{' '}
+                    · {TAX_LABEL[m.taxType]}
                   </span>
                 </span>
-                <span className="text-base font-extrabold whitespace-nowrap">
-                  {formatWon(m.total)}
+                <span className="flex flex-col items-end gap-0.5">
+                  <span className="text-base font-extrabold whitespace-nowrap">
+                    {formatWon(m.netPay)}
+                  </span>
+                  {m.deduction > 0 && (
+                    <span className="text-xs whitespace-nowrap text-muted-foreground">
+                      세전 {formatWon(m.total)}
+                    </span>
+                  )}
                 </span>
               </button>
             </li>
@@ -146,10 +160,10 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] text-muted-foreground">
-            {pay.name} · {month}월 · 참고용
+            {pay.name} · {month}월 실수령 · 참고용
           </span>
           <span className="text-[32px] font-extrabold tracking-[-0.03em]">
-            {formatWon(pay.total)}
+            {formatWon(pay.netPay)}
           </span>
         </div>
         <dl className="m-0 flex flex-col rounded-[22px] bg-white px-[18px] py-1">
@@ -157,11 +171,28 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
             <dt className="text-[#6B7068]">기본급 · {pay.hours}시간</dt>
             <dd className="m-0 font-bold">{formatWon(pay.basePay)}</dd>
           </div>
-          <div className="flex justify-between py-[13px] text-[15px]">
+          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
             <dt className="text-[#6B7068]">주휴수당</dt>
             <dd className="m-0 font-bold">+ {formatWon(pay.weeklyAllowance)}</dd>
           </div>
+          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
+            <dt className="text-[#6B7068]">세전 합계</dt>
+            <dd className="m-0 font-bold">{formatWon(pay.total)}</dd>
+          </div>
+          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
+            <dt className="text-[#6B7068]">공제 · {TAX_LABEL[pay.taxType]}</dt>
+            <dd className="m-0 font-bold">- {formatWon(pay.deduction)}</dd>
+          </div>
+          <div className="flex justify-between py-[13px] text-[15px]">
+            <dt className="font-bold">실수령</dt>
+            <dd className="m-0 font-extrabold text-brand">{formatWon(pay.netPay)}</dd>
+          </div>
         </dl>
+        <span className="px-1 text-xs text-muted-foreground">
+          {pay.taxType === 'ins'
+            ? '4대보험 근로자 부담분만 뺐어요 (근로소득세는 빠져 있어요)'
+            : '공제 종류는 직원 › 직원 상세에서 바꿀 수 있어요'}
+        </span>
         <div className="flex flex-col gap-2">
           <h3 className="m-0 text-base font-extrabold">주별</h3>
           {pay.weeks.map((w) => (
