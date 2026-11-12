@@ -1,38 +1,56 @@
-import { ArrowDown, CalendarDays, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowLeftRight,
+  Bell,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Coffee,
+  House,
+  MessagesSquare,
+  Plus,
+  Sparkles,
+} from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import logo from '@/assets/logo-crewbean.webp'
 import type { ChatMessage, HandoverItem as HandoverItemData, RecipeSummary } from '@/lib/api/types'
 import { ChatBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { markStaffGuideSeen } from '@/pages/staff/guide/staffGuideSeen'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { personColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { GuideSlides, type GuideSlide } from '@/shared/guide/GuideSlides'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
-import { HandoverItem } from '@/shared/handover/HandoverItem'
+import { HandoverList } from '@/shared/handover/HandoverList'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
-import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
 
 // 알바 앱 사용법: 하단 탭 5칸을 한 장씩 (공용 틀 shared/guide/GuideSlides).
 // 오는 길: 초대코드 입장 [시작하기] · 알바 홈 첫 진입(안 봤으면) → 끝나면 알바 홈 / 마이페이지 "앱 사용법" → 끝나면 마이페이지 (state.returnTo)
-// 그림은 실제 부품을 가짜 데이터로 작게 줄여 그린다 (조작은 안 됨)
+// 그림은 실제 부품을 가짜 데이터로 작게 줄여 그린다 (조작은 안 됨). 11/13~ UI 업그레이드에 맞춰 흰 바탕 · 로고 헤더 · 할 일 목록 · 줄 노트 · 파스텔 근무표
 
 type Tab = 'home' | 'recipe' | 'write' | 'chat' | 'schedule'
 
 const noop = () => {}
 
-/** 실제 화면을 작게: 휴대폰 화면 모양 + 아래 하단 탭 줄 (그 장의 탭만 강조) */
-function Phone({ tab, children }: { tab: Tab; children: ReactNode }) {
+/**
+ * 실제 화면을 작게: 휴대폰 화면 모양 + 아래 하단 탭 줄 (그 장의 탭만 강조).
+ * 지금 알바 화면처럼 흰 바탕, header 면 위에 로고 헤더(왼쪽 매장 · 가운데 crewBean · 오른쪽 종 · 프로필)
+ */
+function Phone({ tab, header, children }: { tab: Tab; header?: boolean; children: ReactNode }) {
   return (
     // 화면이 낮으면(예: 360×640) 그림 칸만큼 줄어들고, 넘치는 아래는 흐리게 사라진다
-    <div className="flex max-h-full w-[248px] flex-col overflow-hidden rounded-[30px] border-[5px] border-card bg-background shadow-float">
+    <div className="flex max-h-full w-[248px] flex-col overflow-hidden rounded-[30px] border-[5px] border-card bg-white shadow-float">
       <div className="relative h-[300px] min-h-0 shrink overflow-hidden px-2.5 pt-2.5">
         {/* 실제 크기로 그린 뒤 줄인다 (zoom 은 줄인 크기대로 자리를 잡는다) */}
-        <div className="flex flex-col gap-2.5" style={{ zoom: 0.7 } as CSSProperties}>
+        <div className="flex flex-col gap-3" style={{ zoom: 0.7 } as CSSProperties}>
+          {header && <MiniHeader />}
           {children}
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-white to-transparent" />
       </div>
       <MiniTabBar active={tab} />
     </div>
@@ -84,6 +102,27 @@ function MiniTabBar({ active }: { active: Tab }) {
   )
 }
 
+/** 알바 헤더(StaffLayout)를 작게: 왼쪽 매장 · 가운데 로고 · 오른쪽 종 · 프로필 */
+function MiniHeader() {
+  return (
+    <span className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+      <span className="flex h-10 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold">
+        달빛 카페
+        <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
+      </span>
+      <img src={logo} alt="" width={451} height={144} className="h-6 w-auto" />
+      <span className="flex items-center gap-2 justify-self-end">
+        <span className="flex size-10 items-center justify-center rounded-full bg-card">
+          <Bell aria-hidden="true" className="size-5" />
+        </span>
+        <span className="flex size-10 items-center justify-center rounded-full bg-brand text-base font-extrabold text-background">
+          지
+        </span>
+      </span>
+    </span>
+  )
+}
+
 // ── 가짜 데이터 (그림용) ──
 
 const item = (itemId: string, tag: HandoverItemData['tag'], text: string, checked = false) => ({
@@ -129,37 +168,36 @@ const message = (messageId: string, sender: ChatMessage['sender'], text: string,
 
 function HomePicture() {
   return (
-    <Phone tab="home">
-      <span className="px-1 text-xl font-extrabold">오늘의 인수인계</span>
-      <AiSummaryCard
-        from="2명이 남김"
-        summary={'꽃집 외상 오늘 계산 · 딸기청 1병 남음\n원두 1봉 남음'}
-        done={1}
-        total={3}
-      />
-      <HandoverItem
-        item={item('a', 'credit', '꽃집 사장님 아메리카노 1잔 · 오늘 계산')}
-        done={false}
-        faded={false}
-        subText="외상"
-        meta="민수 · 14:50"
-        onToggle={noop}
-      />
-      <HandoverItem
-        item={item('b', 'stock', '딸기청 1병 남음', true)}
-        done
-        faded
-        subText="재고"
-        meta="도윤 · 08:05"
-        onToggle={noop}
-      />
+    <Phone tab="home" header>
+      <span className="px-1 text-[26px] leading-[1.25] font-extrabold tabular-nums">11/20(금)</span>
+      <div className="flex flex-col gap-3">
+        <span className="px-1 text-[19px] font-bold">오늘의 인수인계</span>
+        <AiSummaryCard
+          from="2명이 남김"
+          summary={'꽃집 외상 오늘 계산 · 딸기청 1병 남음\n원두 1봉 남음'}
+          done={1}
+          total={3}
+        />
+        {/* 알바 홈과 같은 할 일 목록 (카드 한 장 안 줄) */}
+        <HandoverList
+          variant="list"
+          live
+          items={[
+            item('a', 'credit', '꽃집 사장님 아메리카노 1잔 · 오늘 계산'),
+            item('b', 'stock', '딸기청 1병 남음', true),
+          ]}
+          meta={(it) => (it.itemId === 'a' ? '민수 · 14:50' : '도윤 · 08:05')}
+          onToggle={noop}
+        />
+      </div>
     </Phone>
   )
 }
 
 function RecipePicture() {
   return (
-    <Phone tab="recipe">
+    <Phone tab="recipe" header>
+      <span className="px-1 text-[26px] leading-[1.25] font-extrabold">레시피</span>
       <CategoryTabs
         variant="clean"
         categories={[
@@ -185,6 +223,7 @@ function RecipePicture() {
   )
 }
 
+/** 인수인계 남기기: 실제 시트(HandoverWriteForm variant="note")와 같은 줄 노트 카드 — 쓴 글 → AI 정리 결과가 같은 카드 안에 */
 function WritePicture() {
   const items = [
     item('w1', 'stock', '우유 2팩 남음'),
@@ -192,38 +231,47 @@ function WritePicture() {
   ]
   return (
     <Phone tab="write">
-      <span className="px-1 text-[22px] font-extrabold">인수인계 남기기</span>
-      <div className="rounded-[18px] bg-white px-4 py-3.5 text-[15px] leading-[1.6] break-keep text-foreground">
-        우유 두 팩 남았어요. 꽃집 사장님 라떼 한 잔 외상, 내일 계산하신대요
-      </div>
-      <span className="flex items-center justify-center gap-1.5 text-sm font-bold text-brand">
-        <ArrowDown className="size-4" />
-        AI가 정리
-      </span>
-      {items.map((it) => {
-        const [bg, fg] = HANDOVER_TAG_PILL[it.tag]
-        return (
-          <div
-            key={it.itemId}
-            className="flex items-center gap-2.5 rounded-[18px] bg-white px-3.5 py-[13px]"
-          >
+      <span className="px-1 text-[26px] leading-[1.25] font-extrabold">인수인계 남기기</span>
+      <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-white">
+        <span className="border-b border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground tabular-nums">
+          11/20(금) · 달빛 카페
+        </span>
+        <p className="m-0 bg-[linear-gradient(transparent_23px,color-mix(in_oklab,var(--line)_60%,transparent)_23px)] bg-size-[100%_24px] bg-clip-content bg-origin-content px-5 py-3 text-base leading-6 break-keep text-foreground">
+          우유 두 팩 남았어요. 꽃집 사장님 라떼 한 잔 외상, 내일 계산하신대요
+        </p>
+        <span className="flex items-center gap-1.5 border-y border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground">
+          <ArrowDown aria-hidden="true" className="size-4 text-brand" />
+          AI 정리 결과
+        </span>
+        {items.map((it) => {
+          const [bg, fg] = HANDOVER_TAG_PILL[it.tag]
+          return (
             <span
-              className="shrink-0 rounded-full px-[9px] py-1 text-[11px] font-bold"
-              style={{ background: bg, color: fg }}
+              key={it.itemId}
+              className="flex items-start gap-3 border-b border-line/60 px-5 py-3 last:border-b-0"
             >
-              {HANDOVER_TAG_LABEL[it.tag]}
+              <span
+                className="flex h-6 shrink-0 items-center rounded-full px-2.5 text-xs font-bold"
+                style={{ background: bg, color: fg }}
+              >
+                {HANDOVER_TAG_LABEL[it.tag]}
+              </span>
+              <span className="text-[15px] leading-6">{it.text}</span>
             </span>
-            <span className="text-sm">{it.text}</span>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </Phone>
   )
 }
 
 function ChatPicture() {
   return (
-    <Phone tab="chat">
+    <Phone tab="chat" header>
+      <span className="flex items-center gap-1.5 px-1 text-[26px] leading-[1.25] font-extrabold">
+        <Sparkles aria-hidden="true" className="size-5 text-brand" fill="currentColor" />
+        AI 사수
+      </span>
       <div className="flex flex-col gap-3 pt-1">
         {/* 매뉴얼에 없는 질문 → 찾지 못했어요 + [사장님께 물어보기] → 사장님 답변이 채팅에 도착 */}
         <ChatBubble
@@ -246,13 +294,22 @@ function ChatPicture() {
   )
 }
 
-/** 근무표 달력 블록 (ScheduleMonth 와 같은 모양) */
+/** 근무표 그림의 사람들 (사람별 파스텔 색은 실제 근무표와 같은 personColor — 근무표 사람 목록 순서) */
+const WORKERS = ['지은', '민수', '서연', '도윤', '사장'].map((name) => ({
+  userId: name,
+  memberId: null,
+  name,
+  role: name === '사장' ? ('owner' as const) : ('staff' as const),
+}))
+const colorOf = (name: string) => personColor(name, WORKERS)
+
+/** 근무표 달력 한 주 (ScheduleMonth 와 같은 모양: 파스텔 바탕 + 글자색, 내 근무는 굵게) */
 const WEEK = [
   {
     d: 16,
     shifts: [
       ['9', '민수'],
-      ['18', '지은', 'me'],
+      ['18', '지은'],
     ],
   },
   {
@@ -266,7 +323,7 @@ const WEEK = [
     d: 18,
     shifts: [
       ['9', '민수'],
-      ['18', '지은', 'me'],
+      ['18', '지은'],
     ],
   },
   {
@@ -280,7 +337,7 @@ const WEEK = [
     d: 20,
     shifts: [
       ['9', '서연'],
-      ['18', '지은', 'me'],
+      ['18', '지은'],
     ],
   },
   {
@@ -301,11 +358,13 @@ const WEEK = [
 
 function SchedulePicture() {
   return (
-    <Phone tab="schedule">
-      <section className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2.5 shadow-soft">
+    <Phone tab="schedule" header>
+      <section className="flex flex-col gap-2 rounded-3xl border border-line/60 bg-card px-2 pt-3 pb-2.5">
         <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-muted-foreground">
-          {['일', '월', '화', '수', '목', '금', '토'].map((w) => (
-            <span key={w}>{w}</span>
+          {['일', '월', '화', '수', '목', '금', '토'].map((w, i) => (
+            <span key={w} className={cn(i === 0 && 'text-destructive')}>
+              {w}
+            </span>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -313,7 +372,7 @@ function SchedulePicture() {
             <span
               key={d}
               className={cn(
-                'flex min-w-0 flex-col gap-[3px] px-[2px] pt-1 pb-1.5',
+                'flex min-w-0 flex-col gap-[3px] border-t border-line/40 px-[2px] pt-1 pb-1.5',
                 d === 20 && 'rounded-[10px] bg-background',
               )}
             >
@@ -325,34 +384,52 @@ function SchedulePicture() {
               >
                 {d}
               </span>
-              {shifts.map(([hour, name, me]) => (
-                <span
-                  key={hour + name}
-                  className={cn(
-                    'flex flex-wrap gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
-                    me ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
-                  )}
-                >
-                  <span className="tabular-nums">{hour}</span>
-                  <span>{name}</span>
-                </span>
-              ))}
+              {shifts.map(([hour, name]) => {
+                const [bg, fg] = colorOf(name)
+                return (
+                  <span
+                    key={hour + name}
+                    className={cn(
+                      'flex flex-wrap gap-x-[3px] rounded-[4px] px-[2px] py-px text-[10px] leading-[1.3]',
+                      name === '지은' ? 'font-extrabold' : 'font-medium',
+                    )}
+                    style={{ background: bg, color: fg }}
+                  >
+                    <span className="tabular-nums">{hour}</span>
+                    <span>{name}</span>
+                  </span>
+                )
+              })}
             </span>
           ))}
         </div>
       </section>
-      <div className="texture flex items-center justify-between gap-3 rounded-[20px] bg-brand px-4 py-3.5 text-white">
-        <span className="flex flex-col gap-0.5">
-          <span className="text-base font-extrabold">지은 · 마감</span>
+      {/* 고른 날 내 근무 카드: 이름 첫 글자 동그라미 · [⇄ 대타 요청 ›] (실제 근무표 날짜 목록과 같은 모양) */}
+      <div className="flex flex-col gap-3 rounded-3xl border border-brand bg-card px-4 py-3.5 ring-1 ring-brand ring-inset">
+        <span className="flex items-center gap-3">
+          <PersonInitial name="지은" color={colorOf('지은')} />
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex items-center gap-1.5">
+              <span className="text-base font-bold">지은</span>
+              <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
+                나
+              </span>
+            </span>
+            <span className="text-[13px] text-muted-foreground">마감</span>
+          </span>
           <span className="text-[15px] font-bold tabular-nums">18:00 – 23:00</span>
         </span>
-        <Button variant="white" size="sm">
-          대타 요청
-        </Button>
+        <span className="flex justify-end border-t border-line/70 pt-2.5">
+          <span className="flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand">
+            <ArrowLeftRight aria-hidden="true" className="size-3.5" strokeWidth={2.4} />
+            대타 요청
+            <ChevronRight aria-hidden="true" className="-mr-1 size-3.5" strokeWidth={2.4} />
+          </span>
+        </span>
       </div>
-      <div className="flex items-center justify-between rounded-[20px] bg-card px-4 py-3.5 shadow-soft">
-        <span className="text-sm font-bold text-muted-foreground">11월 예상 급여</span>
-        <span className="text-lg font-extrabold tabular-nums">681,120원</span>
+      <div className="flex items-center justify-between rounded-3xl border border-line/60 bg-card px-4 py-3.5">
+        <span className="text-[13px] font-bold text-muted-foreground">11월 예상 급여</span>
+        <span className="text-[19px] font-bold tabular-nums">681,120원</span>
       </div>
     </Phone>
   )

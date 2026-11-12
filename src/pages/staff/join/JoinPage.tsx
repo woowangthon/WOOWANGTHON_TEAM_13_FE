@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ClipboardList, Coffee, LoaderCircle, Sparkles } from 'lucide-react'
+import { ArrowRight, Check, LoaderCircle } from 'lucide-react'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
@@ -15,6 +15,8 @@ import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { CodeCells } from '@/pages/staff/join/components/CodeCells'
 import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
+import { STORE_ICON } from '@/shared/icons'
+import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 
@@ -150,23 +152,26 @@ export default function JoinPage() {
       <OnboardingHeader step={1} onBack={() => navigate('/role')} />
 
       <form
-        className="flex flex-1 flex-col gap-[22px]"
+        className="flex flex-1 flex-col gap-6"
         onSubmit={(event) => {
           event.preventDefault()
           submit()
         }}
       >
-        <div className="flex flex-col gap-2 px-1 pt-1.5">
+        <div className="flex flex-col gap-2 px-1 pt-1">
           <p className="m-0 text-[13px] font-medium text-muted-foreground">알바생</p>
-          <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">
+          <h1 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
             초대코드 입력
           </h1>
         </div>
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           <CodeCells value={code} onChange={changeCode} error={error !== null} disabled={locked} />
           {error && (
-            <p role="alert" className="m-0 px-1.5 text-[13px] text-destructive-foreground">
+            <p
+              role="alert"
+              className="m-0 px-1 text-[13px] font-medium text-destructive-foreground"
+            >
               {ERROR_TEXT[error]}
               {remaining !== null &&
                 remaining > 0 &&
@@ -175,7 +180,7 @@ export default function JoinPage() {
           )}
           {error === 'joined' && memberStore && (
             <Button
-              variant="ink"
+              variant="soft"
               size="md"
               className="self-start"
               onClick={() => goToStore(memberStore)}
@@ -184,29 +189,13 @@ export default function JoinPage() {
               <ArrowRight />
             </Button>
           )}
-          <p className="m-0 px-1.5 text-xs text-subtle">사장님께 받은 6자리 · 예) K7P2QX</p>
+          <p className="m-0 px-1 text-xs font-medium text-subtle tabular-nums">
+            사장님께 받은 6자리 · 예) K7P2QX
+          </p>
         </div>
 
         {invite && (
-          <div className="flex items-center gap-3.5 rounded-[24px] bg-card p-4 shadow-soft animate-in fade-in-0 slide-in-from-bottom-2">
-            <span
-              className="size-[52px] shrink-0 overflow-hidden rounded-[18px]"
-              style={{ background: STORE_THEME[themeOf(invite.store.theme, myStoreCount)].color }}
-            >
-              {invite.store.photoUrl && (
-                <img src={invite.store.photoUrl} alt="" className="size-full object-cover" />
-              )}
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-              <strong className="text-[17px] font-extrabold">{invite.store.name}</strong>
-              <span className="text-[13px] text-muted-foreground">
-                {formatOwner(invite.store.ownerName)} · {invite.staffName} 님 자리
-              </span>
-            </span>
-            <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-brand text-white">
-              <Check className="size-[18px]" />
-            </span>
-          </div>
+          <InvitePreview invite={invite} theme={themeOf(invite.store.theme, myStoreCount)} />
         )}
 
         <Button
@@ -221,11 +210,41 @@ export default function JoinPage() {
   )
 }
 
-/** 입장 완료 카드 아래 바로가기 (인수인계 확인은 홈 맨 위 "오늘의 인수인계") */
+/**
+ * 확인된 매장 미리보기: 매장 사진(없으면 매장 색 아바타 + 매장 아이콘) · 이름 · "박 사장님 · 지은 님으로 들어가요" · ✓
+ * 흰 바탕 위 연한 카드 + 옅은 테두리 (docs/08 4)
+ */
+function InvitePreview({ invite, theme }: { invite: InviteVerification; theme: StoreTheme }) {
+  const Icon = STORE_ICON[theme]
+  return (
+    <div className="flex items-center gap-3 rounded-3xl border border-line/60 bg-card p-4 animate-in fade-in-0 slide-in-from-bottom-2 motion-reduce:animate-none">
+      {invite.store.photoUrl ? (
+        <img
+          src={invite.store.photoUrl}
+          alt=""
+          className="size-12 shrink-0 rounded-2xl object-cover"
+        />
+      ) : (
+        <StoreAvatar color={STORE_THEME[theme].color} size={48}>
+          <Icon className="size-6" fill="currentColor" />
+        </StoreAvatar>
+      )}
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <strong className="truncate text-base leading-[1.4] font-bold">{invite.store.name}</strong>
+        <span className="text-[13px] font-medium text-muted-foreground">
+          {formatOwner(invite.store.ownerName)} · {invite.staffName} 님으로 들어가요
+        </span>
+      </span>
+      <Check aria-label="확인된 코드" className="size-5 shrink-0 text-brand" strokeWidth={2.4} />
+    </div>
+  )
+}
+
+/** 입장 완료 카드 아래 바로가기 (인수인계 확인은 홈 맨 위 "오늘의 인수인계"). 글자와 같은 뜻의 아이콘은 빼고 글자만 */
 const NEXT_LINKS = [
-  { to: '/staff/recipes', icon: Coffee, label: '레시피 보기' },
-  { to: '/staff/chat', icon: Sparkles, label: 'AI 사수에게 묻기' },
-  { to: '/staff', icon: ClipboardList, label: '인수인계 확인' },
+  { to: '/staff/recipes', label: '레시피 보기' },
+  { to: '/staff/chat', label: 'AI 사수에게 묻기' },
+  { to: '/staff', label: '인수인계 확인' },
 ]
 
 // 디자인 시안은 초록 카드 — 비어 보여서 매장 사진 + 환영 문구 + 바로가기 칩으로 바꿈
@@ -241,9 +260,9 @@ function JoinDone({
   const { store, staffName } = invite
   const theme = STORE_THEME[themeKey]
   return (
-    <AuthFrame tone="white" className="gap-[22px]">
+    <AuthFrame tone="white" className="gap-6">
       <section
-        className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-[32px] p-6 text-white"
+        className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-3xl p-6 text-white"
         style={{ background: theme.color }}
       >
         {store.photoUrl && (
@@ -264,32 +283,34 @@ function JoinDone({
         >
           <Check className="size-[30px]" />
         </span>
-        <div className="flex flex-col gap-[18px]">
-          <div className="flex flex-col gap-2.5">
-            <p className="m-0 text-sm opacity-80">{store.name}</p>
-            <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em]">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <p className="m-0 text-[13px] font-medium text-white/80">{store.name}</p>
+            {/* 입장 첫 화면의 큰 카피: 로그인과 같은 34px (docs/08 2 예외) */}
+            <h1 className="m-0 text-[34px] leading-[1.22] font-extrabold tracking-[-0.03em]">
               입장 완료
             </h1>
-            <p className="m-0 text-[15px] opacity-90">{staffName} 님, 오늘부터 함께해요</p>
+            <p className="m-0 text-[15px] font-medium text-white/90">
+              {staffName} 님, 오늘부터 함께해요
+            </p>
           </div>
+          {/* 사진 위 칩은 검정 반투명 (docs/08 4 예외, 유리 효과 대신) */}
           <nav aria-label="바로가기" className="flex flex-wrap gap-2">
-            {NEXT_LINKS.map(({ to, icon: Icon, label }) => (
+            {NEXT_LINKS.map(({ to, label }) => (
               <Link
                 key={label}
                 to={to}
                 replace
-                className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px]"
+                className="flex h-9 items-center rounded-full bg-black/35 px-3.5 text-[13px] font-bold text-white"
               >
-                <Icon className="size-4" />
                 {label}
               </Link>
             ))}
           </nav>
         </div>
       </section>
-      <Button variant="ink" className="h-14 text-base" onClick={onStart}>
+      <Button className="h-14 text-base" onClick={onStart}>
         시작하기
-        <ArrowRight className="size-5" />
       </Button>
     </AuthFrame>
   )
