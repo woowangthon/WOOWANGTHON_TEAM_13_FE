@@ -38,7 +38,7 @@ export function HandoverList({ items, live, onToggle, meta, variant = 'card' }: 
   if (variant === 'card') return items.map(renderItem)
 
   return (
-    <ul className="m-0 list-none overflow-hidden rounded-[20px] bg-card p-0 shadow-soft">
+    <ul className="m-0 list-none overflow-hidden rounded-3xl bg-card p-0 shadow-soft">
       {items.map((item, i) => (
         <li key={item.itemId}>
           {/* 구분선: 체크 동그라미 다음(왼쪽 16 + 24 + 14px)부터 */}

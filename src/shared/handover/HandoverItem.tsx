@@ -45,7 +45,7 @@ export function HandoverItem({
         list
           ? // 목록 줄: 누를 때 그 줄만 살짝 어두워진다 (카드 전체는 그대로).
             // 마우스 · 터치로 누를 땐 테두리 · 휴대폰 탭 하이라이트(회색 네모) 없이, 키보드(Tab)일 때만 카드 모서리에 맞춘 둥근 안쪽 테두리
-            'w-full px-4 py-3.5 outline-none transition-colors duration-150 [-webkit-tap-highlight-color:transparent] enabled:active:bg-background focus-visible:rounded-[20px] focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-inset motion-reduce:transition-none'
+            'w-full px-4 py-3.5 outline-none transition-colors duration-150 [-webkit-tap-highlight-color:transparent] enabled:active:bg-background focus-visible:rounded-3xl focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-inset motion-reduce:transition-none'
           : cn('rounded-[20px] bg-card p-4 shadow-soft', PRESSABLE_CARD_ENABLED),
         faded && 'opacity-50',
       )}
