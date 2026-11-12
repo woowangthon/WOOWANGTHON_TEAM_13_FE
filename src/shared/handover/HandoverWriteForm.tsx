@@ -23,7 +23,7 @@ import { cn } from '@/ui/utils'
 
 // 공용 보기 부품: 인수인계 텍스트 작성 폼 · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 텍스트 → AI 정리(태그) → (태그 · 글자 고치기) → 저장. AI 정리 요청 · 저장 뒤 할 일(시트 닫기 · 토스트)은 화면이 정한다
-// variant: default = 지금 모양(사장님 시트, 모양 · 문구 그대로) · note = 줄 노트 카드(알바 시트)
+// variant: default = 지금 모양(사장님 시트, 모양 · 문구 그대로) · note = 메모지 카드(알바 시트)
 /** 태그를 누르면 이 순서로 바뀐다 */
 const TAG_ORDER: HandoverTag[] = ['credit', 'stock', 'etc']
 
@@ -59,8 +59,8 @@ interface HandoverWriteFormProps {
   /** 저장 중: [저장] · [특이사항 없음] · [고치기]를 끄고 [저장]은 "저장 중…". 안 주면 지금처럼 늘 켜짐 */
   saving?: boolean
   /**
-   * 모양. default = 지금 모양(사장님 시트) · note = 줄 노트 카드 (알바 시트, docs/08 챕터 4):
-   * 흰 카드 + 옅은 테두리 · 위에 noteMeta 한 줄 · 본문 줄높이(24px)마다 옅은 가로줄 · 예시 안내 문구 ·
+   * 모양. default = 지금 모양(사장님 시트) · note = 메모지 카드 (알바 시트, docs/08 챕터 4):
+   * 흰 카드 + 옅은 테두리 + 오른쪽 위 살짝 접힌 모서리 · 위에 noteMeta 한 줄 · 예시 안내 문구 ·
    * 정리 중 뼈대 · 결과 항목도 같은 카드 안에 줄로 이어짐 · ✦ 없음
    */
   variant?: 'default' | 'note'
@@ -221,10 +221,15 @@ export function HandoverWriteForm({
           인수인계 남기기
         </h2>
 
-        {/* 줄 노트 카드: 맨 위 날짜 · 매장 → (쓰기) 줄 그은 입력칸 / (정리 중) 뼈대 / (결과) 항목 줄 */}
-        <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-white">
+        {/* 메모지 카드: 맨 위 날짜 · 매장 → (쓰기) 입력칸 / (정리 중) 뼈대 / (결과) 항목 줄.
+            오른쪽 위 모서리만 살짝 접힌 모양 — 바깥 반은 시트 바탕색(card)으로 모서리를 덮고, 안쪽 반은 접힌 뒷면(muted) + 아주 옅은 그림자 */}
+        <div className="relative flex flex-col overflow-hidden rounded-3xl rounded-tr-none border border-line/60 bg-white">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-px -right-px size-7 bg-linear-to-bl from-card from-50% to-muted to-50% drop-shadow-xs"
+          />
           {noteMeta && (
-            <span className="border-b border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground tabular-nums">
+            <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">
               {noteMeta}
             </span>
           )}
@@ -241,8 +246,8 @@ export function HandoverWriteForm({
                 aria-label="인수인계 내용"
                 maxLength={HANDOVER_TEXT_MAX}
                 rows={6}
-                // 글자 16px(아이폰 확대 방지) · 줄높이 24px. 글자 칸(content-box) 안에만 줄마다 아래쪽 옅은 가로줄(line 60%), 스크롤하면 줄도 같이 움직인다
-                className="block min-h-36 w-full resize-none border-none bg-[linear-gradient(transparent_23px,color-mix(in_oklab,var(--line)_60%,transparent)_23px)] bg-size-[100%_24px] bg-local bg-clip-content bg-origin-content px-5 py-3 text-base leading-6 break-keep text-foreground outline-none placeholder:text-subtle"
+                // 글자 16px(아이폰 확대 방지) · 줄높이 24px, 가로줄 없는 메모지
+                className="block min-h-36 w-full resize-none border-none bg-transparent px-5 py-3 text-base leading-6 break-keep text-foreground outline-none placeholder:text-subtle"
               />
               <LengthHint length={note.length} max={HANDOVER_TEXT_MAX} className="px-5 pb-3" />
             </>

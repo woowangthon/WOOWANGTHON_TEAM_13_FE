@@ -7,7 +7,6 @@ import { ApiError } from '@/lib/apiClient'
 import { ChatBubble, FailedAnswer, TypingBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { ChatInput } from '@/pages/staff/chat/components/ChatInput'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
-import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Spinner } from '@/ui/Spinner'
@@ -103,7 +102,8 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-[90px]">
+    // flex-1: 화면 높이를 채워서, 대화가 없을 때 안내를 남는 공간의 세로 가운데에 둔다
+    <div className="flex flex-1 flex-col gap-4 pb-[90px]">
       {/* 얇은 머리: 화면 이름 + 보조 한 줄. 위에 붙어 있고, 스크롤하면 한 줄로 줄어 대화 공간을 넓힌다.
           ✦ 는 "AI 가 답하는 화면" 표시로 여기 한 곳만 (말풍선마다 반복하지 않는다 — docs/08 7) */}
       <header
@@ -142,7 +142,7 @@ export default function ChatPage() {
       ) : chat.isError ? (
         <LoadError what="대화를" error={chat.error} onRetry={chat.retry} />
       ) : (
-        <div className="flex flex-col gap-3" aria-live="polite">
+        <div className="flex flex-1 flex-col gap-3" aria-live="polite">
           {/* 이전 대화: 불러오는 동안 작은 Spinner, 화면이 짧아 스크롤이 안 되면 버튼으로 */}
           {hasOlder &&
             (loadingOlder ? (
@@ -157,10 +157,15 @@ export default function ChatPage() {
               </button>
             ))}
           {chat.messages?.length === 0 && !send.isPending && !failed && (
-            <EmptyGuide
-              message="아직 나눈 대화가 없어요"
-              hint="궁금한 걸 아래에 적어 보세요. 매뉴얼에 없으면 사장님께 물어봐 드려요"
-            />
+            // 이 화면만의 빈 안내: 상자 없이 글자 두 줄 (보조 13px · 캡션 12px, 흰 바탕 대비 4.5 이상)
+            <div className="flex flex-1 flex-col items-center justify-center gap-1 px-6 text-center">
+              <p className="m-0 text-[13px] leading-[1.45] font-medium text-muted-foreground">
+                아직 나눈 대화가 없어요
+              </p>
+              <p className="m-0 text-xs leading-[1.4] font-medium text-balance break-keep text-subtle">
+                궁금한 걸 아래에 적어 보세요. 매뉴얼에 없으면 사장님께 물어봐 드려요
+              </p>
+            </div>
           )}
           {chat.messages?.map((message) => (
             <ChatBubble
