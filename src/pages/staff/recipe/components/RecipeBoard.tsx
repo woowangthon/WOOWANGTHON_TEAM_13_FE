@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
@@ -63,7 +64,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
   // 사장님 매장 정보와 같은 줄: 기본 6개 + 그 밖의 카테고리를 늘 보여 주고 메뉴 수가 0이면 "티 0"
   const categories = categoryCounts(all)
 
-  const q = (params.get('q') ?? '').trim()
+  // 검색어는 화면 안 상태로 들고(한글 조합이 끊기지 않게), 주소(?q=)에는 따라 적기만 한다.
+  // 주소 값을 입력칸에 바로 물리면 글자마다 주소가 바뀌며 다시 그려져서 "블루베리"가 "ㅂ브블…"처럼 깨진다 (11/13 나현, 민지 OK)
+  const [search, setSearch] = useState(() => params.get('q') ?? '')
+  const q = search.trim()
   const catParam = params.get('cat')
   // 처음 고른 칸: 메뉴가 있는 첫 카테고리 (BE 가 정한 처음 카테고리에 메뉴가 있으면 그것)
   const defaultCategory = recipesQuery.data?.defaultCategory
@@ -118,8 +122,11 @@ function RecipeSection({ storeId }: { storeId: string }) {
           />
           <Input
             variant="card"
-            value={params.get('q') ?? ''}
-            onChange={(event) => update({ q: event.target.value })}
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              update({ q: event.target.value })
+            }}
             placeholder="메뉴, 재료 검색"
             aria-label="메뉴, 재료 검색"
             className="w-full pl-11"
@@ -129,7 +136,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
           <CategoryTabs
             categories={categories}
             value={q ? null : category}
-            onChange={(c) => update({ cat: c, q: '' })}
+            onChange={(c) => {
+              setSearch('')
+              update({ cat: c, q: '' })
+            }}
           />
         )}
       </div>
