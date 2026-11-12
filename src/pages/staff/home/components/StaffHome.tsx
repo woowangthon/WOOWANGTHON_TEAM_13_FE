@@ -1,7 +1,12 @@
 import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { dayHandoverSummary, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
+import {
+  dayHandoverSummary,
+  useConfirmHandoverItem,
+  useHandoverDaySummary,
+  useHandoverNotes,
+} from '@/lib/api/handover'
 import { availabilityEnabled, shiftLabel, useMySchedule } from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
 import { useScheduleWorkers } from '@/lib/api/substitute'
@@ -258,6 +263,18 @@ function HandoverSection({
   const authorName = useStaffName(store.id)
   const authors = new Set(withItems.map((note) => note.author.userId)).size
 
+  // 카드 본문: BE 하루 AI 요약이 있으면 그것, 불러오는 중 · 실패(토스트 없음) · null 이면 노트 요약을 한 줄씩 모은 것.
+  // 요약이 지금 노트보다 적은 노트로 만든 것이면(다른 사람이 막 남김) 노트 요약을 보여 주고 요약을 다시 부른다
+  const daySummary = useHandoverDaySummary(store.id, date)
+  const ai = daySummary.data
+  const notesLoaded = notesQuery.isSuccess
+  const aiIsCurrent = !!ai && notesLoaded && ai.noteCount === notes.length
+  const { refetch: refetchDaySummary } = daySummary
+  useEffect(() => {
+    if (ai && notesLoaded && ai.noteCount !== notes.length) void refetchDaySummary()
+  }, [ai, notesLoaded, notes.length, refetchDaySummary])
+  const summary = (aiIsCurrent && ai.summary?.trim()) || dayHandoverSummary(withItems)
+
   const title = live ? '오늘의 인수인계' : `${formatDate(selectedDate)} 인수인계`
 
   return (
@@ -286,7 +303,7 @@ function HandoverSection({
         <div className="flex flex-col gap-2.5">
           <AiSummaryCard
             from={`${authors}명이 남김`}
-            summary={dayHandoverSummary(withItems)}
+            summary={summary}
             done={live ? items.filter((item) => item.checked).length : items.length}
             total={items.length}
           />
