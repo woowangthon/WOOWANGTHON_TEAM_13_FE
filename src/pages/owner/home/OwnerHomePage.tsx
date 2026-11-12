@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, Navigate, useSearchParams } from 'react-router'
 import { toDateKey } from '@/lib/date'
 import { formatDate, formatTime, formatWon } from '@/lib/format'
 import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
@@ -17,6 +17,7 @@ import { useOwnerProfile } from '@/pages/owner/api/stores'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { useStorePayroll } from '@/pages/owner/api/work'
 import { questionSentence } from '@/pages/owner/components/questionText'
+import { hasSeenOwnerGuide } from '@/pages/owner/guide/ownerGuideSeen'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
 import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
@@ -35,6 +36,12 @@ const QUICK: { to: string; label: string; icon: LucideIcon }[] = [
 ]
 
 export default function OwnerHomePage() {
+  // 사장님 홈에 처음 들어왔고(매장 등록 직후 포함) 앱 사용법을 아직 안 봤으면 한 번 보여 준다 (다 보면 다시 홈으로)
+  if (!hasSeenOwnerGuide()) return <Navigate to="/owner/guide" replace />
+  return <OwnerHome />
+}
+
+function OwnerHome() {
   const { store, today } = useOwnerStore()
   const profile = useOwnerProfile()
   const questions = useOwnerQuestions(store.storeId)

@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, Pencil, Plus, X } from 'lucide-react'
+import { BookOpen, ChevronRight, LogOut, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
@@ -21,7 +21,7 @@ import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · [매장 추가] → 매장 등록 4단계) · 로그아웃 · 탈퇴
+// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · [매장 추가] → 매장 등록 4단계) · 앱 사용법 · 로그아웃 · 탈퇴
 export default function OwnerMyPage() {
   const navigate = useNavigate()
   const close = useCloseTo('/owner')
@@ -73,6 +73,25 @@ export default function OwnerMyPage() {
           <Plus className="size-[18px]" />
           매장 추가
         </Link>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">도움말</h2>
+        <button
+          type="button"
+          // 다 보면(또는 건너뛰면) 마이페이지로 돌아온다
+          onClick={() => navigate('/owner/guide', { state: { returnTo: '/owner/me' } })}
+          className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left shadow-soft"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+            <BookOpen className="size-5" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+            <span className="text-base font-extrabold">앱 사용법</span>
+            <span className="text-[13px] text-[#6B7068]">탭마다 무엇을 하는지 다시 보기</span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-subtle" />
+        </button>
       </section>
 
       <div className="mt-1.5 flex flex-col gap-2.5">
