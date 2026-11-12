@@ -14,13 +14,14 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import { useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import type { RecipeSummary } from '@/lib/api/types'
 import { PersonAvatar } from '@/pages/owner/components/PersonAvatar'
 import { GuideDesktop } from '@/pages/owner/guide/GuideDesktop'
 import { markOwnerGuideSeen } from '@/pages/owner/guide/ownerGuideSeen'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { useWide } from '@/pages/owner/useWide'
 import { GuideSlides, type GuideSlide } from '@/shared/guide/GuideSlides'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
@@ -460,15 +461,6 @@ const SLIDES: GuideSlide[] = [
     visual: <WorkPicture />,
   },
 ]
-
-/** 데스크톱(lg 1024px 이상)인지 — 창 크기를 바꾸면 바로 바뀐다 */
-const WIDE = '(min-width: 1024px)'
-const subscribeWide = (onChange: () => void) => {
-  const media = window.matchMedia(WIDE)
-  media.addEventListener('change', onChange)
-  return () => media.removeEventListener('change', onChange)
-}
-const useWide = () => useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches)
 
 export default function OwnerGuidePage() {
   const navigate = useNavigate()
