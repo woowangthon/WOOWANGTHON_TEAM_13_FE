@@ -1,9 +1,11 @@
-import { Camera, Images, Store } from 'lucide-react'
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { Camera, Crop, Images, Store } from 'lucide-react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ImageCropper } from '@/ui/ImageCropper'
 import { toast } from '@/ui/toastStore'
 
-// 매장 등록 ④ 매장 사진 (선택): 찍기 · 갤러리(파일)에서 고르기. 저장하면 사장님 홈 매장 카드에 보인다
-// 자르기는 나중에 정한다 (11/11)
+// 매장 사진 (매장 등록 ④ · 홈 매장 카드 [사진 변경] 시트): 찍기 · 갤러리(파일)에서 고르기 → 자르기(ImageCropper)
+// 미리보기 칸은 홈 매장 카드와 같은 모양이라 자른 결과가 카드에 어떻게 보일지 알 수 있다
+// [사진 조정]을 누르면 처음 고른 원본에서 다시 자른다 (11/12)
 
 const MAX_BYTES = 10 * 1024 * 1024
 const ACCEPT = 'image/jpeg,image/png,image/webp'
@@ -11,16 +13,49 @@ const ACCEPT = 'image/jpeg,image/png,image/webp'
 export function StorePhotoStep({
   value,
   onChange,
+  onCroppingChange,
 }: {
   value: File | null
   onChange: (file: File | null) => void
+  /** 자르는 중인지 — 부모가 아래 [저장] · [건너뛰기]를 숨긴다 */
+  onCroppingChange?: (cropping: boolean) => void
 }) {
   const url = useMemo(() => (value ? URL.createObjectURL(value) : null), [value])
   useEffect(() => () => void (url && URL.revokeObjectURL(url)), [url])
+  /** 처음 고른 원본 (다시 조정할 때 여기서 자른다) */
+  const [original, setOriginal] = useState<File | null>(null)
+  const [cropping, setCroppingState] = useState(false)
+
+  const setCropping = (next: boolean) => {
+    setCroppingState(next)
+    onCroppingChange?.(next)
+  }
 
   const pick = (file: File) => {
+    setOriginal(file)
+    setCropping(true)
+  }
+
+  const confirm = (file: File) => {
     if (file.size > MAX_BYTES) return toast.error('10MB 이하 사진으로 골라 주세요')
+    setCropping(false)
     onChange(file)
+  }
+
+  if (cropping && original) {
+    return (
+      <ImageCropper
+        file={original}
+        hint="홈 매장 카드에 보일 부분만 모서리를 끌어 남겨 주세요"
+        cancelLabel={value ? '취소' : '다시 고르기'}
+        confirmLabel="넣기"
+        onCancel={() => {
+          setCropping(false)
+          if (!value) setOriginal(null)
+        }}
+        onConfirm={confirm}
+      />
+    )
   }
 
   return (
@@ -48,13 +83,28 @@ export function StorePhotoStep({
         <PickButton icon={<Images />} label="갤러리 · 파일" onPick={pick} />
       </div>
       {value && (
-        <button
-          type="button"
-          onClick={() => onChange(null)}
-          className="self-center p-0 text-[13px] font-semibold text-destructive-foreground"
-        >
-          사진 빼기
-        </button>
+        <div className="flex items-center justify-center gap-5">
+          {original && (
+            <button
+              type="button"
+              onClick={() => setCropping(true)}
+              className="inline-flex items-center gap-1 p-0 text-[13px] font-semibold text-brand"
+            >
+              <Crop className="size-4" />
+              사진 조정
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              onChange(null)
+              setOriginal(null)
+            }}
+            className="p-0 text-[13px] font-semibold text-destructive-foreground"
+          >
+            사진 빼기
+          </button>
+        </div>
       )}
     </div>
   )
