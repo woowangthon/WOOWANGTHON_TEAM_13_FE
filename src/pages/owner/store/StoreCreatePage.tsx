@@ -336,10 +336,9 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
         className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
         style={{
           backgroundColor: theme.color,
-          // 매장 사진을 넣었으면 글씨가 보이게 어둡게 깔고 사진을 보여 준다
-          backgroundImage: store.photoUrl
-            ? `linear-gradient(rgba(20,28,22,0.25), rgba(20,28,22,0.65)), url(${store.photoUrl})`
-            : undefined,
+          // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 그림자로)
+          backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
+          textShadow: store.photoUrl ? '0 1px 10px rgba(0,0,0,0.45)' : undefined,
         }}
       >
         <span

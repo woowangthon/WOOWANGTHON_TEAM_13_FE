@@ -21,6 +21,7 @@ import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { MANUAL_ICON, DEFAULT_MANUAL_ICON } from '@/shared/icons'
+import { cn } from '@/ui/utils'
 
 // 사장님 홈: 인사 · 지금 근무 중 · 바로가기 · 확인 필요(질문 · 인건비) · 인수인계
 
@@ -109,18 +110,21 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
 
   return (
     <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
+      {/* 매장 사진은 그라데이션 없이 그대로 — 글씨는 그림자로 읽히게 (11/12) */}
       {showPhoto && (
-        <>
-          <img
-            src={store.photoUrl ?? undefined}
-            alt=""
-            onError={() => setPhotoFailed(true)}
-            className="absolute inset-0 -z-10 size-full object-cover"
-          />
-          <div className="absolute inset-0 -z-10" style={{ background: store.scrim }} />
-        </>
+        <img
+          src={store.photoUrl ?? undefined}
+          alt=""
+          onError={() => setPhotoFailed(true)}
+          className="absolute inset-0 -z-10 size-full object-cover"
+        />
       )}
-      <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
+      <div
+        className={cn(
+          'relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white',
+          showPhoto && '[text-shadow:0_1px_10px_rgba(0,0,0,0.45)]',
+        )}
+      >
         <span className="flex items-center gap-2 self-start rounded-full bg-white/15 py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md">
           <span className="flex size-7 items-center justify-center rounded-full bg-white">
             <span
