@@ -16,11 +16,14 @@ import type {
 } from '@/lib/api/types'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { LengthHint } from '@/shared/LengthHint'
+import { Skeleton } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
+import { cn } from '@/ui/utils'
 
 // 공용 보기 부품: 인수인계 텍스트 작성 폼 · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 텍스트 → AI 정리(태그) → (태그 · 글자 고치기) → 저장. AI 정리 요청 · 저장 뒤 할 일(시트 닫기 · 토스트)은 화면이 정한다
+// variant: default = 지금 모양(사장님 시트, 모양 · 문구 그대로) · note = 줄 노트 카드(알바 시트)
 /** 태그를 누르면 이 순서로 바뀐다 */
 const TAG_ORDER: HandoverTag[] = ['credit', 'stock', 'etc']
 
@@ -55,6 +58,14 @@ interface HandoverWriteFormProps {
   onNoIssue: () => void
   /** 저장 중: [저장] · [특이사항 없음] · [고치기]를 끄고 [저장]은 "저장 중…". 안 주면 지금처럼 늘 켜짐 */
   saving?: boolean
+  /**
+   * 모양. default = 지금 모양(사장님 시트) · note = 줄 노트 카드 (알바 시트, docs/08 챕터 4):
+   * 흰 카드 + 옅은 테두리 · 위에 noteMeta 한 줄 · 본문 줄높이(24px)마다 옅은 가로줄 · 예시 안내 문구 ·
+   * 정리 중 뼈대 · 결과 항목도 같은 카드 안에 줄로 이어짐 · ✦ 없음
+   */
+  variant?: 'default' | 'note'
+  /** note 카드 맨 위 한 줄 (예: 11/20(금) · 달빛 카페) */
+  noteMeta?: string
 }
 
 export function HandoverWriteForm({
@@ -62,6 +73,8 @@ export function HandoverWriteForm({
   onSave,
   onNoIssue,
   saving = false,
+  variant = 'default',
+  noteMeta,
 }: HandoverWriteFormProps) {
   const [note, setNote] = useState('')
   const [stage, setStage] = useState<'write' | 'loading' | 'done'>('write')
@@ -169,6 +182,164 @@ export function HandoverWriteForm({
         : draft.summary
       ).slice(0, HANDOVER_SUMMARY_MAX),
     })
+  }
+
+  /** 항목 글자: 누르면 그 자리에서 고치기 (note 모양이 쓴다) */
+  const itemText = (i: number, item: HandoverDraftItem, className: string) =>
+    editing?.index === i ? (
+      <input
+        autoFocus
+        value={editing.text}
+        onChange={(event) => setEditing({ index: i, text: event.target.value })}
+        onBlur={finishEdit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') finishEdit()
+          if (event.key === 'Escape') {
+            // 시트(BottomSheet)도 Esc 로 닫히므로, 고치기만 취소하고 시트까지 전달하지 않는다
+            event.stopPropagation()
+            cancelEdit()
+          }
+        }}
+        aria-label="인수인계 항목 고치기"
+        maxLength={HANDOVER_ITEM_MAX}
+        className={cn('min-w-0 flex-1 border-none bg-transparent p-0', className)}
+      />
+    ) : (
+      <button
+        type="button"
+        onClick={() => startEdit(i, item.text)}
+        className={cn('min-w-0 flex-1 text-left', className)}
+      >
+        {item.text}
+      </button>
+    )
+
+  if (variant === 'note') {
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
+          인수인계 남기기
+        </h2>
+
+        {/* 줄 노트 카드: 맨 위 날짜 · 매장 → (쓰기) 줄 그은 입력칸 / (정리 중) 뼈대 / (결과) 항목 줄 */}
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-white">
+          {noteMeta && (
+            <span className="border-b border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground tabular-nums">
+              {noteMeta}
+            </span>
+          )}
+
+          {stage === 'write' && (
+            <>
+              <textarea
+                value={note}
+                onChange={(event) => {
+                  setNote(event.target.value)
+                  setDraftFail(null)
+                }}
+                placeholder="예) 우유 2팩 남았어요. 꽃집 사장님 라떼 외상 1잔"
+                aria-label="인수인계 내용"
+                maxLength={HANDOVER_TEXT_MAX}
+                rows={6}
+                // 글자 16px(아이폰 확대 방지) · 줄높이 24px. 글자 칸(content-box) 안에만 줄마다 아래쪽 옅은 가로줄(line 60%), 스크롤하면 줄도 같이 움직인다
+                className="block min-h-36 w-full resize-none border-none bg-[linear-gradient(transparent_23px,color-mix(in_oklab,var(--line)_60%,transparent)_23px)] bg-size-[100%_24px] bg-local bg-clip-content bg-origin-content px-5 py-3 text-base leading-6 break-keep text-foreground outline-none placeholder:text-subtle"
+              />
+              <LengthHint length={note.length} max={HANDOVER_TEXT_MAX} className="px-5 pb-3" />
+            </>
+          )}
+
+          {stage === 'loading' && (
+            <div role="status" aria-busy="true" className="flex flex-col">
+              {['w-3/4', 'w-1/2', 'w-2/3'].map((width) => (
+                <span
+                  key={width}
+                  aria-hidden="true"
+                  className="flex items-center gap-3 border-b border-line/60 px-5 py-3.5"
+                >
+                  <Skeleton shape="circle" className="h-6 w-10" />
+                  <Skeleton shape="line" className={cn('h-4', width)} />
+                </span>
+              ))}
+              <span className="px-5 py-3 text-[13px] font-medium text-muted-foreground">
+                정리하고 있어요…
+              </span>
+            </div>
+          )}
+
+          {stage === 'done' && (
+            <>
+              <span className="border-b border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground">
+                {manual ? '직접 정리' : 'AI 정리 결과'} · 태그 · 글자를 누르면 고칠 수 있어요
+              </span>
+              <ul className="m-0 flex list-none flex-col p-0">
+                {items.map((item, i) => {
+                  const [bg, fg] = HANDOVER_TAG_PILL[item.tag]
+                  const label = HANDOVER_TAG_LABEL[item.tag]
+                  return (
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 border-b border-line/60 px-5 py-3 last:border-b-0"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => cycleTag(i)}
+                        aria-label={`${label} 태그 · 눌러서 바꾸기`}
+                        className="h-6 shrink-0 rounded-full px-2.5 text-xs font-bold"
+                        style={{ background: bg, color: fg }}
+                      >
+                        {label}
+                      </button>
+                      {itemText(i, item, 'text-[15px] leading-6')}
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+        </div>
+
+        {stage === 'write' && draftFail && (
+          <div
+            role="alert"
+            className="flex flex-col gap-3 rounded-2xl bg-warm px-4 py-3 text-[13px] leading-[1.45] text-foreground"
+          >
+            <span>
+              <strong className="font-bold">{draftFail}.</strong> 직접 나눠서 저장할 수 있어요
+            </span>
+            <div className="flex gap-2">
+              <Button variant="white" size="sm" onClick={summarize}>
+                다시 시도
+              </Button>
+              <Button variant="white" size="sm" onClick={writeManually}>
+                직접 정리하기
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {stage === 'write' && (
+          <div className="grid grid-cols-[1fr_1.6fr] gap-2">
+            <Button variant="soft" disabled={saving} onClick={noIssue}>
+              특이사항 없음
+            </Button>
+            <Button disabled={!note.trim()} onClick={summarize}>
+              AI로 정리하기
+            </Button>
+          </div>
+        )}
+
+        {stage === 'done' && (
+          <div className="grid grid-cols-[1fr_1.6fr] gap-2">
+            <Button variant="soft" disabled={saving} onClick={() => setStage('write')}>
+              고치기
+            </Button>
+            <Button disabled={saving} onClick={save}>
+              {saving ? '저장 중…' : '저장'}
+            </Button>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
