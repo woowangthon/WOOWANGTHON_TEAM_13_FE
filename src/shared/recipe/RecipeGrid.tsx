@@ -10,7 +10,7 @@ import { Badge } from '@/ui/Badge'
 // 사진 자리는 납작하게 둬서 한 화면에 더 많이 보이게 한다. 메뉴 사진(imageUrl)이 있으면 사진, 없으면 카테고리 아이콘
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
 // variant
-//   default: 카드마다 그림자 · 모서리 26 · 사진 위 온도 알약 (지금 사장님 화면)
+//   default: 사진이 카드 전체(1.6:1)를 채우고 위 · 아래만 살짝 어둡게, NEW · 이름(14px) · 아래 줄(11px, "ICE · 16oz · 재료 3가지")은 사진 위 흰 글자 (사장님 화면, 11/13 나현 · 민지 OK)
 //   clean:   그림자 없는 카드(24 · 옅은 테두리 1px) 위쪽을 사진 2:1이 꽉 채움(카드 overflow-hidden 으로 위 모서리만 둥글게) ·
 //            아래 글자 영역만 여백 12px · 이름 16px(두 줄까지) / 아래 줄 13px · 온도는 아래 줄 글자로 (docs/08 · 알바 화면)
 interface RecipeGridProps {
@@ -33,14 +33,14 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
             // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
             preventScrollReset
             className={cn(
-              'flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft',
+              'relative isolate flex aspect-[1.6] flex-col justify-between overflow-hidden rounded-[22px] p-3 shadow-soft',
+              r.imageUrl ? 'text-white' : 'text-foreground',
               PRESSABLE_CARD,
             )}
+            style={{ background: tint }}
           >
-            <span
-              className="relative flex aspect-[2.4] w-full items-center justify-center overflow-hidden rounded-[18px]"
-              style={{ background: tint }}
-            >
+            {/* 사진이 카드 전체를 채운다 (없으면 카테고리 아이콘이 가운데) */}
+            <span className="absolute inset-0 -z-10 flex items-center justify-center">
               <RecipePhoto
                 imageUrl={r.imageUrl}
                 fallback={
@@ -52,24 +52,22 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
                   </span>
                 }
               />
-              {r.temp && (
-                <span
-                  className="absolute top-2 left-2 rounded-full bg-white/70 px-[7px] py-[3px] text-[10px] font-extrabold"
-                  style={{ color: ink }}
-                >
-                  {r.temp}
-                </span>
-              )}
-              {r.isNew && (
-                <Badge className="absolute top-2 right-2" aria-label="새 레시피">
-                  NEW
-                </Badge>
-              )}
             </span>
-            <span className="flex flex-col gap-[3px] px-1">
-              <span className="text-[15px] leading-[1.3] font-bold break-keep">{r.name}</span>
-              <span className="text-xs text-subtle">
-                {[r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
+            {/* 위 · 아래만 살짝 어둡게 (온도 · NEW 와 이름이 사진 위에서도 읽히게) */}
+            {r.imageUrl && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0)_32%,rgba(0,0,0,0)_45%,rgba(0,0,0,0.62)_100%)]"
+              />
+            )}
+            {/* 위 오른쪽: NEW 만 (온도는 아래 줄 "ICE · 16oz · 재료 3가지"로) */}
+            <span className="flex justify-end">
+              {r.isNew && <Badge aria-label="새 레시피">NEW</Badge>}
+            </span>
+            <span className="flex flex-col gap-0.5 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">
+              <span className="text-sm leading-[1.3] font-bold break-keep">{r.name}</span>
+              <span className={cn('text-[11px]', r.imageUrl ? 'text-white/85' : 'text-subtle')}>
+                {[r.temp, r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
               </span>
             </span>
           </Link>
