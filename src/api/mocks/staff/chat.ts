@@ -14,7 +14,7 @@ export type ChatMessage =
 
 export const initialChats: Record<string, ChatMessage[]> = {
   dalbit: [
-    { who: 'ai', text: '무엇이 궁금하세요?' },
+    { who: 'ai', text: '매장 레시피 · 매뉴얼에서 찾아 답해요' },
     { who: 'me', text: '딸기라떼 딸기청 몇 스푼이야?' },
     {
       who: 'ai',
@@ -22,7 +22,7 @@ export const initialChats: Record<string, ChatMessage[]> = {
       source: { kind: 'recipe', id: 'stl', label: '레시피 › 딸기라떼' },
     },
   ],
-  afternoon: [{ who: 'ai', text: '무엇이 궁금하세요?' }],
+  afternoon: [{ who: 'ai', text: '매장 레시피 · 매뉴얼에서 찾아 답해요' }],
 }
 
 export const NOT_FOUND_TEXT = '매뉴얼에서 찾지 못했어요. 제가 지어내지 않을게요.'
@@ -30,7 +30,11 @@ export const OWNER_ANSWER = '창고 우산 빌려드리고 연락처 받아 둬.
 
 /** 마지막 글자에 받침이 있나 (숫자 · 영어는 읽는 소리 기준: 200ml → 엘, 3 → 삼). 끝의 (괄호)는 빼고 본다: 2샷 (40ml) → 샷 */
 function hasBatchim(word: string) {
-  const last = word.replace(/\s*\([^)]*\)\s*$/, '').trim().at(-1) ?? ''
+  const last =
+    word
+      .replace(/\s*\([^)]*\)\s*$/, '')
+      .trim()
+      .at(-1) ?? ''
   const code = last.charCodeAt(0)
   if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 !== 0
   if (/[013678]/.test(last)) return true // 영 일 삼 육 칠 팔
