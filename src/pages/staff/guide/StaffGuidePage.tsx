@@ -407,7 +407,7 @@ export default function StaffGuidePage() {
   return (
     <div className="min-h-dvh bg-canvas" style={brand}>
       <div className="mx-auto w-full max-w-[460px]">
-        <GuideSlides slides={SLIDES} onDone={done} />
+        <GuideSlides tone="white" slides={SLIDES} onDone={done} />
       </div>
     </div>
   )

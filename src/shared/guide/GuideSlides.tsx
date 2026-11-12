@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { useThemeColor, WHITE_THEME_COLOR } from '@/lib/useThemeColor'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
 
@@ -14,6 +15,7 @@ import { cn } from '@/ui/utils'
  *     slides={[{ tab: '홈', title: '출근하면 인수인계부터 확인해요', body: '…', visual: <HomePicture /> }]}
  *     onDone={() => navigate('/owner', { replace: true })}
  *   />
+ *   알바 화면은 tone="white" (흰 바탕)
  */
 
 export interface GuideSlide {
@@ -31,12 +33,20 @@ interface GuideSlidesProps {
   onDone: () => void
   /** 마지막 장 버튼 (기본 "시작하기") */
   doneLabel?: string
+  /** 바탕색. 기본 cream = 지금(--background, 사장님) · white = 흰색 + 보이는 동안 상태 바도 흰색 (알바, docs/08 4) */
+  tone?: 'cream' | 'white'
 }
 
 /** 이만큼(px) 밀면 넘긴다 */
 const SWIPE_PX = 48
 
-export function GuideSlides({ slides, onDone, doneLabel = '시작하기' }: GuideSlidesProps) {
+export function GuideSlides({
+  slides,
+  onDone,
+  doneLabel = '시작하기',
+  tone = 'cream',
+}: GuideSlidesProps) {
+  useThemeColor(tone === 'white' ? WHITE_THEME_COLOR : null)
   const [index, setIndex] = useState(0)
   const [drag, setDrag] = useState(0)
   const [dragging, setDragging] = useState(false)
@@ -97,7 +107,10 @@ export function GuideSlides({ slides, onDone, doneLabel = '시작하기' }: Guid
     <section
       aria-roledescription="carousel"
       aria-label="앱 사용법"
-      className="flex h-dvh flex-col overflow-hidden bg-background pt-3 pb-[max(20px,env(safe-area-inset-bottom))]"
+      className={cn(
+        'flex h-dvh flex-col overflow-hidden pt-3 pb-[max(20px,env(safe-area-inset-bottom))]',
+        tone === 'white' ? 'bg-white' : 'bg-background',
+      )}
     >
       <div className="flex h-10 shrink-0 items-center justify-end px-4">
         <button

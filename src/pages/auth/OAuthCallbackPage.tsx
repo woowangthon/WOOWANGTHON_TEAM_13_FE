@@ -55,7 +55,7 @@ export default function OAuthCallbackPage() {
   }, [navigate, setPendingRole])
 
   return (
-    <AuthFrame className="items-center justify-center gap-2">
+    <AuthFrame tone="white" className="items-center justify-center gap-2">
       <Spinner className="py-0" label="로그인하는 중" />
       <p className="m-0 text-[15px] font-semibold text-subtle">로그인하는 중이에요</p>
       {slow && (
