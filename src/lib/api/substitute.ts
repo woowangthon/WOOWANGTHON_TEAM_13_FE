@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createSubstituteRequest,
   getScheduleWorkers,
@@ -53,6 +53,18 @@ export function useScheduleWorkers(storeId: string, enabled = true) {
     queryKey: substituteKeys.workers(storeId),
     queryFn: () => fetchWorkers(storeId),
     enabled: enabled && !!storeId,
+  })
+}
+
+/** 여러 매장의 근무표 사람 목록 (예상 급여 상세 카드의 사람 색). 같은 키라 근무표 탭에서 받은 게 있으면 그대로, 실패해도 토스트 없이 회색 */
+export function useScheduleWorkersOf(storeIds: string[]) {
+  return useQueries({
+    queries: storeIds.map((storeId) => ({
+      queryKey: substituteKeys.workers(storeId),
+      queryFn: () => fetchWorkers(storeId),
+      enabled: !!storeId,
+      meta: { silent: true },
+    })),
   })
 }
 
