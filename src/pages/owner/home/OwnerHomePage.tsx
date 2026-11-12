@@ -135,11 +135,11 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
             </span>
             {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
           </span>
-          {/* 아래는 버튼만 — 누르면 매장 사진 바꾸기 (11/12) */}
+          {/* 아래는 버튼만 — 누르면 매장 사진 변경 (11/12) */}
           <button
             type="button"
             onClick={() => setEditingPhoto(true)}
-            aria-label="매장 사진 바꾸기"
+            aria-label="매장 사진 변경"
             className="flex size-[46px] shrink-0 items-center justify-center self-end rounded-full bg-white text-foreground transition-transform active:scale-[0.97]"
           >
             <ChevronRight className="size-6" />

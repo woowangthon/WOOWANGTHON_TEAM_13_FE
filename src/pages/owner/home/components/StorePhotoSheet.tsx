@@ -7,7 +7,7 @@ import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
-// 사장님 홈 매장 카드 오른쪽 아래 버튼 → 매장 사진 바꾸기 (찍기 · 갤러리, POST /stores/{storeId}/photo)
+// 사장님 홈 매장 카드 오른쪽 아래 버튼 → 매장 사진 변경 (찍기 · 갤러리, POST /stores/{storeId}/photo)
 export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose: () => void }) {
   const [photo, setPhoto] = useState<File | null>(null)
   const save = useSaveStorePhoto()
@@ -18,7 +18,7 @@ export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose
       { storeId, file: photo },
       {
         onSuccess: () => {
-          toast('매장 사진을 바꿨어요')
+          toast('매장 사진을 변경했어요')
           onClose()
         },
         onError: (error) => {
@@ -32,9 +32,9 @@ export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose
   }
 
   return (
-    <BottomSheet open onClose={onClose} label="매장 사진 바꾸기" closeButton>
+    <BottomSheet open onClose={onClose} label="매장 사진 변경" closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">매장 사진 바꾸기</h2>
+        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">매장 사진 변경</h2>
         <StorePhotoStep value={photo} onChange={setPhoto} />
         <Button className="h-[54px]" disabled={!photo || save.isPending} onClick={submit}>
           {save.isPending ? '올리는 중…' : '저장'}
