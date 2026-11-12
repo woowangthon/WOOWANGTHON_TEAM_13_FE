@@ -23,8 +23,14 @@ export default function ScheduleDraftPage() {
   return (
     <div className="flex flex-col gap-[22px]">
       <WorkHeader segment="schedule" />
-      <ReceivedRequests storeId={store.storeId} />
-      <WorkCalendar key={store.storeId} storeId={store.storeId} today={today} closed={store} />
+      {/* 받은 대타 요청은 휴대폰에서는 달력 위, 데스크톱에서는 오른쪽 칸 (달력 7 : 3) */}
+      <WorkCalendar
+        key={store.storeId}
+        storeId={store.storeId}
+        today={today}
+        closed={store}
+        aside={<ReceivedRequests storeId={store.storeId} />}
+      />
       <button
         type="button"
         onClick={() => setSettingsOpen((open) => !open)}
