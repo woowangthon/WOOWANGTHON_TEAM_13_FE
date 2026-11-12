@@ -76,7 +76,7 @@ export function BizVerifyForm({
         {verified ? (
           <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-brand">
             <Check className="size-[18px]" />
-            확인됐어요
+            확인
           </span>
         ) : (
           <button
