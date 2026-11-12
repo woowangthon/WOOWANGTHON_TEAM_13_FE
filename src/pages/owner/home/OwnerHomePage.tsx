@@ -14,7 +14,7 @@ import { toDateKey } from '@/lib/date'
 import { formatDate, formatTime, formatWon } from '@/lib/format'
 import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
-import type { OwnerQuestionItem } from '@/pages/owner/api/types'
+import type { OnDuty, OwnerQuestionItem } from '@/pages/owner/api/types'
 import { useStorePayroll } from '@/pages/owner/api/work'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
@@ -106,11 +106,13 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
   const query = useOnDuty(store.storeId)
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = !!store.photoUrl && !photoFailed
-  const duty = query.data?.onDuty
+  const people = query.data?.people ?? []
+  const label = (p: OnDuty) => (p.isOwner ? '사장님' : p.name)
+  // 매장 사진 위 글씨는 반투명 어두운 판 위에 (그라데이션 없이, 11/12)
+  const glass = showPhoto ? 'bg-black/35 backdrop-blur-md' : ''
 
   return (
     <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
-      {/* 매장 사진은 그라데이션 없이 그대로 — 글씨는 그림자로 읽히게 (11/12) */}
       {showPhoto && (
         <img
           src={store.photoUrl ?? undefined}
@@ -119,40 +121,56 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
           className="absolute inset-0 -z-10 size-full object-cover"
         />
       )}
-      <div
-        className={cn(
-          'relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white',
-          showPhoto && '[text-shadow:0_1px_10px_rgba(0,0,0,0.45)]',
-        )}
-      >
-        <span className="flex items-center gap-2 self-start rounded-full bg-white/15 py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md">
+      <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
+        <span
+          className={cn(
+            'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
+            showPhoto ? 'bg-black/35' : 'bg-white/15',
+          )}
+        >
           <span className="flex size-7 items-center justify-center rounded-full bg-white">
             <span
-              className={
-                duty ? 'size-2.5 rounded-full bg-[#6FA97B]' : 'size-2.5 rounded-full bg-faint'
-              }
+              className={cn('size-2.5 rounded-full', people.length ? 'bg-[#6FA97B]' : 'bg-faint')}
             />
           </span>
-          {duty ? '지금 영업 중' : '근무 중인 직원 없음'}
+          {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
         </span>
         <div className="flex items-end justify-between gap-3.5">
-          {duty ? (
-            <div className="flex min-w-0 flex-col gap-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-[15px] font-extrabold text-brand">
-                  {duty.name.slice(0, 1)}
-                </span>
-                <span className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] whitespace-nowrap">
-                  {duty.name} 근무 중
-                </span>
-              </div>
-              <span className="text-[13px] opacity-85">
-                {duty.role} {duty.start} – {duty.end} · {duty.clockIn} 출근
+          <div
+            className={cn(
+              'flex min-w-0 flex-col gap-2 rounded-[22px]',
+              glass && `${glass} px-4 py-3`,
+            )}
+          >
+            {people.length === 0 ? (
+              <span className="text-[22px] font-extrabold tracking-[-0.02em] break-keep">
+                {store.name}
               </span>
-            </div>
-          ) : (
-            <span className="text-[22px] font-extrabold tracking-[-0.02em]">{store.name}</span>
-          )}
+            ) : (
+              <>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex shrink-0 -space-x-2">
+                    {people.slice(0, 3).map((p) => (
+                      <span
+                        key={p.userId}
+                        className="flex size-9 items-center justify-center rounded-full border-2 border-white bg-card text-sm font-extrabold text-brand"
+                      >
+                        {label(p).slice(0, 1)}
+                      </span>
+                    ))}
+                  </span>
+                  <span className="truncate text-[24px] leading-[1.15] font-extrabold tracking-[-0.03em]">
+                    {people.length === 1
+                      ? `${label(people[0])} 근무 중`
+                      : `${people.length}명 근무 중`}
+                  </span>
+                </div>
+                <span className="text-[13px] leading-relaxed break-keep opacity-90">
+                  {people.map((p) => `${label(p)} ${p.shiftName} ${p.start}–${p.end}`).join(' · ')}
+                </span>
+              </>
+            )}
+          </div>
           <Link
             to="/owner/schedule"
             aria-label="근무 보기"

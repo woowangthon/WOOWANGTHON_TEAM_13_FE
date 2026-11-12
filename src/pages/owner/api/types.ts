@@ -33,6 +33,8 @@ export interface NewStore {
   name: string
   address: string
   size: StoreSize
+  /** 급여일 1~31 (31 = 말일) */
+  payday: number
   bizNo?: string | null
   /** 사업자 확인(VERIFIED) 결과 번호 — POST /stores/business-verifications */
   businessVerificationId: number
@@ -189,14 +191,15 @@ export interface NewMember {
   schedule?: WeekShift[]
 }
 
-/** 지금 근무 중인 사람 (홈 카드) */
+/** 지금 근무 중인 사람 (홈 카드) — 직원 · 사장님 모두, 근무 달력에서 지금 시간이 근무 시간 안인 사람 */
 export interface OnDuty {
+  userId: string
   name: string
-  role: string
+  isOwner: boolean
+  /** 근무 이름 (오픈 · 미들 · 마감 …) */
+  shiftName: string
   start: string
   end: string
-  /** 출근 시각 */
-  clockIn: string
 }
 
 /** 홈 · 알림의 "확인 필요": AI 가 답하지 못해 알바생이 사장님께 물어본 질문 */
