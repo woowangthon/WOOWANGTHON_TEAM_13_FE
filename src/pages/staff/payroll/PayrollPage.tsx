@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useMyPayrollEstimates } from '@/lib/api/payroll'
+import { daysUntil, payDateOf, useMyPayrollEstimates } from '@/lib/api/payroll'
 import { myUserId, overlaps, useMySchedule, useScheduleCalendars } from '@/lib/api/schedule'
 import { useScheduleWorkersOf } from '@/lib/api/substitute'
 import type { PayWorkDay, PayrollEstimate, TaxType } from '@/lib/api/types'
@@ -20,8 +20,6 @@ import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
 import { cn } from '@/ui/utils'
-
-const DAY_MS = 24 * 60 * 60 * 1000
 
 const TAX_LABEL: Record<TaxType, string> = {
   none: '공제 없음',
@@ -98,17 +96,10 @@ export default function PayrollPage() {
   const noWork = estimates.every((e) => e.workDays.length === 0)
   const setSelectedDay = setPickedDay
 
-  // 급여일: 다음 달 n일 (31 = 말일). 사장님이 아직 안 정했으면(null) 입금일 대신 달만 보여 준다
-  const payDate =
-    settings.payday === null
-      ? null
-      : new Date(
-          payMonth.year,
-          payMonth.month,
-          // 31(말일)이나 29 · 30일이 없는 달(2월 등)은 그 달 말일로
-          Math.min(settings.payday, new Date(payMonth.year, payMonth.month + 1, 0).getDate()),
-        )
-  const dDay = payDate ? Math.round((payDate.getTime() - today.getTime()) / DAY_MS) : null
+  // 급여일: 다음 달 n일 (31 = 말일, lib/api/payroll payDateOf — 알바 홈 월급날 칩과 같은 계산).
+  // 사장님이 아직 안 정했으면(null) 입금일 대신 달만 보여 준다
+  const payDate = payDateOf(current)
+  const dDay = payDate ? daysUntil(payDate, today) : null
   const payDateText =
     payDate === null || dDay === null
       ? `${payMonth.month}월 예상 급여 · 급여일 미정`
