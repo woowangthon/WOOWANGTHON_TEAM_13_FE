@@ -355,8 +355,9 @@ export async function getNotifications(): Promise<{ notifications: OwnerNotifica
       storeName: storeName(q.storeId),
       kind: 'question',
       title: questionSentence(q.question, 14),
-      sub: `${q.staffName} · ${q.askedAt.slice(11, 16)}`,
+      sub: `${q.staffName} 님이 물어봤어요`,
       questionId: q.questionId,
+      createdAt: q.askedAt,
     }))
   const notices: OwnerNotification[] = seedStockNotices
     .filter((n) => !db.dismissed.has(n.notificationId))

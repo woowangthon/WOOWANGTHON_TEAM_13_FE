@@ -231,6 +231,8 @@ export interface OwnerNotification {
   questionId: string | null
   /** 읽었는지 (인수인계만 — 질문 · 대타는 처리할 때까지 늘 새 알림) */
   isRead?: boolean
+  /** 온 시각 ("3분 전"). 대타 요청은 BE 에 시각이 없어서 비어 있다 */
+  createdAt?: string
 }
 
 /**
