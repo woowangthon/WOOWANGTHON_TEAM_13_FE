@@ -27,7 +27,11 @@ export function ReceivedRequests({ storeId }: { storeId: string }) {
   return (
     <section className="flex flex-col gap-2.5">
       {requests.map((r) => (
-        <div key={r.requestId} className="flex flex-col gap-3 rounded-[24px] bg-warm p-4">
+        // 연한 주황: warm 토큰을 흰색과 반씩 섞음 (토큰은 알바 화면도 써서 그대로 둔다)
+        <div
+          key={r.requestId}
+          className="flex flex-col gap-3 rounded-[24px] bg-[color-mix(in_srgb,var(--warm)_50%,white)] p-4"
+        >
           <div className="flex items-start gap-2.5">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-warm-foreground">
               <Repeat className="size-[18px]" />
