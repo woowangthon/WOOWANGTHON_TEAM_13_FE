@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { ScheduleWorker } from '@/lib/api/types'
@@ -114,9 +115,9 @@ export function FixedScheduleCard({
         onClick={onEdit}
         aria-label={`${name} 근무 수정`}
         disabled={templates.length === 0}
-        className="shrink-0 p-0 text-[13px] font-bold text-brand disabled:text-faint"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft active:bg-brand-soft disabled:text-faint disabled:hover:bg-transparent"
       >
-        수정
+        <Pencil className="size-[17px]" />
       </button>
     </div>
   )

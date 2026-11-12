@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react'
+import { Clock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { useSaveShiftTemplates, useShiftTemplates } from '@/pages/owner/api/fixedSchedule'
@@ -26,9 +26,9 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
             type="button"
             onClick={() => setEditing(true)}
             aria-label="근무 타임 수정"
-            className="p-0 text-[13px] font-bold text-brand"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft active:bg-brand-soft"
           >
-            수정
+            <Pencil className="size-[17px]" />
           </button>
         )}
       </div>

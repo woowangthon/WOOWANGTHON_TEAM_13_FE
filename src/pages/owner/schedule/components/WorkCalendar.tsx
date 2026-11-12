@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { shiftHours, shiftKey } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
@@ -329,9 +329,9 @@ export function WorkCalendar({
                 type="button"
                 onClick={() => setEditingDay(true)}
                 aria-label={`${formatDate(selected)} 근무 수정`}
-                className="shrink-0 p-0 text-[13px] font-bold text-brand"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft active:bg-brand-soft"
               >
-                수정
+                <Pencil className="size-[17px]" />
               </button>
             </div>
             {selectedShifts.length === 0 ? (
