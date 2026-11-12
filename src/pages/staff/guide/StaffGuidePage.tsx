@@ -223,7 +223,7 @@ function RecipePicture() {
   )
 }
 
-/** 인수인계 남기기: 실제 시트(HandoverWriteForm variant="note")와 같은 줄 노트 카드 — 쓴 글 → AI 정리 결과가 같은 카드 안에 */
+/** 인수인계 남기기: 실제 시트(HandoverWriteForm variant="note")와 같은 메모지 카드(오른쪽 위 접힌 모서리) — 쓴 글 → AI 정리 결과가 같은 카드 안에 */
 function WritePicture() {
   const items = [
     item('w1', 'stock', '우유 2팩 남음'),
@@ -232,11 +232,15 @@ function WritePicture() {
   return (
     <Phone tab="write">
       <span className="px-1 text-[26px] leading-[1.25] font-extrabold">인수인계 남기기</span>
-      <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-white">
-        <span className="border-b border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground tabular-nums">
+      <div className="relative flex flex-col overflow-hidden rounded-3xl rounded-tr-none border border-line/60 bg-white">
+        <span
+          aria-hidden="true"
+          className="absolute -top-px -right-px size-7 bg-linear-to-bl from-white from-50% to-muted to-50% drop-shadow-xs"
+        />
+        <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">
           11/20(금) · 달빛 카페
         </span>
-        <p className="m-0 bg-[linear-gradient(transparent_23px,color-mix(in_oklab,var(--line)_60%,transparent)_23px)] bg-size-[100%_24px] bg-clip-content bg-origin-content px-5 py-3 text-base leading-6 break-keep text-foreground">
+        <p className="m-0 px-5 py-3 text-base leading-6 break-keep text-foreground">
           우유 두 팩 남았어요. 꽃집 사장님 라떼 한 잔 외상, 내일 계산하신대요
         </p>
         <span className="flex items-center gap-1.5 border-y border-line/60 px-5 py-3 text-[13px] font-medium text-muted-foreground">

@@ -34,7 +34,9 @@ export function CodeCells({ value, onChange, error, disabled }: CodeCellsProps) 
       <input
         value={value}
         onChange={(event) => onChange(normalizeCode(event.target.value))}
-        maxLength={CODE_LENGTH}
+        // 정리(normalizeCode: 대문자 · 영어 숫자만 · 6자) 전에 브라우저가 먼저 자르지 않게 넉넉히.
+        // 그래야 "n4e-w7k" · "N4E W7K"처럼 - · 빈칸이 섞인 붙여넣기도 6글자가 다 들어간다
+        maxLength={CODE_LENGTH * 4}
         autoComplete="one-time-code"
         autoCapitalize="characters"
         autoFocus
