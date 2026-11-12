@@ -84,7 +84,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
     name,
     count: all.filter((r) => r.category === name).length,
   }))
-  const q = (params.get('q') ?? '').trim()
+  // 검색어는 화면 안 상태로 들고(한글 조합이 끊기지 않게), 주소(?q=)에는 따라 적기만 한다.
+  // 주소 값을 입력칸에 바로 물리면 글자마다 주소가 바뀌며 다시 그려져서 "블루베리"가 "ㅡㄹㅜㅔㅣ"처럼 깨진다
+  const [search, setSearch] = useState(() => params.get('q') ?? '')
+  const q = search.trim()
   const catParam = params.get('cat')
   const category =
     catParam && names.includes(catParam)
@@ -111,8 +114,11 @@ function RecipeSection({ storeId }: { storeId: string }) {
       <div className="flex h-14 items-center gap-2.5 rounded-[20px] bg-card pr-2 pl-[18px] shadow-soft">
         <Search className="size-5 shrink-0 text-subtle" />
         <input
-          value={params.get('q') ?? ''}
-          onChange={(event) => update({ q: event.target.value })}
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            update({ q: event.target.value })
+          }}
           placeholder="메뉴, 재료 검색"
           aria-label="메뉴, 재료 검색"
           className="min-w-0 flex-1 border-none bg-transparent text-[15px] placeholder:text-subtle"
@@ -136,7 +142,10 @@ function RecipeSection({ storeId }: { storeId: string }) {
           <CategoryTabs
             categories={categories}
             value={q ? null : category}
-            onChange={(c) => update({ cat: c, q: '' })}
+            onChange={(c) => {
+              setSearch('')
+              update({ cat: c, q: '' })
+            }}
           />
           <div className="flex items-center justify-between gap-2.5 px-1">
             <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">
