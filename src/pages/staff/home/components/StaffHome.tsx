@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Clock, Minus } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
@@ -21,9 +21,9 @@ import { LoadError } from '@/shared/LoadError'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { PRESSABLE } from '@/shared/pressable'
+import { SectionHeader } from '@/shared/SectionHeader'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
-import { EmptyState } from '@/ui/EmptyState'
-import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -45,7 +45,7 @@ export function StaffHome() {
       />
     )
   }
-  if (!schedule) return <Spinner />
+  if (!schedule) return <HomeSkeleton />
 
   // 인수인계가 진짜 API면 BE 는 실제 오늘(KST)로 저장한다 → 근무표가 아직 가짜(11/20)여도 홈은 실제 오늘 기준.
   // 가짜 서버일 땐 시연 날짜 그대로. 주 시작 요일은 근무표를 따른다
@@ -82,50 +82,52 @@ function HomeBody({
   const todayDate = todayOfStore.getDate()
   const [selected, setSelected] = useState(todayDate)
 
+  // 배치 (docs/08): 알림 배너 → 오늘(날짜 제목 + 오늘 근무) → 인수인계. 섹션 사이 32px · 섹션 안 12px.
+  // 진한 덩어리는 오늘 근무 사진 카드 하나 (배너 · AI 요약은 옅은 바탕)
   return (
-    <div className="flex flex-col gap-[18px]">
-      <ShiftBanner storeId={store.id} today={todayOfStore} />
-      <ReceivedSubstituteBanner storeId={store.id} />
-      <span className="px-1 text-[13px] font-medium text-muted-foreground">
-        {formatDate(todayOfStore)}
-      </span>
+    <div className="flex flex-col gap-8">
+      {/* 출근 전 · 받은 대타 배너 (둘 다 없으면 이 칸도 없음) */}
+      <div className="flex flex-col gap-2 empty:hidden">
+        <ShiftBanner storeId={store.id} today={todayOfStore} />
+        <ReceivedSubstituteBanner storeId={store.id} />
+      </div>
 
-      {todayShift ? (
-        <TodayShiftCard store={store} shift={todayShift} />
-      ) : week.some((d) => d.work) ? (
-        <EmptyGuide
-          message="오늘은 근무가 없어요"
-          action={
-            <Button size="md" className="h-[46px] px-5" onClick={() => navigate('/staff/schedule')}>
-              근무표 보기
-            </Button>
-          }
-        />
-      ) : (
-        <EmptyGuide
-          message="아직 정해진 근무가 없어요"
-          action={
-            // 근무 가능 시간은 BE 에서 없어져서 진짜 모드면 전체 근무표로
-            availabilityEnabled() ? (
-              <Button
-                size="md"
-                className="h-[46px] px-5"
-                onClick={() => navigate('/staff/availability')}
-              >
-                가능 시간 내기
-              </Button>
-            ) : (
-              <Button
-                size="md"
-                className="h-[46px] px-5"
-                onClick={() => navigate('/staff/schedule')}
-              >
+      <section aria-labelledby="home-today" className="flex flex-col gap-3">
+        <h1
+          id="home-today"
+          className="m-0 px-1 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] tabular-nums"
+        >
+          {formatDate(todayOfStore)}
+        </h1>
+        {todayShift ? (
+          <TodayShiftCard store={store} shift={todayShift} />
+        ) : week.some((d) => d.work) ? (
+          <EmptyGuide
+            message="오늘은 근무가 없어요"
+            action={
+              <Button size="md" variant="soft" onClick={() => navigate('/staff/schedule')}>
                 근무표 보기
               </Button>
-            )
-          }
-        />
-      )}
+            }
+          />
+        ) : (
+          <EmptyGuide
+            message="아직 정해진 근무가 없어요"
+            action={
+              // 근무 가능 시간은 BE 에서 없어져서 진짜 모드면 전체 근무표로
+              availabilityEnabled() ? (
+                <Button size="md" onClick={() => navigate('/staff/availability')}>
+                  가능 시간 내기
+                </Button>
+              ) : (
+                <Button size="md" variant="soft" onClick={() => navigate('/staff/schedule')}>
+                  근무표 보기
+                </Button>
+              )
+            }
+          />
+        )}
+      </section>
 
       {/* 요일 줄은 인수인계 볼 날짜만 바꿔서 인수인계 섹션 맨 위에 */}
       <HandoverSection
@@ -152,7 +154,7 @@ function WeekStrip({
   onSelect: (day: number) => void
 }) {
   return (
-    <div className="grid grid-cols-7 items-center gap-1">
+    <div className="grid grid-cols-7 gap-1">
       {week.map(({ date, work }) => {
         const day = date.getDate()
         const on = day === selected
@@ -164,16 +166,24 @@ function WeekStrip({
             onClick={() => onSelect(day)}
             aria-pressed={on}
             className={cn(
-              'flex flex-col items-center gap-[5px] rounded-full transition-colors',
-              on ? 'bg-brand pt-3.5 pb-3 text-white shadow-lift' : 'py-2',
-              !on && (today ? 'text-brand' : work ? 'text-foreground' : 'text-faint'),
+              // 고른 날만 매장 색 알약 (그림자 없음). 오늘은 매장 색 글자, 근무 없는 날은 연한 회색
+              'flex flex-col items-center gap-1 rounded-full py-2.5 transition-colors duration-150 motion-reduce:transition-none',
+              on
+                ? 'bg-brand text-white'
+                : today
+                  ? 'text-brand'
+                  : work
+                    ? 'text-foreground'
+                    : 'text-muted-foreground',
             )}
           >
-            <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[date.getDay()]}</span>
-            <span className="text-[17px] font-bold tabular-nums">{day}</span>
+            <span className={cn('text-[11px] font-semibold', on ? 'text-white/80' : 'opacity-80')}>
+              {WEEKDAYS[date.getDay()]}
+            </span>
+            <span className="text-base font-bold tabular-nums">{day}</span>
             <span
               className={cn(
-                'size-[5px] rounded-full',
+                'size-1 rounded-full',
                 work ? (on ? 'bg-white' : 'bg-brand') : 'bg-transparent',
               )}
             />
@@ -193,7 +203,7 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
       to="/staff/schedule"
       aria-label={`오늘 근무 ${shift.start} – ${shift.end} · 근무 보기`}
       className={cn(
-        'relative isolate block min-h-[240px] overflow-hidden rounded-[30px] bg-brand texture',
+        'relative isolate block min-h-44 overflow-hidden rounded-3xl bg-brand texture',
         PRESSABLE,
       )}
     >
@@ -212,34 +222,34 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
           style={{ background: store.photoShade }}
         />
       )}
-      <div className="relative flex min-h-[240px] flex-col justify-between gap-[18px] p-5 text-white">
-        {/* 사진 위에서는 사장님 홈 매장 카드처럼 검정 반투명, 사진이 없으면 매장 색 위 흰 반투명 */}
-        <span
-          className={cn(
-            'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
-            showPhoto ? 'bg-black/35' : 'bg-white/15',
-          )}
-        >
-          <span className="flex size-7 items-center justify-center rounded-full bg-white text-brand">
-            <Clock className="size-4" strokeWidth={2.4} />
+      {/* 높이는 첫 화면의 1/4 정도(176px~). 위: 칩 · › / 아래: 근무 시간(40px, 화면의 큰 숫자 하나 — 한 줄로 넓게) · 같이 일하는 사람 */}
+      <div className="relative flex min-h-44 flex-col justify-between gap-4 p-5 text-white">
+        <div className="flex items-center justify-between gap-3">
+          {/* 사진 위에서는 사장님 홈 매장 카드처럼 검정 반투명, 사진이 없으면 매장 색 위 흰 반투명 */}
+          <span
+            className={cn(
+              'rounded-full px-3 py-1.5 text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
+              showPhoto ? 'bg-black/35' : 'bg-white/15',
+            )}
+          >
+            오늘 근무 · {shiftLabel(shift)}
           </span>
-          오늘 근무 · {shiftLabel(shift)}
-        </span>
-        <div className="flex items-end justify-between gap-3.5">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-[32px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
-              {shift.start} – {shift.end}
-            </span>
-            <span className="text-[13px] text-balance break-keep opacity-85">
-              {shift.crew.join(' · ')}
-            </span>
-          </div>
           <span
             aria-hidden="true"
-            className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-white text-foreground"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-foreground"
           >
-            <ChevronRight className="size-6" />
+            <ChevronRight className="size-5" />
           </span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums">
+            {shift.start} – {shift.end}
+          </span>
+          {shift.crew.length > 0 && (
+            <span className="text-[13px] font-medium text-balance break-keep text-white/85">
+              {shift.crew.join(' · ')}
+            </span>
+          )}
         </div>
       </div>
     </Link>
@@ -303,22 +313,15 @@ function HandoverSection({
 
   return (
     // 출근 전 배너 [인수인계 보기]가 여기로 내려온다: 요일 줄부터 보이게 (scroll-mt: 위 헤더만큼)
-    <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3.5">
+    <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3">
       <WeekStrip week={week} today={today} selected={selectedDay} onSelect={onSelectDay} />
-      <div className="flex items-baseline justify-between gap-2.5 px-1">
-        <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">{title}</h2>
-        {live && (
-          <Link
-            to="/staff/handover"
-            className="p-1 text-[13px] font-semibold whitespace-nowrap text-foreground"
-          >
-            남기기
-          </Link>
-        )}
-      </div>
+      <SectionHeader
+        title={title}
+        action={live ? { label: '남기기', to: '/staff/handover' } : undefined}
+      />
 
       {notesQuery.isPending ? (
-        <Spinner />
+        <HandoverSkeleton />
       ) : notesQuery.isError ? (
         <LoadError
           what="인수인계를"
@@ -326,7 +329,7 @@ function HandoverSection({
           onRetry={() => notesQuery.refetch()}
         />
       ) : withItems.length > 0 ? (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           <AiSummaryCard
             from={`${authors}명이 남김`}
             summary={summary}
@@ -356,7 +359,6 @@ function HandoverSection({
           action={
             <Button
               size="md"
-              className="h-[46px] px-5"
               onClick={() => navigate('/staff/handover', { preventScrollReset: true })}
             >
               인수인계 남기기
@@ -364,8 +366,8 @@ function HandoverSection({
           }
         />
       ) : (
-        <EmptyState
-          icon={selectedDay > todayDate ? Clock : notes.length > 0 ? Check : Minus}
+        // 지난 날 · 앞날: 큰 아이콘 없이 한 줄 (docs/08 6. 빈 화면)
+        <EmptyGuide
           message={
             selectedDay > todayDate
               ? '아직 기록 전이에요'
@@ -376,5 +378,46 @@ function HandoverSection({
         />
       )}
     </section>
+  )
+}
+
+/** 인수인계 불러오는 중: AI 요약 카드 + 목록 카드 모양 */
+function HandoverSkeleton() {
+  return (
+    <SkeletonGroup label="인수인계를 불러오는 중" className="flex flex-col gap-2">
+      <Skeleton className="h-32 rounded-3xl" />
+      <div className="flex flex-col gap-4 rounded-3xl bg-card p-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton shape="circle" className="size-6" />
+            <div className="flex flex-1 flex-col gap-2">
+              <Skeleton shape="line" className={i === 1 ? 'w-1/2' : 'w-3/4'} />
+              <Skeleton shape="line" className="w-1/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </SkeletonGroup>
+  )
+}
+
+/** 홈 불러오는 중 (근무를 받기 전): 날짜 제목 · 오늘 근무 카드 · 요일 줄 · 인수인계 자리 */
+function HomeSkeleton() {
+  return (
+    <SkeletonGroup label="홈을 불러오는 중" className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3">
+        <Skeleton shape="line" className="mx-1 h-7 w-28" />
+        <Skeleton className="h-44 rounded-3xl" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }, (_, i) => (
+            <Skeleton key={i} className="h-16 rounded-full" />
+          ))}
+        </div>
+        <Skeleton shape="line" className="mx-1 h-5 w-36" />
+        <HandoverSkeleton />
+      </div>
+    </SkeletonGroup>
   )
 }
