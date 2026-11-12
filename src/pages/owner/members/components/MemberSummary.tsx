@@ -26,21 +26,21 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
     0,
     members.findIndex((m) => m.memberId === member.memberId),
   )
-  // 고정 근무 요일: 입장한 직원은 고정 근무표, 입장 전이면 초대할 때 정해 둔 근무
+  // 고정 근무 요일: 입장한 직원만 (입장 전 · 초대됨은 전부 비활성)
   const weekdays = new Set(
     active
       ? fixed
           // 가짜 서버는 근무표 쪽 memberId 가 달라서(mbr_usr_…) 이름으로도 맞춘다 (BE 는 같은 memberId)
           .filter((a) => a.assignee.memberId === member.memberId || a.assignee.name === member.name)
           .map((a) => a.weekday)
-      : (member.schedule ?? []).map((s) => s.weekday),
+      : [],
   )
   const monthLabel = `${today.getMonth() + 1}월`
 
   return (
-    <section className="flex flex-col gap-5 rounded-[28px] bg-card p-6 shadow-soft">
+    <section className="flex flex-col gap-5 rounded-[28px] bg-card p-7 shadow-soft">
       <div className="flex items-center gap-4">
-        <PersonAvatar name={member.name} index={index} size={60} />
+        <PersonAvatar name={member.name} index={index} size={64} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="m-0 text-2xl font-extrabold tracking-[-0.02em]">{member.name}</h2>
           <span className="truncate text-sm text-muted-foreground">
