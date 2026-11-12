@@ -56,9 +56,10 @@ export function OwnerSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[256px] flex-col gap-7 border-r border-line/60 bg-card px-5 pt-7 pb-6 lg:flex">
-      <div className="flex flex-col items-start gap-1.5 px-2">
+      {/* 원두 캐릭터 아이콘 + 글자 로고 */}
+      <div className="flex items-center gap-2 px-2">
+        <img src="/logo-bean.png" alt="" className="h-10 w-auto" />
         <img src="/logo-crewbean.png" alt="crewBean" className="h-8 w-auto" />
-        <span className="text-[11px] text-muted-foreground">우리 매장 AI 사수</span>
       </div>
 
       <button
