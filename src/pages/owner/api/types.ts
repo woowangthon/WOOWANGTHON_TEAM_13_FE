@@ -244,6 +244,15 @@ export interface OwnerAnswer {
   manualBody: string
 }
 
+/**
+ * 사장님 답변 → AI 매뉴얼 초안 (POST /stores/{storeId}/owner-questions/{questionId}/manual-draft, BE #37).
+ * 저장하지 않는다. 사장님이 고친 뒤 답변 API 의 manualTitle · manualBody 로 저장한다
+ */
+export interface ManualDraft {
+  title: string
+  body: string
+}
+
 /** 레시피 등록 · 수정 요청 */
 export interface RecipeInput {
   name: string

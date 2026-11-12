@@ -1,8 +1,8 @@
-import { Check, Lightbulb } from 'lucide-react'
+import { Check, Lightbulb, LoaderCircle, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { formatTime } from '@/lib/format'
-import { useAnswerQuestion } from '@/pages/owner/api/home'
+import { useAnswerQuestion, useManualDraft } from '@/pages/owner/api/home'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
@@ -16,6 +16,7 @@ import { cn } from '@/ui/utils'
 // 확인 필요 (docs/03 S5): 알바생 질문에 답하기 + [매뉴얼에도 추가] 체크박스(처음엔 꺼짐, 11/10 회의)
 // 답은 알바생 채팅에 "사장님 답변"으로 가고, 추가하면 다음부터 AI 사수가 그 매뉴얼로 답한다
 // 체크하면 제목 · 본문을 고칠 수 있다. 본문은 고치기 전까지 답변을 그대로 따라간다 (BE 카테고리: 물건 위치)
+// [AI로 정리하기]: 답변을 AI(Gemini, BE #37)가 매뉴얼 문장으로 바꿔 칸에 채운다. 저장은 사장님이 보내기를 눌러야 한다
 export function QuestionSheet({
   question,
   onClose,
@@ -30,6 +31,7 @@ export function QuestionSheet({
   const [editedBody, setEditedBody] = useState<string | null>(null)
   const manualBody = editedBody ?? answer
   const send = useAnswerQuestion(question.storeId)
+  const draft = useManualDraft(question.storeId)
   // 여러 매장 알림에서 열 수 있어서 어느 카페 질문인지 보여 준다
   const { stores } = useOwnerStore()
   const storeName = stores.find((s) => s.storeId === question.storeId)?.name
@@ -44,6 +46,19 @@ export function QuestionSheet({
           toast(addToManual ? '답변을 보내고 매뉴얼에 추가했어요' : '답변을 보냈어요')
         },
         onError: (error) => toastApiError(error, '보내지 못했어요. 다시 시도해 주세요', submit),
+      },
+    )
+
+  const organize = () =>
+    draft.mutate(
+      { questionId: question.questionId, answer },
+      {
+        onSuccess: ({ title, body }) => {
+          setManualTitle(title)
+          setEditedBody(body)
+          toast('AI가 정리했어요. 확인하고 고쳐 주세요')
+        },
+        onError: (error) => toastApiError(error, 'AI가 정리하지 못했어요. 직접 적어 주세요'),
       },
     )
 
@@ -103,6 +118,20 @@ export function QuestionSheet({
 
           {addToManual && (
             <div className="flex flex-col gap-2 animate-in duration-150 fade-in-0 motion-reduce:animate-none">
+              <Button
+                variant="soft"
+                size="md"
+                className="self-start"
+                disabled={!answer.trim() || draft.isPending}
+                onClick={organize}
+              >
+                {draft.isPending ? (
+                  <LoaderCircle className="animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <Sparkles />
+                )}
+                {draft.isPending ? 'AI가 정리하는 중…' : 'AI로 정리하기'}
+              </Button>
               <Input
                 value={manualTitle}
                 onChange={(event) => setManualTitle(event.target.value)}
@@ -125,7 +154,11 @@ export function QuestionSheet({
           )}
         </div>
 
-        <Button className="h-[54px]" disabled={!canSend || send.isPending} onClick={submit}>
+        <Button
+          className="h-[54px]"
+          disabled={!canSend || send.isPending || draft.isPending}
+          onClick={submit}
+        >
           보내기
         </Button>
       </div>

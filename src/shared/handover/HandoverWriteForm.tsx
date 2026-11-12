@@ -53,9 +53,16 @@ interface HandoverWriteFormProps {
   requestDraft: (text: string) => Promise<HandoverDraft>
   onSave: (note: NewHandoverNote) => void
   onNoIssue: () => void
+  /** 저장 중: [저장] · [특이사항 없음] · [고치기]를 끄고 [저장]은 "저장 중…". 안 주면 지금처럼 늘 켜짐 */
+  saving?: boolean
 }
 
-export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverWriteFormProps) {
+export function HandoverWriteForm({
+  requestDraft,
+  onSave,
+  onNoIssue,
+  saving = false,
+}: HandoverWriteFormProps) {
   const [note, setNote] = useState('')
   const [stage, setStage] = useState<'write' | 'loading' | 'done'>('write')
   const [draft, setDraft] = useState<HandoverDraft>({ summary: '', items: [] })
@@ -141,7 +148,14 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
     setEditing(null)
   }
 
-  const save = () =>
+  // 저장 중이면 다시 보내지 않는다 (같은 순간 두 번 눌림은 화면 쪽 저장 함수도 막는다)
+  const noIssue = () => {
+    if (saving) return
+    onNoIssue()
+  }
+
+  const save = () => {
+    if (saving) return
     onSave({
       rawText: note,
       noIssue: false,
@@ -155,6 +169,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
         : draft.summary
       ).slice(0, HANDOVER_SUMMARY_MAX),
     })
+  }
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -192,7 +207,7 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
             </div>
           )}
           <div className="grid grid-cols-[1fr_1.6fr] gap-2">
-            <Button variant="soft" className="text-sm" onClick={onNoIssue}>
+            <Button variant="soft" className="text-sm" disabled={saving} onClick={noIssue}>
               특이사항 없음
             </Button>
             <Button disabled={!note.trim()} onClick={summarize}>
@@ -262,11 +277,11 @@ export function HandoverWriteForm({ requestDraft, onSave, onNoIssue }: HandoverW
             )
           })}
           <div className="mt-1 grid grid-cols-[1fr_1.6fr] gap-2">
-            <Button variant="soft" onClick={() => setStage('write')}>
+            <Button variant="soft" disabled={saving} onClick={() => setStage('write')}>
               고치기
             </Button>
-            <Button size="lg" className="h-[54px]" onClick={save}>
-              저장
+            <Button size="lg" className="h-[54px]" disabled={saving} onClick={save}>
+              {saving ? '저장 중…' : '저장'}
             </Button>
           </div>
         </div>

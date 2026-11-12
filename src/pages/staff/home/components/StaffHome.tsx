@@ -179,10 +179,20 @@ function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift 
         />
       )}
       {showPhoto && (
-        <div className="pointer-events-none absolute inset-0" style={{ background: store.scrim }} />
+        // 아래쪽만 옅게 어둡게 (근무 시간 · 같이 일하는 사람 흰 글씨), 위쪽 절반은 사진 그대로
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: store.photoShade }}
+        />
       )}
       <div className="relative flex min-h-[240px] flex-col justify-between gap-[18px] p-5 text-white">
-        <span className="flex items-center gap-2 self-start rounded-full bg-white/15 py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md">
+        {/* 사진 위에서는 사장님 홈 매장 카드처럼 검정 반투명, 사진이 없으면 매장 색 위 흰 반투명 */}
+        <span
+          className={cn(
+            'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
+            showPhoto ? 'bg-black/35' : 'bg-white/15',
+          )}
+        >
           <span className="flex size-7 items-center justify-center rounded-full bg-white text-brand">
             <Clock className="size-4" strokeWidth={2.4} />
           </span>
