@@ -45,7 +45,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
       <div
         className={cn(
           'flex flex-col gap-4',
-          panel && 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-start lg:gap-5',
+          panel && 'lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-6',
         )}
       >
         {query.isPending ? (
@@ -84,14 +84,14 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                     aria-current={selected ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-foreground shadow-soft transition-shadow',
-                      // 데스크톱에서 고른 직원은 진한 테두리 (휴대폰은 시트가 떠서 표시 없음)
-                      selected && 'lg:shadow-[inset_0_0_0_1.5px_var(--foreground)]',
+                      // 데스크톱에서 고른 직원은 흰 바탕 + 2px 매장 색 테두리 (휴대폰은 시트가 떠서 표시 없음)
+                      selected && 'lg:bg-white lg:shadow-[inset_0_0_0_2px_var(--brand)]',
                     )}
                   >
                     <PersonAvatar
                       name={member.name}
                       index={i}
-                      size={48}
+                      size={panel ? 46 : 48}
                       dot={active ? '#6FA97B' : '#D9B26A'}
                     />
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
