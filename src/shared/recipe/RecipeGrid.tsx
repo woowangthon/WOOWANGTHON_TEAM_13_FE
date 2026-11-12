@@ -2,7 +2,7 @@ import { Link, type To } from 'react-router'
 import type { RecipeSummary } from '@/lib/api/types'
 import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/icons'
 import { RecipePhoto } from '@/shared/recipe/RecipePhoto'
-import { PRESSABLE, PRESSABLE_CARD } from '@/shared/pressable'
+import { PRESSABLE_CARD } from '@/shared/pressable'
 import { useRevealChildren } from '@/shared/useReveal'
 import { cn } from '@/ui/utils'
 import { Badge } from '@/ui/Badge'
@@ -10,20 +10,21 @@ import { Badge } from '@/ui/Badge'
 // 공용 보기 부품: 포스기식 메뉴 버튼 격자 · 사장/알바 화면이 함께 사용 — 담당: 민지
 // 사진 자리는 납작하게 둬서 한 화면에 더 많이 보이게 한다. 메뉴 사진(imageUrl)이 있으면 사진, 없으면 카테고리 아이콘
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
-// variant
-//   default: 사진이 카드 전체(1.6:1)를 채우고 위 · 아래만 살짝 어둡게, NEW · 이름(14px) · 아래 줄(11px, "ICE · 16oz · 재료 3가지")은 사진 위 흰 글자 (사장님 화면, 11/13 나현 · 민지 OK)
-//   clean:   그림자 없는 카드(24 · 옅은 테두리 1px) 위쪽을 사진 2:1이 꽉 채움(카드 overflow-hidden 으로 위 모서리만 둥글게) ·
-//            아래 글자 영역만 여백 12px · 이름 16px(두 줄까지) / 아래 줄 13px · 온도는 아래 줄 글자로 (docs/08 · 알바 화면)
+// 모양 (사장 · 알바 같이, 11/13 나현 · 민지 OK): 사진이 카드 전체(1.6:1)를 채우고 위 · 아래만 살짝 어둡게,
+// NEW · 이름(14px) · 아래 줄(11px, "ICE · 16oz · 재료 3가지")은 사진 위 흰 글자. 사진 없는 메뉴는 카테고리 색 + 아이콘
+// reveal: 스크롤해서 처음 보이는 줄마다 살짝 떠오르기(shared/useReveal) — 알바 레시피만 켠다, 사장님 화면은 그대로
 interface RecipeGridProps {
   recipes: RecipeSummary[]
   getHref: (recipe: RecipeSummary) => To
-  variant?: 'default' | 'clean'
+  /** 스크롤 떠오르기 (기본 꺼짐) */
+  reveal?: boolean
 }
 
-export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGridProps) {
-  if (variant === 'clean') return <CleanGrid recipes={recipes} getHref={getHref} />
+export function RecipeGrid({ recipes, getHref, reveal = false }: RecipeGridProps) {
+  // 메뉴가 바뀌면(카테고리 · 검색) 새 카드를 다시 본다
+  const gridRef = useRevealChildren<HTMLDivElement>([recipes.map((r) => r.recipeId).join()], reveal)
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div ref={gridRef} className="grid grid-cols-2 gap-2.5">
       {recipes.map((r) => {
         const Icon = CATEGORY_ICON[r.category] ?? DEFAULT_CATEGORY_ICON
         const [tint, ink] = getCategoryTint(r.category)
@@ -74,54 +75,6 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
             >
               <span className="text-sm leading-[1.3] font-bold break-keep">{r.name}</span>
               <span className={cn('text-[11px]', r.imageUrl ? 'text-white/85' : 'text-subtle')}>
-                {[r.temp, r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
-              </span>
-            </span>
-          </Link>
-        )
-      })}
-    </div>
-  )
-}
-
-function CleanGrid({ recipes, getHref }: Omit<RecipeGridProps, 'variant'>) {
-  // 스크롤해서 처음 보이는 줄마다 살짝 떠오르기 (shared/useReveal) — 메뉴가 바뀌면(카테고리 · 검색) 다시 본다
-  const gridRef = useRevealChildren<HTMLDivElement>([recipes.map((r) => r.recipeId).join()])
-  return (
-    <div ref={gridRef} className="grid grid-cols-2 gap-2">
-      {recipes.map((r) => {
-        const Icon = CATEGORY_ICON[r.category] ?? DEFAULT_CATEGORY_ICON
-        const [tint, ink] = getCategoryTint(r.category)
-        return (
-          <Link
-            key={r.recipeId}
-            to={getHref(r)}
-            // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
-            preventScrollReset
-            className={cn(
-              'flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card text-foreground',
-              PRESSABLE,
-            )}
-          >
-            <span
-              className="relative flex aspect-2/1 w-full items-center justify-center"
-              style={{ background: tint }}
-            >
-              <RecipePhoto
-                imageUrl={r.imageUrl}
-                fallback={<Icon aria-hidden="true" className="size-6" style={{ color: ink }} />}
-              />
-              {r.isNew && (
-                <Badge className="absolute top-3 right-3" aria-label="새 레시피">
-                  NEW
-                </Badge>
-              )}
-            </span>
-            <span className="flex flex-col gap-0.5 p-3">
-              <span className="line-clamp-2 text-base leading-[1.4] font-bold tracking-[-0.01em] break-keep">
-                {r.name}
-              </span>
-              <span className="text-[13px] font-medium text-muted-foreground tabular-nums">
                 {[r.temp, r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
               </span>
             </span>

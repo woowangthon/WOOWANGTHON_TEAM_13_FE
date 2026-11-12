@@ -17,7 +17,8 @@ import { Tabs } from '@/ui/Tabs'
 export type BoardSegment = 'recipe' | 'manual'
 
 // 레시피 (포스기처럼 카테고리 → 메뉴 격자) · 매뉴얼 (바둑판 카드)
-// 공용 부품은 variant="clean" (docs/08: 가로 알약 칩 · 그림자 없는 카드 · 글자 단계)
+// 레시피 카테고리 · 메뉴 카드는 사장님 매장 정보와 같은 모양(CategoryTabs · RecipeGrid 기본, 메뉴 카드만 스크롤 떠오르기 reveal),
+// 매뉴얼은 ManualGrid variant="clean"
 export function RecipeBoard({ segment }: { segment: BoardSegment }) {
   const { store } = useCurrentStore()
   const navigate = useNavigate()
@@ -120,7 +121,6 @@ function RecipeSection({ storeId }: { storeId: string }) {
         </label>
         {recipesQuery.isSuccess && (
           <CategoryTabs
-            variant="clean"
             categories={categories}
             value={q ? null : category}
             onChange={(c) => update({ cat: c, q: '' })}
@@ -148,7 +148,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
           />
           {shown.length > 0 ? (
             <RecipeGrid
-              variant="clean"
+              reveal
               recipes={shown}
               getHref={(r) => ({
                 pathname: `/staff/recipes/${r.recipeId}`,
@@ -205,30 +205,24 @@ function ManualCards({ storeId }: { storeId: string }) {
   )
 }
 
-// 로딩 뼈대: 카테고리 칩 줄 + 섹션 제목 + 레시피 카드 격자 (RecipeGrid clean 과 같은 자리 · 모서리)
+// 로딩 뼈대: 카테고리 동그라미 줄 + 섹션 제목 + 레시피 카드 격자 (CategoryTabs · RecipeGrid 와 같은 자리 · 모서리)
 function RecipeSkeleton() {
   return (
     <SkeletonGroup label="레시피를 불러오는 중" className="flex flex-col gap-6">
-      {/* 칩 줄은 진짜 화면에서 검색창 바로 아래(12px)라 묶음 간격 24px 에서 12px 를 당긴다 */}
+      {/* 카테고리 줄은 진짜 화면에서 검색창 바로 아래(12px)라 묶음 간격 24px 에서 12px 를 당긴다 */}
       <div className="-mt-3 flex gap-2 overflow-hidden">
-        {['w-16', 'w-20', 'w-20', 'w-16'].map((w, i) => (
-          <Skeleton key={i} shape="circle" className={`h-10 ${w}`} />
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className="flex w-[76px] shrink-0 flex-col items-center gap-2 pt-3 pb-3">
+            <Skeleton shape="circle" className="size-10" />
+            <Skeleton shape="line" className="w-12" />
+          </span>
         ))}
       </div>
       <div className="flex flex-col gap-3">
         <Skeleton shape="line" className="mx-1 my-2.5 h-4 w-24" />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           {Array.from({ length: 6 }, (_, i) => (
-            <span
-              key={i}
-              className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card"
-            >
-              <Skeleton className="aspect-2/1 w-full rounded-none" />
-              <span className="flex flex-col gap-2 p-3">
-                <Skeleton shape="line" className="h-4 w-3/4" />
-                <Skeleton shape="line" className="w-1/2" />
-              </span>
-            </span>
+            <Skeleton key={i} className="aspect-[1.6] w-full rounded-[22px]" />
           ))}
         </div>
       </div>
