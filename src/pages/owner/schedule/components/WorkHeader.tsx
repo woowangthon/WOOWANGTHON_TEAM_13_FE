@@ -5,14 +5,15 @@ import { Tabs } from '@/ui/Tabs'
 export function WorkHeader({ segment }: { segment: 'schedule' | 'pay' }) {
   const navigate = useNavigate()
   return (
-    <Tabs
-      fill
-      options={[
-        { value: 'schedule', label: '스케줄' },
-        { value: 'pay', label: '급여' },
-      ]}
-      value={segment}
-      onChange={(next) => navigate(next === 'schedule' ? '/owner/schedule' : '/owner/payroll')}
-    />
+    <div className="flex justify-end px-1">
+      <Tabs
+        options={[
+          { value: 'schedule', label: '스케줄' },
+          { value: 'pay', label: '급여' },
+        ]}
+        value={segment}
+        onChange={(next) => navigate(next === 'schedule' ? '/owner/schedule' : '/owner/payroll')}
+      />
+    </div>
   )
 }
