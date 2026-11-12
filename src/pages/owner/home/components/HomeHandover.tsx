@@ -51,7 +51,8 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
   ).data
 
   return (
-    <section className="flex flex-col gap-3.5">
+    // id: 출근 전 배너 [인수인계 보기]가 여기로 내려온다
+    <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3.5">
       <div className="flex items-baseline justify-between gap-2.5 px-1">
         <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">
           {live ? '오늘의 인수인계' : `${formatDate(date)} 인수인계`}
