@@ -140,7 +140,7 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
             type="button"
             onClick={() => setEditingPhoto(true)}
             aria-label="매장 사진 변경"
-            className="flex size-[46px] shrink-0 items-center justify-center self-end rounded-full bg-white text-foreground transition-transform active:scale-[0.97]"
+            className="flex size-[46px] shrink-0 items-center justify-center self-end rounded-full bg-black/35 text-white backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             <ChevronRight className="size-6" />
           </button>
