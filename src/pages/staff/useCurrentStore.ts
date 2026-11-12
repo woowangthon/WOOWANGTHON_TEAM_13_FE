@@ -25,6 +25,7 @@ export interface StaffStoreView {
   color: string
   soft: string
   scrim: string
+  photoShade: string
   photo?: string
   /** 매장 목록 한 줄 (예: 주 3회 마감 · 박 사장님) */
   meta: string

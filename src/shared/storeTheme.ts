@@ -8,8 +8,10 @@ export interface StoreThemeColors {
   color: string
   /** 매장 연한 색 (--brand-soft) */
   soft: string
-  /** 매장 사진 위 어둡게 덮는 그라데이션 */
+  /** 매장 사진 위 전체를 어둡게 덮는 그라데이션 (초대코드 입장 화면) */
   scrim: string
+  /** 매장 사진 아래쪽만 옅게 어둡게 (알바 홈 오늘 근무 카드: 위쪽 절반은 투명, 아래 흰 글씨가 밝은 사진에서도 읽히게) */
+  photoShade: string
 }
 
 export const STORE_THEME: Record<StoreTheme, StoreThemeColors> = {
@@ -17,11 +19,15 @@ export const STORE_THEME: Record<StoreTheme, StoreThemeColors> = {
     color: '#2A4536',
     soft: '#E3E8DC',
     scrim: 'linear-gradient(180deg, rgba(24,36,29,0.15) 0%, rgba(24,36,29,0.85) 78%)',
+    photoShade:
+      'linear-gradient(180deg, rgba(24,36,29,0) 40%, rgba(24,36,29,0.55) 68%, rgba(24,36,29,0.8) 100%)',
   },
   sunset: {
     color: '#6E3B26',
     soft: '#F3E3D6',
     scrim: 'linear-gradient(180deg, rgba(60,32,20,0.15) 0%, rgba(60,32,20,0.85) 78%)',
+    photoShade:
+      'linear-gradient(180deg, rgba(60,32,20,0) 40%, rgba(60,32,20,0.55) 68%, rgba(60,32,20,0.8) 100%)',
   },
 }
 
