@@ -12,6 +12,7 @@ import type { CalendarShift } from '@/lib/api/types'
 import { useSubstituteRequests } from '@/lib/api/substitute'
 import { addDays, fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { SentSubstitutesOfDay } from '@/pages/staff/schedule/components/SubstituteRequests'
 import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
 import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
 import { usePersonColor } from '@/pages/staff/schedule/personColor'
@@ -25,7 +26,7 @@ import { cn } from '@/ui/utils'
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로: 사람마다 파스텔 바탕 + 글자색만(personColor), 내 근무는 굵게, 대타는 1px 점선 테두리.
 // 보고 있는 달의 날짜만 보여 주고 다른 달 칸은 빈칸 (‹ › 로 넘겼을 때만 그 달).
-// 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중"). ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
+// 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중") + 그날 보낸 대타 요청 카드. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -130,7 +131,19 @@ export function ScheduleMonth() {
     byDate.set(shift.date, [...(byDate.get(shift.date) ?? []), shift])
   }
   const isMine = (shift: CalendarShift) => shift.assignee.userId === me
-  const selectedShifts = byDate.get(toDateKey(selected)) ?? []
+  const selectedKey = toDateKey(selected)
+  const selectedShifts = byDate.get(selectedKey) ?? []
+  // 그날 보낸 대타 요청 (최신 순, 이미 불러온 sent 목록). 대기 중인 요청이 내 근무 카드 안 "○○님에게 대타 요청 중"으로
+  // 이미 보이면 아래 카드에서는 뺀다 (지난 날처럼 카드 안에 안 보이는 대기 요청은 아래에 남긴다)
+  const shownInCard = new Set(
+    selectedShifts
+      .filter((s) => isMine(s) && s.date >= todayKey && s.assignmentId !== null)
+      .map((s) => pendingSentOf(s)?.requestId)
+      .filter(Boolean),
+  )
+  const sentOfDay = (sentQuery.data?.requests ?? []).filter(
+    (r) => r.date === selectedKey && !shownInCard.has(r.requestId),
+  )
   // 이 달에 근무하는 사람 (범례: 색 점 + 이름). 근무표 사람 목록에 없는 사람(퇴사 등)은 회색
   const monthPeople = [
     ...new Map(
@@ -347,6 +360,7 @@ export function ScheduleMonth() {
               )
             })
           )}
+          <SentSubstitutesOfDay requests={sentOfDay} colorOf={colorOf} />
         </section>
       )}
       {sheetShift && (

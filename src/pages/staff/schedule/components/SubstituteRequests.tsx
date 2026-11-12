@@ -10,12 +10,14 @@ import {
 import type { SubstituteRequest, SubstituteStatus } from '@/lib/api/types'
 import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import type { PersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 대타 요청 카드들 (근무표 탭): 받은 요청(대기 중) [거절] [수락] · 보낸 요청 상태(대기 · 수락됨 · 거절됨)
+// 대타 요청 카드들 (근무표 탭): 받은 요청(대기 중) [거절] [수락] · 그날 보낸 요청 상태(대기 · 수락됨 · 거절됨 · 취소됨)
 
 const shiftText = (r: SubstituteRequest) =>
   `${formatDate(fromDateKey(r.date))} ${r.shiftName || '근무'} ${r.start}–${r.end}`
@@ -92,24 +94,35 @@ const STATUS: Record<SubstituteStatus, { label: string; className: string }> = {
   CANCELLED: { label: '취소됨', className: 'bg-muted text-muted-foreground' },
 }
 
-/** 내가 보낸 대타 요청 상태 (최근 5개) — 근무표 아래 작게 */
-export function SentSubstitutes() {
-  const { store } = useCurrentStore()
-  const query = useSubstituteRequests(store.id, 'sent')
-  const requests = (query.data?.requests ?? []).slice(0, 5)
+/**
+ * 그날 내가 보낸 대타 요청 — 근무표에서 날짜를 누르면 그날 근무 목록 아래 작은 카드 (없으면 안 보임).
+ * 줄마다 "마감 18:00–23:00" + (동그라미) "민수님에게 요청" + 상태 칩. 수락돼서 근무가 넘어간 날도 여기서 기록이 보인다
+ */
+export function SentSubstitutesOfDay({
+  requests,
+  colorOf,
+}: {
+  requests: SubstituteRequest[]
+  colorOf: (userId: string) => PersonColor
+}) {
   if (requests.length === 0) return null
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="m-0 px-1 text-[15px] font-extrabold">보낸 대타 요청</h2>
-      <ul className="m-0 flex list-none flex-col rounded-[20px] bg-card px-4 py-1 shadow-soft">
+    <div className="flex flex-col gap-1 rounded-[20px] bg-card px-4 pt-3 pb-1 shadow-soft">
+      <span className="text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
+      <ul className="m-0 flex list-none flex-col p-0">
         {requests.map((r) => (
           <li
             key={r.requestId}
-            className="flex items-center justify-between gap-3 border-b border-[#F0EBE2] py-3 last:border-b-0"
+            className="flex items-center justify-between gap-3 border-b border-[#F0EBE2] py-2.5 last:border-b-0"
           >
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm font-bold tabular-nums">{shiftText(r)}</span>
-              <span className="text-xs text-muted-foreground">{r.target.name}님에게 요청</span>
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="text-sm font-bold tabular-nums">
+                {r.shiftName || '근무'} {r.start}–{r.end}
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <PersonInitial name={r.target.name} color={colorOf(r.target.userId)} size={18} />
+                {r.target.name}님에게 요청
+              </span>
             </span>
             <span
               className={cn(
@@ -122,7 +135,7 @@ export function SentSubstitutes() {
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   )
 }
 
