@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { rememberRedirect, signIn, type OAuthProvider } from '@/lib/auth'
 import { getHomePath, useAuthStore } from '@/lib/authStore'
-import logo from '@/assets/logo-crewbean.webp'
 import { wakeServer } from '@/lib/wakeServer'
 import loginPhoto from '@/pages/auth/assets/login-photo.webp'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
@@ -40,12 +39,13 @@ export default function LoginPage() {
 
   return (
     <AuthFrame tone="white" className="gap-6">
+      {/* 글자 로고 (public/logo-crewbean.png, 사장님 화면과 같은 그림) */}
       <img
-        src={logo}
+        src="/logo-crewbean.png"
         alt="crewBean"
-        width={451}
-        height={144}
-        className="mt-1 h-8 w-auto self-start"
+        width={528}
+        height={120}
+        className="mt-1 h-6 w-auto self-start"
       />
 
       <section className="relative isolate flex min-h-[380px] flex-1 flex-col justify-end overflow-hidden rounded-3xl p-6 text-white">

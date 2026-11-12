@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
   dayHandoverSummary,
@@ -7,7 +7,13 @@ import {
   useHandoverDaySummary,
   useHandoverNotes,
 } from '@/lib/api/handover'
-import { availabilityEnabled, shiftLabel, useMySchedule } from '@/lib/api/schedule'
+import {
+  availabilityEnabled,
+  myUserId,
+  shiftLabel,
+  useMySchedule,
+  useScheduleCalendar,
+} from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
 import { useScheduleWorkers } from '@/lib/api/substitute'
 import type { Shift, UserRef } from '@/lib/api/types'
@@ -23,6 +29,7 @@ import { HandoverList } from '@/shared/handover/HandoverList'
 import { PRESSABLE } from '@/shared/pressable'
 import { SectionHeader } from '@/shared/SectionHeader'
 import { useReveal, useRevealChildren } from '@/shared/useReveal'
+import { WeekNav } from '@/shared/WeekNav'
 import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
@@ -80,8 +87,38 @@ function HomeBody({
   todayShift?: Shift
 }) {
   const navigate = useNavigate()
-  const todayDate = todayOfStore.getDate()
-  const [selected, setSelected] = useState(todayDate)
+  // 인수인계 볼 날짜 · 보고 있는 주 (0 = 오늘이 있는 주, ‹ › 로 한 주씩)
+  const [selectedKey, setSelectedKey] = useState(toDateKey(todayOfStore))
+  const [weekOffset, setWeekOffset] = useState(0)
+  const shownStart = addDays(week[0].date, weekOffset * 7)
+  // 다른 주의 근무 점: 그 주 공유 근무 달력에서 내 근무만 (이번 주는 이미 받은 useMySchedule 그대로)
+  const otherWeek = useScheduleCalendar(
+    store.id,
+    toDateKey(shownStart),
+    toDateKey(addDays(shownStart, 6)),
+    weekOffset !== 0,
+  ).data
+  const me = myUserId()
+  const shownWeek: WeekDay[] =
+    weekOffset === 0
+      ? week
+      : Array.from({ length: 7 }, (_, i) => {
+          const date = addDays(shownStart, i)
+          const key = toDateKey(date)
+          return {
+            date,
+            work: !!otherWeek?.shifts.some((s) => s.date === key && s.assignee.userId === me),
+          }
+        })
+  // 주를 옮기면 같은 요일을 골라 둔다. [이번 주로]는 오늘로
+  const moveWeek = (step: number) => {
+    setWeekOffset((offset) => offset + step)
+    setSelectedKey((key) => toDateKey(addDays(fromDateKey(key), step * 7)))
+  }
+  const backToThisWeek = () => {
+    setWeekOffset(0)
+    setSelectedKey(toDateKey(todayOfStore))
+  }
   // 스크롤해서 처음 보일 때 살짝 떠오르기 (첫 화면에 보이는 것은 그대로 — shared/useReveal)
   const todayRef = useReveal<HTMLElement>()
 
@@ -136,15 +173,18 @@ function HomeBody({
       <HandoverSection
         store={store}
         today={todayOfStore}
-        week={week}
-        selectedDay={selected}
-        onSelectDay={setSelected}
+        week={shownWeek}
+        selectedDate={fromDateKey(selectedKey)}
+        onSelectDate={(date) => setSelectedKey(toDateKey(date))}
+        weekNav={
+          <WeekNav thisWeek={weekOffset === 0} onMove={moveWeek} onThisWeek={backToThisWeek} />
+        }
       />
     </div>
   )
 }
 
-/** 이번 주 요일 줄 (월~일): 고른 날 · 오늘 · 근무 있는 날 점. 누르면 그날 인수인계를 본다 */
+/** 요일 줄 (월~일, ‹ › 로 다른 주): 고른 날 · 오늘 · 근무 있는 날 점. 누르면 그날 인수인계를 본다 */
 function WeekStrip({
   week,
   today: todayOfStore,
@@ -153,20 +193,20 @@ function WeekStrip({
 }: {
   week: WeekDay[]
   today: Date
-  selected: number
-  onSelect: (day: number) => void
+  selected: Date
+  onSelect: (date: Date) => void
 }) {
   return (
     <div className="grid grid-cols-7 gap-1">
       {week.map(({ date, work }) => {
         const day = date.getDate()
-        const on = day === selected
+        const on = isSameDay(date, selected)
         const today = isSameDay(date, todayOfStore)
         return (
           <button
-            key={day}
+            key={toDateKey(date)}
             type="button"
-            onClick={() => onSelect(day)}
+            onClick={() => onSelect(date)}
             aria-pressed={on}
             className={cn(
               // 고른 날만 매장 색 알약 (그림자 없음). 오늘은 매장 색 글자, 근무 없는 날은 연한 회색
@@ -273,20 +313,19 @@ function HandoverSection({
   store,
   today,
   week,
-  selectedDay,
-  onSelectDay,
+  selectedDate,
+  onSelectDate,
+  weekNav,
 }: {
   store: StaffStoreView
   today: Date
   week: WeekDay[]
-  selectedDay: number
-  onSelectDay: (day: number) => void
+  selectedDate: Date
+  onSelectDate: (date: Date) => void
+  /** 요일 줄 위 오른쪽 ‹ › (WeekNav) */
+  weekNav: ReactNode
 }) {
-  const todayDate = today.getDate()
-  const live = selectedDay === todayDate
-  const selectedDate =
-    week.find((w) => w.date.getDate() === selectedDay)?.date ??
-    new Date(today.getFullYear(), today.getMonth(), selectedDay)
+  const live = isSameDay(selectedDate, today)
   const date = toDateKey(selectedDate)
   const navigate = useNavigate()
   const notesQuery = useHandoverNotes(store.id, date)
@@ -319,7 +358,11 @@ function HandoverSection({
   return (
     // 출근 전 배너 [인수인계 보기]가 여기로 내려온다: 요일 줄부터 보이게 (scroll-mt: 위 헤더만큼)
     <section ref={revealRef} id="today-handover" className="flex scroll-mt-20 flex-col gap-3">
-      <WeekStrip week={week} today={today} selected={selectedDay} onSelect={onSelectDay} />
+      {/* 요일 줄 위 오른쪽 ‹ › 와 요일 줄은 한 덩어리 (스크롤 떠오르기도 같이) */}
+      <div data-reveal-group className="flex flex-col gap-2">
+        {weekNav}
+        <WeekStrip week={week} today={today} selected={selectedDate} onSelect={onSelectDate} />
+      </div>
       <SectionHeader
         title={title}
         action={live ? { label: '남기기', to: '/staff/handover' } : undefined}
@@ -375,7 +418,7 @@ function HandoverSection({
         // 지난 날 · 앞날: 큰 아이콘 없이 한 줄 (docs/08 6. 빈 화면)
         <EmptyGuide
           message={
-            selectedDay > todayDate
+            selectedDate > today
               ? '아직 기록 전이에요'
               : notes.length > 0
                 ? '특이사항 없음'

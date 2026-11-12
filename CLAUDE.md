@@ -17,7 +17,7 @@
 
 | 주인 | 폴더 · 파일 |
 | --- | --- |
-| 🟠 민지 | `src/app/`, `src/assets/`(로고 등 이미지), `src/lib/`, `src/shared/`, `src/pages/auth/`, `src/pages/staff/`, `src/api/mocks/staff/`, 설정 파일(`package.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `.prettierrc`, `orval.config.ts`, `.env.example`, `index.html`) |
+| 🟠 민지 | `src/app/`, `src/lib/`, `src/shared/`, `src/pages/auth/`, `src/pages/staff/`, `src/api/mocks/staff/`, 설정 파일(`package.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `.prettierrc`, `orval.config.ts`, `.env.example`, `index.html`) |
 | 🟣 나현 | `src/ui/`, `src/index.css`, `tailwind` · `shadcn` 설정(`components.json`), `public/`, `src/pages/owner/`, `src/api/mocks/owner/` |
 | 🤖 자동 | `src/api/generated/` — `npm run api`로만 만든다. **절대 직접 수정하지 않는다** |
 
