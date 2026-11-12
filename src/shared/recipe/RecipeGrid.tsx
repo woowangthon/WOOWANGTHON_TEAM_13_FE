@@ -65,7 +65,13 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
             <span className="flex justify-end">
               {r.isNew && <Badge aria-label="새 레시피">NEW</Badge>}
             </span>
-            <span className="flex flex-col gap-0.5 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">
+            {/* 글자 그림자는 사진 위에서만 (사진 없는 메뉴는 색 바탕이라 그림자 없이) */}
+            <span
+              className={cn(
+                'flex flex-col gap-0.5',
+                r.imageUrl && '[text-shadow:0_1px_2px_rgba(0,0,0,0.25)]',
+              )}
+            >
               <span className="text-sm leading-[1.3] font-bold break-keep">{r.name}</span>
               <span className={cn('text-[11px]', r.imageUrl ? 'text-white/85' : 'text-subtle')}>
                 {[r.temp, r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
