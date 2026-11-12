@@ -219,9 +219,12 @@ function RecipeSkeleton() {
         <Skeleton shape="line" className="mx-1 my-2.5 h-4 w-24" />
         <div className="grid grid-cols-2 gap-2">
           {Array.from({ length: 6 }, (_, i) => (
-            <span key={i} className="flex flex-col gap-2 rounded-3xl bg-card p-2 pb-3">
-              <Skeleton className="aspect-2/1 w-full" />
-              <span className="flex flex-col gap-2 px-1 py-1">
+            <span
+              key={i}
+              className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card"
+            >
+              <Skeleton className="aspect-2/1 w-full rounded-none" />
+              <span className="flex flex-col gap-2 p-3">
                 <Skeleton shape="line" className="h-4 w-3/4" />
                 <Skeleton shape="line" className="w-1/2" />
               </span>
