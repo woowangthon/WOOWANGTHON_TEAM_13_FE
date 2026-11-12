@@ -10,9 +10,11 @@ import {
 } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
 import { useSubstituteRequests } from '@/lib/api/substitute'
-import { addDays, isSameDay, toDateKey } from '@/lib/date'
+import { addDays, fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
 import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { usePersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
@@ -21,7 +23,7 @@ import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
-// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로. 내 근무는 진한 매장 색, 대타는 점선 테두리.
+// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로. 사람마다 파스텔 색(personColor), 내 근무는 진한 테두리 · 굵게, 대타는 점선 테두리.
 // 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중"). ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -54,6 +56,8 @@ export function ScheduleMonth() {
   const { start, end, days } = monthGrid(view.year, view.month)
   const calendarQuery = useScheduleCalendar(store.id, toDateKey(start), toDateKey(end))
   const me = myUserId()
+  // 사람별 파스텔 색 (근무표 사람 목록 순서)
+  const colorOf = usePersonColor(store.id)
   // 대타: 내가 보낸 요청(진행 중이면 [대타 요청] 대신 "요청 중") · 요청 시트를 띄울 근무
   const sentQuery = useSubstituteRequests(store.id, 'sent')
   const [sheetShift, setSheetShift] = useState<CalendarShift | null>(null)
@@ -123,6 +127,14 @@ export function ScheduleMonth() {
   }
   const isMine = (shift: CalendarShift) => shift.assignee.userId === me
   const selectedShifts = byDate.get(toDateKey(selected)) ?? []
+  // 이 달에 근무하는 사람 (범례: 색 점 + 이름). 근무표 사람 목록에 없는 사람(퇴사 등)은 회색
+  const monthPeople = [
+    ...new Map(
+      calendar.shifts
+        .filter((shift) => fromDateKey(shift.date).getMonth() === view.month - 1)
+        .map((shift) => [shift.assignee.userId, shift.assignee] as const),
+    ).values(),
+  ]
   // 이번 주 내 근무 (오늘이 보이는 달일 때만)
   const showWeek = days.some((d) => isSameDay(d, today))
   const week = showWeek ? toMySchedule(calendar, today, me) : null
@@ -182,16 +194,24 @@ export function ScheduleMonth() {
                   </span>
                   {shifts.slice(0, MAX_BLOCKS).map((shift) => {
                     const name = blockName(shift)
+                    const mine = isMine(shift)
+                    const [bg, fg] = colorOf(shift.assignee.userId)
                     // 시간 · 이름이 한 줄에 들어가면 한 줄("15 지은"), 안 들어가면 이름이 아랫줄로 ("15" / "김민수")
+                    // 사람마다 파스텔 색. 내 근무는 같은 색 + 진한 테두리 · 굵게, 대타는 점선 테두리
                     return (
                       <span
                         key={shiftKey(shift)}
                         className={cn(
-                          'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3] font-semibold',
-                          isMine(shift) ? 'bg-brand text-white' : 'bg-brand-soft text-foreground',
+                          'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3]',
+                          mine ? 'font-extrabold' : 'font-semibold',
+                          mine && !shift.substituted && 'shadow-[inset_0_0_0_1.5px_currentColor]',
                           shift.substituted &&
-                            'outline-1 -outline-offset-1 outline-current outline-dashed',
+                            cn(
+                              '-outline-offset-1 outline-current outline-dashed',
+                              mine ? 'outline-[1.5px]' : 'outline-1',
+                            ),
                         )}
+                        style={{ background: bg, color: fg }}
                       >
                         <span className="shrink-0 tabular-nums">{hourText(shift.start)}</span>
                         <span
@@ -215,18 +235,32 @@ export function ScheduleMonth() {
               )
             })}
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span className="size-2.5 rounded-[3px] bg-brand" />내 근무
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="size-2.5 rounded-[3px] bg-brand-soft" />
-              다른 사람
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
-              대타
-            </span>
+          <div className="flex flex-col gap-1.5 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] shadow-[inset_0_0_0_1.5px_currentColor]" />
+                내 근무
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
+                대타
+              </span>
+            </div>
+            {/* 이 달에 근무하는 사람 색 (4명이 넘으면 색이 반복돼서 이름을 같이) */}
+            <ul aria-label="사람별 색" className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0">
+              {monthPeople.map((person) => {
+                const [bg, fg] = colorOf(person.userId)
+                return (
+                  <li key={person.userId} className="flex items-center gap-1 text-foreground">
+                    <span
+                      className="size-2.5 rounded-full shadow-[inset_0_0_0_1px_currentColor]"
+                      style={{ background: bg, color: fg }}
+                    />
+                    {person.name}
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         </section>
       )}
@@ -250,33 +284,32 @@ export function ScheduleMonth() {
                 <div
                   key={shiftKey(shift)}
                   className={cn(
-                    'flex flex-col gap-3 rounded-[20px] px-4 py-3.5',
-                    mine ? 'texture bg-brand text-white' : 'bg-card shadow-soft',
+                    // 내 근무도 연한 카드 + 매장 색 테두리 (진한 덮개 대신)
+                    'flex flex-col gap-3 rounded-[20px] bg-card px-4 py-3.5 shadow-soft',
+                    mine &&
+                      'shadow-[inset_0_0_0_1.5px_var(--brand),0_8px_24px_rgba(40,46,36,0.06)]',
                   )}
                 >
                   <div className="flex items-center gap-3">
+                    <PersonInitial
+                      name={shift.assignee.name}
+                      color={colorOf(shift.assignee.userId)}
+                    />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="flex items-center gap-1.5">
                         <span className="text-base font-extrabold">{shift.assignee.name}</span>
                         {mine && (
-                          <span className="rounded-full bg-white/20 px-2 py-px text-[11px] font-bold">
+                          <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
                             나
                           </span>
                         )}
                         {shift.substituted && (
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-px text-[11px] font-bold',
-                              mine ? 'bg-white text-brand' : 'bg-warm text-warm-foreground',
-                            )}
-                          >
+                          <span className="rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
                             대타
                           </span>
                         )}
                       </span>
-                      <span
-                        className={cn('text-[13px]', mine ? 'opacity-80' : 'text-muted-foreground')}
-                      >
+                      <span className="text-[13px] text-muted-foreground">
                         {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
                       </span>
                     </span>
@@ -284,28 +317,18 @@ export function ScheduleMonth() {
                       <span className="text-[15px] font-bold tabular-nums">
                         {shift.start} – {shift.end}
                       </span>
-                      <span
-                        className={cn(
-                          'text-xs tabular-nums',
-                          mine ? 'opacity-80' : 'text-muted-foreground',
-                        )}
-                      >
+                      <span className="text-xs text-muted-foreground tabular-nums">
                         {shiftHours(shift)}시간
                       </span>
                     </span>
                   </div>
                   {canRequest &&
                     (pendingSent ? (
-                      <span className="self-start rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                      <span className="self-start rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
                         {pendingSent.target.name}님에게 대타 요청 중
                       </span>
                     ) : (
-                      <Button
-                        variant="white"
-                        size="sm"
-                        className="self-start"
-                        onClick={() => setSheetShift(shift)}
-                      >
+                      <Button size="sm" className="self-start" onClick={() => setSheetShift(shift)}>
                         대타 요청
                       </Button>
                     ))}
