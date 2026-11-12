@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useMyPayrollEstimates } from '@/lib/api/payroll'
@@ -7,17 +7,18 @@ import { useScheduleWorkersOf } from '@/lib/api/substitute'
 import type { PayWorkDay, PayrollEstimate, TaxType } from '@/lib/api/types'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import { formatDate, formatHours, formatLongDate, formatWon } from '@/lib/format'
+import { MonthSwitcher } from '@/pages/staff/schedule/components/MonthSwitcher'
 import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 import { personColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
 import { Calendar } from '@/ui/Calendar'
 import { Card } from '@/ui/Card'
 import { Chip } from '@/ui/Chip'
-import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -59,7 +60,11 @@ export default function PayrollPage() {
     return (
       <div className="flex flex-col gap-4">
         <WorkHeader segment="pay" />
-        {error ? <LoadError what="예상 급여를" error={error} onRetry={retry} /> : <Spinner />}
+        {error ? (
+          <LoadError what="예상 급여를" error={error} onRetry={retry} />
+        ) : (
+          <PayrollSkeleton />
+        )}
       </div>
     )
   }
@@ -113,41 +118,17 @@ export default function PayrollPage() {
 
   // 달 넘기기 (근무가 없는 달이어도 보이게 맨 위에)
   const monthSwitcher = (
-    <div className="flex items-center justify-center gap-1.5">
-      <button
-        type="button"
-        aria-label="지난달"
-        onClick={() => moveMonth(-1)}
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
-      >
-        <ChevronLeft className="size-5" />
-      </button>
-      <span className="min-w-[96px] text-center text-[15px] font-bold tabular-nums">
-        {payMonth.year}년 {payMonth.month}월
-      </span>
-      <button
-        type="button"
-        aria-label="다음 달"
-        onClick={() => moveMonth(1)}
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
-      >
-        <ChevronRight className="size-5" />
-      </button>
-    </div>
+    <MonthSwitcher year={payMonth.year} month={payMonth.month} onMove={moveMonth} />
   )
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <WorkHeader segment="pay" />
       {monthSwitcher}
 
-      <div className="flex flex-col gap-3.5">
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pt-0.5 pb-1">
-          <Chip
-            active={showAll}
-            onClick={() => setShowAll(true)}
-            className="h-[42px] px-[18px] py-0 text-[15px] font-bold shadow-[0_6px_18px_rgba(40,46,36,0.05)]"
-          >
+      <div className="flex flex-col gap-4">
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+          <Chip active={showAll} onClick={() => setShowAll(true)} className={storeChip(showAll)}>
             전체
           </Chip>
           {stores.map((s) => (
@@ -158,7 +139,7 @@ export default function PayrollPage() {
                 setShowAll(false)
                 setCurrentStoreId(s.id)
               }}
-              className="h-[42px] px-[18px] py-0 text-[15px] font-bold shadow-[0_6px_18px_rgba(40,46,36,0.05)]"
+              className={storeChip(!showAll && s.id === store.id)}
             >
               {s.name}
             </Chip>
@@ -170,36 +151,33 @@ export default function PayrollPage() {
             message="아직 계산할 근무가 없어요"
             hint="근무가 정해지면 바로 계산해 드려요"
             action={
-              <Button
-                size="md"
-                className="h-[46px] px-5"
-                onClick={() => navigate('/staff/schedule')}
-              >
+              <Button size="md" onClick={() => navigate('/staff/schedule')}>
                 근무표 보기
               </Button>
             }
           />
         ) : (
           <>
-            <Card variant="dark" className="gap-1.5 px-[18px] pt-[22px] pb-[18px]">
-              <div className="flex items-center justify-between gap-2.5 px-1">
-                <span className="text-sm font-semibold whitespace-nowrap opacity-85">
+            {/* 화면의 진한 덩어리는 이 금액 카드 하나 (docs/08 4). 위계: 입금일(13) → 금액(40 · 화면의 큰 숫자) → 세전(13) → 구분선 아래 내역 3칸(상자 없이) */}
+            <Card variant="dark" className="gap-1 px-5 pt-5 pb-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[13px] font-medium whitespace-nowrap text-white/85 tabular-nums">
                   {payDateText}
                 </span>
                 <Link
                   to={`/staff/stores/${store.id}`}
-                  className="py-1 text-[13px] font-semibold whitespace-nowrap text-white opacity-85"
+                  className="py-1 text-[13px] font-medium whitespace-nowrap text-white/85"
                 >
                   급여 설정 ›
                 </Link>
               </div>
-              <span className="px-1 pt-1.5 text-[44px] leading-[1.1] font-extrabold tracking-[-0.035em] tabular-nums">
+              <span className="pt-1 text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] tabular-nums">
                 {formatWon(total.net)}
               </span>
-              <span className="px-1 pb-2.5 text-sm tabular-nums opacity-75">
+              <span className="text-[13px] font-medium text-white/75 tabular-nums">
                 세전 {formatWon(total.gross)} · 참고용
               </span>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="mt-3 grid grid-cols-[auto_1fr_1fr] border-t border-white/15 pt-3">
                 <PayTile
                   label={`${total.hours}시간 × ${hourly.toLocaleString('ko-KR')}`}
                   value={formatWon(total.base)}
@@ -223,11 +201,13 @@ export default function PayrollPage() {
             />
 
             {current.aiNote && (
-              <div className="flex items-start gap-3.5 rounded-[24px] bg-card px-5 py-[18px] shadow-soft">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-                  <Sparkles className="size-[18px]" fill="currentColor" />
-                </span>
-                <p className="m-0 text-[15px] leading-[1.65] break-keep text-[#2E3A33]">
+              <div className="flex items-start gap-3 rounded-3xl border border-line/60 bg-card p-5">
+                <Sparkles
+                  aria-hidden="true"
+                  className="mt-1 size-4 shrink-0 text-brand"
+                  fill="currentColor"
+                />
+                <p className="m-0 text-[15px] leading-[1.55] break-keep text-foreground">
                   {current.aiNote}
                 </p>
               </div>
@@ -239,15 +219,37 @@ export default function PayrollPage() {
   )
 }
 
+/** 금액 카드 아래 내역 한 칸: 상자 없이 칸 사이 옅은 세로선 (첫 칸 제외) */
 function PayTile({ label, value }: { label: string; value: string }) {
   return (
-    <span className="flex flex-col gap-1 rounded-2xl bg-white/10 px-2.5 py-3">
-      <span className="text-xs whitespace-nowrap tabular-nums opacity-80">{label}</span>
-      {/* 금액은 오른쪽 끝에 맞춘다 */}
-      <span className="text-right text-[15px] font-extrabold whitespace-nowrap tabular-nums">
-        {value}
+    <span className="flex min-w-0 flex-col gap-1 px-2 first:pl-0 last:pr-0 [&+&]:border-l [&+&]:border-white/15">
+      <span className="text-xs font-medium whitespace-nowrap text-white/75 tabular-nums">
+        {label}
       </span>
+      <span className="text-[15px] font-bold whitespace-nowrap tabular-nums">{value}</span>
     </span>
+  )
+}
+
+/** 예상 급여 매장 칩: 흰 바탕 위 옅은 테두리 (고른 칩은 매장 색 그대로) */
+const storeChip = (active: boolean) =>
+  cn(
+    'h-10 border px-4 py-0 text-[15px] font-bold',
+    active ? 'border-transparent' : 'border-line/60',
+  )
+
+/** 예상 급여 로딩 뼈대: 달 줄 · 매장 칩 · 금액 카드 · 달력 */
+function PayrollSkeleton() {
+  return (
+    <SkeletonGroup label="예상 급여를 불러오는 중" className="flex flex-col gap-4">
+      <Skeleton shape="line" className="mx-1 my-2 h-5 w-32" />
+      <div className="flex gap-2">
+        <Skeleton shape="circle" className="h-10 w-16" />
+        <Skeleton shape="circle" className="h-10 w-24" />
+      </div>
+      <Skeleton className="h-52 rounded-3xl" />
+      <Skeleton className="h-96 rounded-3xl" />
+    </SkeletonGroup>
   )
 }
 
@@ -380,10 +382,10 @@ function PayCalendar({
 
   return (
     <>
-      <section className="flex flex-col gap-3 rounded-[24px] bg-card px-2 pt-4 pb-3 shadow-soft">
-        <div className="flex items-baseline justify-between gap-2.5 px-2.5">
-          <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">{payMonth.month}월</h2>
-          <span className="text-[13px] font-semibold whitespace-nowrap text-foreground tabular-nums">
+      <section className="flex flex-col gap-3 rounded-3xl border border-line/60 bg-card px-2 pt-4 pb-3">
+        <div className="flex items-baseline justify-between gap-3 px-2.5">
+          <h2 className="m-0 text-base leading-[1.4] font-bold">{payMonth.month}월</h2>
+          <span className="text-[13px] font-bold whitespace-nowrap text-foreground tabular-nums">
             근무 {workedCount}일 · 예정 {plannedCount}일
           </span>
         </div>
@@ -487,10 +489,10 @@ function PayCalendar({
           key={selectedDay}
           ref={detailRef}
           aria-live="polite"
-          className="flex animate-in scroll-mt-20 scroll-mb-[calc(108px+env(safe-area-inset-bottom))] flex-col gap-3 rounded-[24px] bg-card px-5 pt-[18px] pb-4 shadow-soft duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
+          className="flex animate-in scroll-mt-20 scroll-mb-[calc(108px+env(safe-area-inset-bottom))] flex-col gap-3 rounded-3xl border border-line/60 bg-card p-5 pb-4 duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
         >
           <div className="flex items-center justify-between gap-2.5">
-            <h3 className="m-0 text-[17px] font-extrabold tracking-[-0.01em]">
+            <h3 className="m-0 text-base leading-[1.4] font-bold tracking-[-0.01em]">
               {formatLongDate(dateOf(selectedDay))}
             </h3>
             {selected.length > 0 && (
@@ -510,13 +512,15 @@ function PayCalendar({
             )}
           </div>
           {selected.length === 0 ? (
-            <p className="m-0 text-sm text-muted-foreground">이날은 근무가 없어요</p>
+            <p className="m-0 text-[13px] font-medium text-muted-foreground">
+              이날은 근무가 없어요
+            </p>
           ) : (
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {selected.map(({ store, storeIndex, workDay, worked }) => (
                 <li
                   key={`${store.id}-${workDay.start}`}
-                  className="flex items-center gap-3 rounded-[18px] bg-background px-4 py-3"
+                  className="flex items-center gap-3 rounded-2xl bg-background px-4 py-3"
                 >
                   {/* 매장 색 막대: 일한 근무는 진하게, 예정은 연하게 */}
                   <span
@@ -525,7 +529,7 @@ function PayCalendar({
                     style={{ background: worked ? store.color : store.soft }}
                   />
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-xl leading-tight font-extrabold tracking-[-0.02em] tabular-nums">
+                    <span className="text-[19px] leading-[1.3] font-bold tracking-[-0.02em] tabular-nums">
                       {workDay.start} – {workDay.end}
                     </span>
                     <span className="text-[13px] text-muted-foreground">
@@ -545,7 +549,7 @@ function PayCalendar({
             </ul>
           )}
           {selected.length > 1 && (
-            <span className="text-right text-[13px] font-semibold text-foreground tabular-nums">
+            <span className="text-right text-[13px] font-bold text-foreground tabular-nums">
               합계 {formatHours(selectedHours)}
             </span>
           )}

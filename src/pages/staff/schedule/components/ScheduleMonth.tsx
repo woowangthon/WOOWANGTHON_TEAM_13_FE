@@ -1,5 +1,5 @@
-import { ArrowLeftRight, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeftRight, ChevronRight } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import {
   myUserId,
   scheduleToday,
@@ -12,6 +12,7 @@ import type { CalendarShift } from '@/lib/api/types'
 import { useSubstituteRequests } from '@/lib/api/substitute'
 import { addDays, fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { MonthSwitcher } from '@/pages/staff/schedule/components/MonthSwitcher'
 import { SentSubstitutesOfDay } from '@/pages/staff/schedule/components/SubstituteRequests'
 import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
 import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
@@ -20,8 +21,9 @@ import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { PRESSABLE } from '@/shared/pressable'
+import { SectionHeader } from '@/shared/SectionHeader'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { useRevealChildren } from '@/shared/useReveal'
-import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
@@ -90,35 +92,18 @@ export function ScheduleMonth() {
     )
   }
 
-  const switcher = (
-    <div className="flex items-center justify-center gap-1.5">
-      <button
-        type="button"
-        aria-label="지난달"
-        onClick={() => move(-1)}
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
-      >
-        <ChevronLeft className="size-5" />
-      </button>
-      <span className="min-w-[96px] text-center text-[15px] font-bold tabular-nums">
-        {view.year}년 {view.month}월
-      </span>
-      <button
-        type="button"
-        aria-label="다음 달"
-        onClick={() => move(1)}
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-card"
-      >
-        <ChevronRight className="size-5" />
-      </button>
-    </div>
+  // 달 이동 줄: 왼쪽 "2026년 11월"(섹션 제목) + 오른쪽 ‹ › (MonthSwitcher). 아래 보조 한 줄은 근무표를 받은 뒤
+  const switcher = (note?: ReactNode) => (
+    <MonthSwitcher year={view.year} month={view.month} onMove={move}>
+      {note}
+    </MonthSwitcher>
   )
 
   const calendar = calendarQuery.data
   if (!calendar) {
     return (
       <>
-        {switcher}
+        {switcher()}
         {calendarQuery.isError ? (
           <LoadError
             what="근무표를"
@@ -126,7 +111,7 @@ export function ScheduleMonth() {
             onRetry={() => calendarQuery.refetch()}
           />
         ) : (
-          <Spinner />
+          <CalendarSkeleton />
         )}
       </>
     )
@@ -164,13 +149,13 @@ export function ScheduleMonth() {
 
   return (
     <>
-      {switcher}
-
-      {week && week.weekHours > 0 && (
-        <p className="m-0 px-1 text-[13px] text-balance text-foreground">
-          <strong className="font-bold tabular-nums">{week.weekNote}</strong>
-          <span className="text-muted-foreground"> · 내 근무 기준</span>
-        </p>
+      {switcher(
+        week && week.weekHours > 0 && (
+          <p className="m-0 text-[13px] leading-[1.45] font-medium text-balance text-muted-foreground">
+            <strong className="font-bold text-foreground tabular-nums">{week.weekNote}</strong> · 내
+            근무 기준
+          </p>
+        ),
       )}
 
       {calendar.shifts.length === 0 ? (
@@ -179,10 +164,10 @@ export function ScheduleMonth() {
           hint="사장님이 근무표를 만들면 여기서 다 같이 볼 수 있어요"
         />
       ) : (
-        <section className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2 shadow-soft">
+        <section className="flex flex-col gap-2 rounded-3xl border border-line/60 bg-card px-2 pt-3 pb-2">
           <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-muted-foreground">
             {WEEKDAYS.map((w, i) => (
-              <span key={w} className={cn(i === 0 && 'text-[#C0574A]')}>
+              <span key={w} className={cn(i === 0 && 'text-destructive')}>
                 {w}
               </span>
             ))}
@@ -200,7 +185,7 @@ export function ScheduleMonth() {
                   <div
                     key={key}
                     aria-hidden="true"
-                    className="min-h-[78px] border-t border-[#F0EBE2]"
+                    className="min-h-[78px] border-t border-line/40"
                   />
                 )
               }
@@ -212,7 +197,7 @@ export function ScheduleMonth() {
                   aria-pressed={isSelected}
                   aria-label={`${formatDate(day)} 근무 ${shifts.length}개`}
                   className={cn(
-                    'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
+                    'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-line/40 px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
                     isSelected && 'rounded-[10px] bg-background',
                   )}
                 >
@@ -296,16 +281,12 @@ export function ScheduleMonth() {
       )}
 
       {calendar.shifts.length > 0 && (
-        <section className="flex flex-col gap-2.5">
-          <h2 className="m-0 px-1 text-lg font-extrabold tracking-[-0.02em]">
-            {formatDate(selected)} 근무
-          </h2>
+        <section className="flex flex-col gap-3">
+          <SectionHeader title={`${formatDate(selected)} 근무`} />
           {selectedShifts.length === 0 ? (
-            <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
-              이날은 근무가 없어요
-            </p>
+            <EmptyGuide message="이날은 근무가 없어요" />
           ) : (
-            <div ref={dayListRef} className="flex flex-col gap-2.5">
+            <div ref={dayListRef} className="flex flex-col gap-2">
               {selectedShifts.map((shift) => {
                 const mine = isMine(shift)
                 // 대타 요청은 내 근무 · 오늘 이후만. 하루 조정한 근무(assignmentId null)는 BE 가 막는다
@@ -315,10 +296,9 @@ export function ScheduleMonth() {
                   <div
                     key={shiftKey(shift)}
                     className={cn(
-                      // 내 근무도 연한 카드 + 매장 색 테두리 (진한 덮개 대신)
-                      'flex flex-col gap-3 rounded-[20px] bg-card px-4 py-3.5 shadow-soft',
-                      mine &&
-                        'shadow-[inset_0_0_0_1.5px_var(--brand),0_8px_24px_rgba(40,46,36,0.06)]',
+                      // 흰 바탕 위 연한 카드 + 옅은 테두리 (docs/08 4). 내 근무는 매장 색 테두리 2px(안쪽 1px 더해 크기 그대로)
+                      'flex flex-col gap-3 rounded-3xl border border-line/60 bg-card px-4 py-3.5',
+                      mine && 'border-brand ring-1 ring-brand ring-inset',
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -328,7 +308,9 @@ export function ScheduleMonth() {
                       />
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="flex items-center gap-1.5">
-                          <span className="text-base font-extrabold">{shift.assignee.name}</span>
+                          <span className="text-base leading-[1.4] font-bold">
+                            {shift.assignee.name}
+                          </span>
                           {mine && (
                             <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
                               나
@@ -418,5 +400,22 @@ function LegendBlock({ bold, substituted }: { bold?: boolean; substituted?: bool
     >
       9
     </span>
+  )
+}
+
+/** 근무표 로딩 뼈대: 요일 줄 + 달력 5주 (달력 카드와 같은 모서리 · 테두리) */
+function CalendarSkeleton() {
+  return (
+    <SkeletonGroup
+      label="근무표를 불러오는 중"
+      className="flex flex-col gap-2 rounded-3xl border border-line/60 bg-card px-2 pt-3 pb-3"
+    >
+      <Skeleton shape="line" className="mx-2 h-3" />
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 35 }, (_, i) => (
+          <Skeleton key={i} className="h-16 rounded-sm" />
+        ))}
+      </div>
+    </SkeletonGroup>
   )
 }
