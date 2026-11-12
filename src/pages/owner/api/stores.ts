@@ -28,15 +28,17 @@ import type {
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
  * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — lib/api/source.
- * 사업자 확인도 'stores'를 따른다 (POST /business-verifications, 국세청 진위확인 → 매장 등록에 verificationId).
+ * 사업자 확인도 'stores'를 따른다 (POST /stores/business-verifications, 국세청 상태조회 → 매장 등록에 verificationId).
  */
 
 /** 사업장 규모: 화면 under5 · over5 ↔ BE UNDER_FIVE · FIVE_OR_MORE */
+/** BE 가 급여일을 안 정했을 때 · 매장 등록 휠 처음 값 */
+export const DEFAULT_PAYDAY = 10
+
 const toBusinessSize = (size: StoreSize): BusinessSize =>
   size === 'over5' ? 'FIVE_OR_MORE' : 'UNDER_FIVE'
 
 /** 급여일을 안 정한 매장(null)은 화면에서 10일로 보여 준다 (저장하면 그 값이 들어간다) */
-const DEFAULT_PAYDAY = 10
 
 /*
  * BE 매장 응답 → 화면 모양. BE 에 없는 값(종류 · 직원 수 · 사업자번호)은 기본값으로 채운다.
@@ -69,6 +71,7 @@ const postStore = async (input: NewStore): Promise<OwnerStore> => {
     name: input.name,
     address: input.address,
     businessSize: toBusinessSize(input.size),
+    payday: input.payday,
     businessVerificationId: input.businessVerificationId,
     shiftTemplates: input.shiftTemplates.map((t, i) => ({ ...t, sortOrder: i })),
     closedWeekdays: input.closedWeekdays,
@@ -222,7 +225,7 @@ export function useSaveOwnerShifts() {
   })
 }
 
-/** 매장 사진 올리기 (온보딩 ⑤) */
+/** 매장 사진 올리기 (온보딩 ④) */
 export function useSaveStorePhoto() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -248,13 +251,11 @@ export function useDeleteStore() {
   })
 }
 
-// 사업자 확인: 번호 · 대표자 이름 · 개업일이 국세청과 맞으면 VERIFIED (아니면 INVALID, 에러 아님)
+// 사업자 확인: 번호만 → 국세청 상태조회, 계속사업자면 VERIFIED (휴업 · 폐업 · 미등록은 INVALID, 에러 아님 · BE #40)
 const postBizVerification = (input: BizVerifyInput): Promise<BizVerification> =>
   isRealApi('stores')
-    ? http.post<BizVerification>('/business-verifications', {
+    ? http.post<BizVerification>('/stores/business-verifications', {
         businessRegistrationNumber: input.bizNo,
-        ownerName: input.ownerName.trim(),
-        businessStartDate: input.startDate,
       })
     : verifyBizNo(input)
 

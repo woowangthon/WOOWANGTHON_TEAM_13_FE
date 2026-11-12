@@ -4,12 +4,18 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
-import { useCreateStore, useSaveOwnerShifts, useSaveStorePhoto } from '@/pages/owner/api/stores'
+import {
+  DEFAULT_PAYDAY,
+  useCreateStore,
+  useSaveOwnerShifts,
+  useSaveStorePhoto,
+} from '@/pages/owner/api/stores'
 import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
 import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
 import { AddressField } from '@/pages/owner/store/components/AddressField'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
+import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
@@ -20,9 +26,9 @@ import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님) 5단계 (11/11 고정 스케줄 개편)
-//   ① 사업자 확인 → ② 매장 이름 · 주소(검색) · 규모 → ③ 근무 타임(시간 · 인원) · 휴무 → ④ 사장님 근무(건너뛰기)
-//   → [④ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ⑤ 매장 사진(건너뛰기) → 등록 완료
+// 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님) 4단계 (11/12 사업자 확인을 번호만 · ① 에 합침)
+//   ① 매장 이름 · 사업자등록번호(국세청 상태조회) · 주소(검색) · 규모 → ② 근무 타임(시간 · 인원) · 휴무 · 급여일 → ③ 사장님 근무(건너뛰기)
+//   → [③ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ④ 매장 사진(건너뛰기) → 등록 완료
 // 매장 사진은 매장이 생긴 뒤에만 올릴 수 있어서(BE) 맨 끝이다
 // 역할 선택에서 [사장님]을 고르거나 마이페이지 [매장 추가]로 여기 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
 
@@ -32,8 +38,8 @@ const SIZES: { label: string; size: StoreSize }[] = [
   { label: '5인 이상', size: 'over5' },
 ]
 
-type Step = 'biz' | 'info' | 'shifts' | 'owner' | 'photo'
-const STEP_TOTAL = 5
+type Step = 'info' | 'shifts' | 'owner' | 'photo'
+const STEP_TOTAL = 4
 
 const initialRows = (): ShiftRow[] =>
   DEFAULT_SHIFT_TEMPLATES.map((t, i) => ({ ...t, key: `row_${i}` }))
@@ -48,7 +54,7 @@ export default function StoreCreatePage() {
   const saveShifts = useSaveOwnerShifts()
   const savePhoto = useSaveStorePhoto()
   const { setCurrentStoreId } = useOwnerStore()
-  const [step, setStep] = useState<Step>('biz')
+  const [step, setStep] = useState<Step>('info')
   const [verificationId, setVerificationId] = useState<number | null>(null)
   const [name, setName] = useState('')
   /** 주소 검색에서 고른 도로명 주소 + 상세 주소 */
@@ -58,10 +64,11 @@ export default function StoreCreatePage() {
   const [rows, setRows] = useState<ShiftRow[]>(initialRows)
   const [closedWeekdays, setClosedWeekdays] = useState<number[]>([])
   const [closedOnHolidays, setClosedOnHolidays] = useState(false)
+  const [payday, setPayday] = useState(DEFAULT_PAYDAY)
   /** 사장님 근무 칸: cellKey(줄 key, 요일) */
   const [ownerCells, setOwnerCells] = useState<Set<string>>(new Set())
   const [photo, setPhoto] = useState<File | null>(null)
-  /** ④ 끝에서 만든 매장 (다시 시도해도 두 번 만들지 않게) */
+  /** ③ 끝에서 만든 매장 (다시 시도해도 두 번 만들지 않게) */
   const [created, setCreated] = useState<OwnerStore | null>(null)
   const [done, setDone] = useState(false)
   const size = SIZES.find((s) => s.label === sizeLabel)?.size ?? 'under5'
@@ -86,7 +93,7 @@ export default function StoreCreatePage() {
     }
   }
 
-  // 사장님 근무 저장 → ⑤ 사진. 실패해도 매장은 있으니 다시 시도하거나 건너뛸 수 있다
+  // 사장님 근무 저장 → ④ 사진. 실패해도 매장은 있으니 다시 시도하거나 건너뛸 수 있다
   const saveOwner = (store: OwnerStore, shifts: OwnerShift[]) => {
     if (shifts.length === 0) return setStep('photo')
     saveShifts.mutate(
@@ -101,7 +108,7 @@ export default function StoreCreatePage() {
     )
   }
 
-  // ④ [다음] · [건너뛰기]: 매장 만들기(처음 한 번) → 사장님 근무
+  // ③ [다음] · [건너뛰기]: 매장 만들기(처음 한 번) → 사장님 근무
   const submit = (shifts: OwnerShift[]) => {
     if (created) return saveOwner(created, shifts)
     create.mutate(
@@ -109,6 +116,7 @@ export default function StoreCreatePage() {
         name: name.trim(),
         address: [address, addressDetail.trim()].filter(Boolean).join(' '),
         size,
+        payday,
         businessVerificationId: verificationId!,
         shiftTemplates: rows.map((r) => ({
           name: r.name.trim(),
@@ -129,7 +137,7 @@ export default function StoreCreatePage() {
           // 사업자 확인 결과를 못 쓰면(400) 확인부터 다시
           if (error instanceof ApiError && error.status === 400) {
             setVerificationId(null)
-            setStep('biz')
+            setStep('info')
             return toast.error('사업자 확인을 다시 해 주세요')
           }
           toastApiError(error, '등록하지 못했어요. 다시 시도해 주세요', () => submit(shifts))
@@ -162,36 +170,9 @@ export default function StoreCreatePage() {
 
   const pending = create.isPending || saveShifts.isPending
 
-  if (step === 'biz')
-    return (
-      <StepFrame step={1} title="사업자 확인" onBack={() => navigate(from)}>
-        <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
-        <Button
-          className="mt-auto h-14 text-base"
-          disabled={verificationId === null}
-          onClick={() => setStep('info')}
-        >
-          다음
-        </Button>
-        {/* 개발 서버에서만: 사업자번호 없이 다음 단계 확인용 (진짜 BE 는 매장 만들 때 400) */}
-        {import.meta.env.DEV && (
-          <button
-            type="button"
-            onClick={() => {
-              setVerificationId(1)
-              setStep('info')
-            }}
-            className="-mt-2 self-center p-0 text-xs font-semibold text-subtle underline"
-          >
-            [개발용] 사업자 확인 건너뛰기
-          </button>
-        )}
-      </StepFrame>
-    )
-
   if (step === 'info')
     return (
-      <StepFrame step={2} title="매장 정보" onBack={() => setStep('biz')}>
+      <StepFrame step={1} title="매장 정보" onBack={() => navigate(from)}>
         <div className="flex flex-col gap-2.5">
           <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
             <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
@@ -202,6 +183,7 @@ export default function StoreCreatePage() {
               className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
             />
           </label>
+          <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
           <AddressField
             address={address}
             onAddressChange={setAddress}
@@ -238,7 +220,7 @@ export default function StoreCreatePage() {
         </div>
         <Button
           className="mt-auto h-14 text-base"
-          disabled={!name.trim() || !address.trim()}
+          disabled={!name.trim() || verificationId === null || !address.trim()}
           onClick={() => setStep('shifts')}
         >
           다음
@@ -248,7 +230,7 @@ export default function StoreCreatePage() {
 
   if (step === 'shifts')
     return (
-      <StepFrame step={3} title="근무 타임 · 휴무" onBack={() => setStep('info')}>
+      <StepFrame step={2} title="근무 타임 · 휴무 · 급여일" onBack={() => setStep('info')}>
         <ShiftTemplateStep
           rows={rows}
           onRowsChange={setRows}
@@ -258,6 +240,10 @@ export default function StoreCreatePage() {
           onClosedOnHolidaysChange={setClosedOnHolidays}
           error={rowsError}
         />
+        <section className="flex flex-col gap-2.5">
+          <span className="px-1 text-[13px] font-bold text-muted-foreground">급여일</span>
+          <PaydayField value={payday} onChange={setPayday} />
+        </section>
         <Button
           className="mt-auto h-14 shrink-0 text-base"
           disabled={!!rowsError}
@@ -270,7 +256,7 @@ export default function StoreCreatePage() {
 
   if (step === 'owner')
     return (
-      <StepFrame step={4} title="사장님 근무" onBack={() => setStep(created ? 'photo' : 'shifts')}>
+      <StepFrame step={3} title="사장님 근무" onBack={() => setStep(created ? 'photo' : 'shifts')}>
         <span className="px-1 text-[13px] text-muted-foreground">
           사장님도 근무하는 요일 · 타임을 눌러 주세요. 같은 날 여러 타임도 돼요
         </span>
@@ -301,7 +287,7 @@ export default function StoreCreatePage() {
     )
 
   return (
-    <StepFrame step={5} title="매장 사진" onBack={() => setDone(true)}>
+    <StepFrame step={4} title="매장 사진" onBack={() => setDone(true)}>
       <StorePhotoStep value={photo} onChange={setPhoto} />
       {photo ? (
         <Button
@@ -320,7 +306,7 @@ export default function StoreCreatePage() {
   )
 }
 
-/** 단계 화면 틀: 위쪽 뒤로 + 제목 위 "사장님 · 3 / 5" */
+/** 단계 화면 틀: 위쪽 뒤로 + 제목 위 "사장님 · 2 / 4" */
 function StepFrame({
   step,
   title,
@@ -362,10 +348,8 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
         className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
         style={{
           backgroundColor: theme.color,
-          // 매장 사진을 넣었으면 글씨가 보이게 어둡게 깔고 사진을 보여 준다
-          backgroundImage: store.photoUrl
-            ? `linear-gradient(rgba(20,28,22,0.25), rgba(20,28,22,0.65)), url(${store.photoUrl})`
-            : undefined,
+          // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
+          backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
         }}
       >
         <span
@@ -374,7 +358,12 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
         >
           <Check className="size-[30px]" />
         </span>
-        <div className="flex flex-col gap-[18px]">
+        <div
+          className={cn(
+            'flex flex-col gap-[18px]',
+            store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
+          )}
+        >
           <div className="flex flex-col gap-2.5">
             <p className="m-0 text-sm opacity-75">사장님</p>
             <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">

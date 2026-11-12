@@ -112,7 +112,7 @@ export async function createStore(input: NewStore): Promise<OwnerStore> {
     address: input.address.trim(),
     theme: THEME_ORDER[db.stores.length % THEME_ORDER.length],
     photoUrl: null as string | null,
-    payday: 10,
+    payday: input.payday,
     size: input.size,
     bizNo: input.bizNo ?? null,
     closedWeekdays: input.closedWeekdays,
@@ -153,7 +153,7 @@ export async function deleteStore(storeId: string): Promise<void> {
   })
 }
 
-/** POST /business-numbers/verify (제안, P2 국세청 상태조회) — 시연: 10자리면 정상 */
+/** POST /stores/business-verifications (국세청 상태조회) — 시연: 10자리면 정상 */
 export async function verifyBizNo(input: BizVerifyInput): Promise<BizVerification> {
   await wait(1200)
   if (input.bizNo.replace(/\D/g, '').length !== 10) {
@@ -260,22 +260,25 @@ export async function removeMember(memberId: string): Promise<void> {
 const memberName = (memberId: string) =>
   memberId === 'owner' ? '사장님' : (db.members.find((m) => m.memberId === memberId)?.name ?? '')
 
-/** GET /stores/{storeId}/on-duty (제안) — 지금 근무 중 */
-export async function getOnDuty(storeId: string): Promise<{ onDuty: OnDuty | null }> {
+/** 가짜 서버: 지금 근무 중 (시연 — 정해 둔 직원 한 명. 진짜는 근무 달력에서 계산) */
+export async function getOnDuty(storeId: string): Promise<{ people: OnDuty[] }> {
   await wait(150)
   const now = onDuty[storeId]
   const pattern = shiftPatterns[storeId]?.find((p) => p.memberId === now?.memberId)
-  if (!now || !pattern) return { onDuty: null }
+  if (!now || !pattern) return { people: [] }
   const member = db.members.find((m) => m.memberId === now.memberId)
-  if (!member || member.status === 'removed') return { onDuty: null }
+  if (!member || member.status === 'removed') return { people: [] }
   return {
-    onDuty: {
-      name: member.name,
-      role: pattern.start >= '15:00' ? '마감' : '오픈',
-      start: pattern.start,
-      end: pattern.end,
-      clockIn: now.clockIn,
-    },
+    people: [
+      {
+        userId: member.memberId,
+        name: member.name,
+        isOwner: false,
+        shiftName: pattern.start >= '15:00' ? '마감' : '오픈',
+        start: pattern.start,
+        end: pattern.end,
+      },
+    ],
   }
 }
 

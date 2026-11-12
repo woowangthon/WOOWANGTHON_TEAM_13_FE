@@ -2,7 +2,7 @@ import { Camera, Images, Store } from 'lucide-react'
 import { useEffect, useMemo, type ReactNode } from 'react'
 import { toast } from '@/ui/toastStore'
 
-// 매장 등록 ⑤ 매장 사진 (선택): 찍기 · 갤러리(파일)에서 고르기. 저장하면 사장님 홈 매장 카드에 보인다
+// 매장 등록 ④ 매장 사진 (선택): 찍기 · 갤러리(파일)에서 고르기. 저장하면 사장님 홈 매장 카드에 보인다
 // 자르기는 나중에 정한다 (11/11)
 
 const MAX_BYTES = 10 * 1024 * 1024
