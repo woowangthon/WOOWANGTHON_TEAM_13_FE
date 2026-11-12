@@ -4,12 +4,18 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
-import { useCreateStore, useSaveOwnerShifts, useSaveStorePhoto } from '@/pages/owner/api/stores'
+import {
+  DEFAULT_PAYDAY,
+  useCreateStore,
+  useSaveOwnerShifts,
+  useSaveStorePhoto,
+} from '@/pages/owner/api/stores'
 import type { OwnerStore, StoreSize } from '@/pages/owner/api/types'
 import { BizVerifyForm } from '@/pages/owner/components/BizVerifyForm'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
 import { AddressField } from '@/pages/owner/store/components/AddressField'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
+import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
@@ -21,7 +27,7 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 매장 등록 (온보딩, 디자인: 로그인 → 역할 선택 → 사장님) 4단계 (11/12 사업자 확인을 번호만 · ① 에 합침)
-//   ① 매장 이름 · 사업자등록번호(국세청 상태조회) · 주소(검색) · 규모 → ② 근무 타임(시간 · 인원) · 휴무 → ③ 사장님 근무(건너뛰기)
+//   ① 매장 이름 · 사업자등록번호(국세청 상태조회) · 주소(검색) · 규모 → ② 근무 타임(시간 · 인원) · 휴무 · 급여일 → ③ 사장님 근무(건너뛰기)
 //   → [③ 끝에서 매장 등록 + 사장님 고정 근무 저장] → ④ 매장 사진(건너뛰기) → 등록 완료
 // 매장 사진은 매장이 생긴 뒤에만 올릴 수 있어서(BE) 맨 끝이다
 // 역할 선택에서 [사장님]을 고르거나 마이페이지 [매장 추가]로 여기 온다 (/owner/store/new). BE 는 사업자 확인(VERIFIED) 결과가 있어야 매장을 만든다
@@ -58,6 +64,7 @@ export default function StoreCreatePage() {
   const [rows, setRows] = useState<ShiftRow[]>(initialRows)
   const [closedWeekdays, setClosedWeekdays] = useState<number[]>([])
   const [closedOnHolidays, setClosedOnHolidays] = useState(false)
+  const [payday, setPayday] = useState(DEFAULT_PAYDAY)
   /** 사장님 근무 칸: cellKey(줄 key, 요일) */
   const [ownerCells, setOwnerCells] = useState<Set<string>>(new Set())
   const [photo, setPhoto] = useState<File | null>(null)
@@ -109,6 +116,7 @@ export default function StoreCreatePage() {
         name: name.trim(),
         address: [address, addressDetail.trim()].filter(Boolean).join(' '),
         size,
+        payday,
         businessVerificationId: verificationId!,
         shiftTemplates: rows.map((r) => ({
           name: r.name.trim(),
@@ -222,7 +230,7 @@ export default function StoreCreatePage() {
 
   if (step === 'shifts')
     return (
-      <StepFrame step={2} title="근무 타임 · 휴무" onBack={() => setStep('info')}>
+      <StepFrame step={2} title="근무 타임 · 휴무 · 급여일" onBack={() => setStep('info')}>
         <ShiftTemplateStep
           rows={rows}
           onRowsChange={setRows}
@@ -232,6 +240,10 @@ export default function StoreCreatePage() {
           onClosedOnHolidaysChange={setClosedOnHolidays}
           error={rowsError}
         />
+        <section className="flex flex-col gap-2.5">
+          <span className="px-1 text-[13px] font-bold text-muted-foreground">급여일</span>
+          <PaydayField value={payday} onChange={setPayday} />
+        </section>
         <Button
           className="mt-auto h-14 shrink-0 text-base"
           disabled={!!rowsError}
@@ -336,9 +348,8 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
         className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
         style={{
           backgroundColor: theme.color,
-          // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 그림자로)
+          // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
           backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
-          textShadow: store.photoUrl ? '0 1px 10px rgba(0,0,0,0.45)' : undefined,
         }}
       >
         <span
@@ -347,7 +358,12 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
         >
           <Check className="size-[30px]" />
         </span>
-        <div className="flex flex-col gap-[18px]">
+        <div
+          className={cn(
+            'flex flex-col gap-[18px]',
+            store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
+          )}
+        >
           <div className="flex flex-col gap-2.5">
             <p className="m-0 text-sm opacity-75">사장님</p>
             <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
