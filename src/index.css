@@ -7,6 +7,7 @@
  */
 
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://cdn.jsdelivr.net/gh/sun-typeface/SUITE@2/fonts/variable/woff2/SUITE-Variable.css');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -103,6 +104,18 @@
 /* 다크 카드 텍스처: <div className="bg-brand texture"> */
 @utility texture {
   background-image: var(--texture);
+}
+
+/* SUITE 글꼴: 사장님 홈 인사말에만 (11/13, 다른 글씨는 Pretendard). 불러오기 실패하면 Pretendard → 시스템 글꼴 */
+@utility font-suite {
+  font-family:
+    'SUITE Variable',
+    SUITE,
+    'Pretendard Variable',
+    Pretendard,
+    -apple-system,
+    system-ui,
+    sans-serif;
 }
 
 /* 가로 스크롤 줄에서 스크롤바 숨기기 */
