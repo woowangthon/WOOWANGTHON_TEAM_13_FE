@@ -1,13 +1,12 @@
 import { Bell, CalendarDays, ChevronDown, Coffee, House, MessagesSquare, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import logo from '@/assets/logo-crewbean.webp'
 import { useNotifications } from '@/lib/api/notifications'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
 import { LoadError } from '@/shared/LoadError'
-import { STORE_ICON } from '@/shared/icons'
-import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
 import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
 import { Spinner } from '@/ui/Spinner'
@@ -15,7 +14,8 @@ import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 알바 화면 공통 틀 (상단 매장 전환 · 하단 탭: 홈 · 레시피 · + 인수인계 · AI 사수 · 근무)
+// 알바 화면 공통 틀 (상단: 왼쪽 매장 전환 · 가운데 crewBean 로고 · 오른쪽 알림 · 프로필 / 하단 탭: 홈 · 레시피 · + 인수인계 · AI 사수 · 근무)
+// 로고는 누르면 알바 홈, 이미 홈이면 맨 위로 (앱 로고를 누르면 처음으로 가는 흔한 동작)
 
 const NAV_ITEMS: BottomNavItem[] = [
   { to: '/staff', label: '홈', icon: House, end: true, alsoActive: ['/staff/handover'] },
@@ -35,7 +35,6 @@ export default function StaffLayout() {
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const StoreIcon = STORE_ICON[store.icon]
   // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
   const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)
@@ -51,7 +50,7 @@ export default function StaffLayout() {
     <StaffFrame store={store}>
       <header
         className={cn(
-          'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 flex items-center justify-between gap-2.5 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
+          'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
           scrolled &&
             'bg-white/80 shadow-[0_1px_0_rgba(40,46,36,0.06)] backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-white',
         )}
@@ -59,15 +58,28 @@ export default function StaffLayout() {
         <button
           type="button"
           onClick={() => setStoreSheetOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-card py-1.5 pr-3.5 pl-1.5 text-[15px] font-bold"
+          aria-label={`매장 바꾸기 · 지금 ${store.name}`}
+          // 왼쪽 칸 폭(375px 에서 124px) 안에서만: 이름 + ▾ 만 (꾸밈 아이콘 원 없이), 길면 "달빛…"처럼 말줄임.
+          // 흰 바탕 위 크림색 알약이라 옅은 테두리로 구분 (docs/08 4)
+          className="flex h-10 max-w-full min-w-0 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold"
         >
-          <StoreAvatar color={store.color} size={30}>
-            <StoreIcon className="size-4" fill="currentColor" />
-          </StoreAvatar>
-          {store.name}
-          <ChevronDown className="size-[18px] text-muted-foreground" />
+          <span className="min-w-0 truncate">{store.name}</span>
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
         </button>
-        <span className="flex items-center gap-2">
+        <Link
+          to="/staff"
+          aria-label="crewBean 홈"
+          onClick={(event) => {
+            if (pathname !== '/staff') return
+            event.preventDefault()
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+          }}
+          className="flex h-10 items-center justify-self-center"
+        >
+          <img src={logo} alt="crewBean" width={451} height={144} className="h-6 w-auto" />
+        </Link>
+        <span className="flex items-center gap-2 justify-self-end">
           <Link
             to="/staff/notifications"
             aria-label={unread > 0 ? `알림 · 안 읽은 알림 ${unread}개` : '알림'}

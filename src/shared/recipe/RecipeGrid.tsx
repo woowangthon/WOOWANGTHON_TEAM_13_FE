@@ -3,6 +3,7 @@ import type { RecipeSummary } from '@/lib/api/types'
 import { CATEGORY_ICON, DEFAULT_CATEGORY_ICON, getCategoryTint } from '@/shared/icons'
 import { RecipePhoto } from '@/shared/recipe/RecipePhoto'
 import { PRESSABLE, PRESSABLE_CARD } from '@/shared/pressable'
+import { useRevealChildren } from '@/shared/useReveal'
 import { cn } from '@/ui/utils'
 import { Badge } from '@/ui/Badge'
 
@@ -78,8 +79,10 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
 }
 
 function CleanGrid({ recipes, getHref }: Omit<RecipeGridProps, 'variant'>) {
+  // 스크롤해서 처음 보이는 줄마다 살짝 떠오르기 (shared/useReveal) — 메뉴가 바뀌면(카테고리 · 검색) 다시 본다
+  const gridRef = useRevealChildren<HTMLDivElement>([recipes.map((r) => r.recipeId).join()])
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div ref={gridRef} className="grid grid-cols-2 gap-2">
       {recipes.map((r) => {
         const Icon = CATEGORY_ICON[r.category] ?? DEFAULT_CATEGORY_ICON
         const [tint, ink] = getCategoryTint(r.category)
