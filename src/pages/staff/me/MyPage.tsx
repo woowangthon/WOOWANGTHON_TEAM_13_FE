@@ -1,4 +1,4 @@
-import { LoaderCircle, LogOut, Pencil, X } from 'lucide-react'
+import { BookOpen, ChevronRight, LoaderCircle, LogOut, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
@@ -15,6 +15,7 @@ import { useCloseTo } from '@/lib/useCloseTo'
 import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
+import { PRESSABLE_CARD } from '@/shared/pressable'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { Header } from '@/ui/Header'
@@ -274,6 +275,30 @@ export default function MyPage() {
             {codeError}
           </span>
         )}
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">도움말</h2>
+        <button
+          type="button"
+          // 다 보면(또는 건너뛰면) 마이페이지로 돌아온다
+          onClick={() => navigate('/staff/guide', { state: { returnTo: '/staff/me' } })}
+          className={cn(
+            'flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left shadow-soft',
+            PRESSABLE_CARD,
+          )}
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+            <BookOpen className="size-5" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+            <span className="text-base font-extrabold">앱 사용법</span>
+            <span className="text-[13px] text-muted-foreground">
+              탭마다 무엇을 하는지 다시 보기
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-subtle" />
+        </button>
       </section>
 
       <div className="mt-1.5 flex flex-col gap-2.5">

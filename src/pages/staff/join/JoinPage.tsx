@@ -122,7 +122,8 @@ export default function JoinPage() {
       <JoinDone
         invite={joined.invite}
         theme={joined.theme}
-        onStart={() => navigate('/staff', { replace: true })}
+        // 처음 들어온 알바생: 앱 사용법을 보고 알바 홈으로
+        onStart={() => navigate('/staff/guide', { replace: true })}
       />
     )
 
