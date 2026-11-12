@@ -1,19 +1,18 @@
 import { Check } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
-import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
 import { useVerifyBizNo } from '@/pages/owner/api/stores'
-import { Button } from '@/ui/Button'
-import { Input } from '@/ui/Input'
 import { toast } from '@/ui/toastStore'
+import { cn } from '@/ui/utils'
 
-// 사업자 확인 (매장 등록 ① 단계 — 온보딩 · 마이페이지 [매장 추가] 둘 다 이 화면): 번호 · 대표자 이름 · 개업일 → 국세청 진위확인
-// VERIFIED 면 onVerified(확인 번호), 칸을 고치면 다시 확인해야 해서 onVerified(null)
+// 사업자등록번호 칸 (매장 등록 ① 매장 정보 안 — 온보딩 · 마이페이지 [매장 추가] 둘 다): 번호만 → 국세청 상태조회 (BE #40)
+// 지금 영업 중(계속사업자)이면 VERIFIED → onVerified(확인 번호), 번호를 고치면 다시 확인해야 해서 onVerified(null)
+// 시연 · 테스트는 000-00-00000 (BE 가 국세청 없이 VERIFIED)
 
 // BE 오류는 영어 문장이라 상태별로 화면 문구를 고른다
 const VERIFY_ERROR: Record<number, string> = {
-  422: '입력한 내용을 다시 확인해 주세요',
+  422: '사업자등록번호 10자리를 다시 확인해 주세요',
   502: '국세청 확인이 잠시 안 돼요. 잠시 뒤 다시 시도해 주세요',
   503: '지금은 사업자 확인을 할 수 없어요. 잠시 뒤 다시 시도해 주세요',
 }
@@ -25,8 +24,6 @@ const formatBizNo = (value: string) => {
   return d
 }
 
-const today = () => new Date().toLocaleDateString('sv-SE')
-
 export function BizVerifyForm({
   verified,
   onVerified,
@@ -35,29 +32,26 @@ export function BizVerifyForm({
   verified: boolean
   onVerified: (verificationId: number | null) => void
 }) {
-  const nickname = useAuthStore((state) => state.me?.nickname)
   const [bizNo, setBizNo] = useState('')
-  const [ownerName, setOwnerName] = useState(nickname ?? '')
-  const [startDate, setStartDate] = useState('')
   const [error, setError] = useState('')
   const verify = useVerifyBizNo()
 
-  const filled = bizNo.replace(/\D/g, '').length === 10 && !!ownerName.trim() && !!startDate
+  const filled = bizNo.replace(/\D/g, '').length === 10
 
-  // 칸을 고치면 확인을 다시 받는다
-  const change = (set: (value: string) => void) => (value: string) => {
-    set(value)
+  // 번호를 고치면 확인을 다시 받는다
+  const change = (value: string) => {
+    setBizNo(formatBizNo(value))
     setError('')
     if (verified) onVerified(null)
   }
 
   const check = () =>
     verify.mutate(
-      { bizNo, ownerName, startDate },
+      { bizNo },
       {
         onSuccess: (result) => {
           if (result.status === 'VERIFIED') return onVerified(result.verificationId)
-          setError('국세청 정보와 맞지 않아요. 번호 · 대표자 이름 · 개업일을 다시 확인해 주세요')
+          setError('영업 중인 사업자로 확인되지 않아요. 번호를 다시 확인해 주세요')
         },
         onError: (err) => {
           const known = err instanceof ApiError ? VERIFY_ERROR[err.status] : undefined
@@ -68,50 +62,46 @@ export function BizVerifyForm({
     )
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <Input
-        variant="card"
-        inputMode="numeric"
-        value={bizNo}
-        onChange={(event) => change(setBizNo)(formatBizNo(event.target.value))}
-        placeholder="사업자등록번호 000-00-00000"
-        aria-label="사업자등록번호"
-      />
-      <Input
-        variant="card"
-        value={ownerName}
-        onChange={(event) => change(setOwnerName)(event.target.value)}
-        placeholder="대표자 이름 (사업자등록증과 같게)"
-        aria-label="대표자 이름"
-      />
-      <label className="flex h-[52px] items-center justify-between gap-3 rounded-full bg-card px-[18px] text-[15px]">
-        <span className="shrink-0 text-subtle">개업일</span>
+    <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+      <span className="text-xs font-bold text-muted-foreground">사업자등록번호</span>
+      <div className="flex items-center gap-2">
         <input
-          type="date"
-          value={startDate}
-          max={today()}
-          onChange={(event) => change(setStartDate)(event.target.value)}
-          aria-label="개업일"
-          className="min-w-0 flex-1 border-none bg-transparent p-0 text-right text-[15px]"
+          inputMode="numeric"
+          value={bizNo}
+          onChange={(event) => change(event.target.value)}
+          placeholder="000-00-00000"
+          aria-label="사업자등록번호"
+          className="min-w-0 flex-1 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
         />
-      </label>
-      <span className="px-2 text-xs text-muted-foreground">
-        사업자등록증에 있는 대로 넣으면 국세청에서 확인해요
-      </span>
-      {error && (
-        <span role="alert" className="px-2 text-[13px] text-destructive-foreground">
+        {verified ? (
+          <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-brand">
+            <Check className="size-[18px]" />
+            확인됐어요
+          </span>
+        ) : (
+          <button
+            type="button"
+            disabled={!filled || verify.isPending}
+            onClick={check}
+            className={cn(
+              'h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-transform enabled:active:scale-[0.97]',
+              filled ? 'bg-ink text-white' : 'bg-background text-faint',
+            )}
+          >
+            {verify.isPending ? '확인 중…' : '확인'}
+          </button>
+        )}
+      </div>
+      {error ? (
+        <span role="alert" className="text-[13px] text-destructive-foreground">
           {error}
         </span>
-      )}
-      {verified ? (
-        <div className="flex h-[52px] items-center justify-center gap-1.5 rounded-full bg-accent text-sm font-bold text-brand">
-          <Check className="size-[18px]" />
-          확인됐어요
-        </div>
       ) : (
-        <Button variant="ink" disabled={!filled || verify.isPending} onClick={check}>
-          {verify.isPending ? '확인 중…' : '확인'}
-        </Button>
+        !verified && (
+          <span className="text-xs text-muted-foreground">
+            국세청에서 영업 중인 사업자인지 확인해요
+          </span>
+        )
       )}
     </div>
   )

@@ -21,7 +21,7 @@ import { Toaster } from '@/ui/Toast'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · [매장 추가] → 매장 등록 5단계) · 로그아웃 · 탈퇴
+// 사장님 마이페이지: 이름 · 연결된 계정 · 내 매장(상세 · 삭제 · [매장 추가] → 매장 등록 4단계) · 로그아웃 · 탈퇴
 export default function OwnerMyPage() {
   const navigate = useNavigate()
   const close = useCloseTo('/owner')
@@ -64,7 +64,7 @@ export default function OwnerMyPage() {
             />
           ))
         )}
-        {/* 매장 추가는 온보딩과 같은 5단계로 (사업자 확인 · 근무 타임 · 사진까지) */}
+        {/* 매장 추가는 온보딩과 같은 4단계로 (사업자등록번호 · 근무 타임 · 사진까지) */}
         <Link
           to="/owner/store/new"
           state={{ from: '/owner/me' }}

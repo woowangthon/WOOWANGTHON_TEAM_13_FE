@@ -82,13 +82,10 @@ export interface OwnerSubstituteRequest {
   requester: ScheduleWorker
 }
 
-/** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */
+/** 사업자 확인 요청 (POST /business-verifications, 국세청 상태조회 · 시연 000-00-00000) */
 export interface BizVerifyInput {
   /** 000-00-00000 (BE 가 - 를 뺀다) */
   bizNo: string
-  ownerName: string
-  /** 개업일 YYYY-MM-DD */
-  startDate: string
 }
 
 /** 사업자 확인 결과 — VERIFIED 여야 매장을 등록할 수 있다 */

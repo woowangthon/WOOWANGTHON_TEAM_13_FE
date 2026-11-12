@@ -222,7 +222,7 @@ export function useSaveOwnerShifts() {
   })
 }
 
-/** 매장 사진 올리기 (온보딩 ⑤) */
+/** 매장 사진 올리기 (온보딩 ④) */
 export function useSaveStorePhoto() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -248,13 +248,11 @@ export function useDeleteStore() {
   })
 }
 
-// 사업자 확인: 번호 · 대표자 이름 · 개업일이 국세청과 맞으면 VERIFIED (아니면 INVALID, 에러 아님)
+// 사업자 확인: 번호만 → 국세청 상태조회, 계속사업자면 VERIFIED (휴업 · 폐업 · 미등록은 INVALID, 에러 아님 · BE #40)
 const postBizVerification = (input: BizVerifyInput): Promise<BizVerification> =>
   isRealApi('stores')
     ? http.post<BizVerification>('/business-verifications', {
         businessRegistrationNumber: input.bizNo,
-        ownerName: input.ownerName.trim(),
-        businessStartDate: input.startDate,
       })
     : verifyBizNo(input)
 
