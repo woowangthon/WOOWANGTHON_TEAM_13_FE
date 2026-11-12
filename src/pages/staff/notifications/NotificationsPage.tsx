@@ -1,4 +1,12 @@
-import { ArrowLeftRight, Bell, ClipboardList, MessageCircleReply, UserCheck } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  Bell,
+  CalendarClock,
+  ClipboardList,
+  MessageCircleReply,
+  UserCheck,
+  UserX,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -17,22 +25,25 @@ import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 import { cn } from '@/ui/utils'
 
-// 알림: 최신 순 (대타 요청 · 대타 구해짐 · 사장님 답변). 화면을 열면 전부 읽음(POST /read) → 헤더 뱃지 0.
+// 알림: 최신 순 (대타 요청 · 대타 구해짐 · 대타 거절 · 근무 변경 · 사장님 답변). 화면을 열면 전부 읽음(POST /read) → 헤더 뱃지 0.
 // 이번에 열었을 때 안 읽었던 것은 점을 남겨 둔다 (읽음 처리 뒤에도 무엇이 새로 왔는지 보이게)
 
 const ICON: Record<string, typeof Bell> = {
   SUBSTITUTE_REQUESTED: ArrowLeftRight,
   SUBSTITUTE_ACCEPTED: UserCheck,
+  SUBSTITUTE_REJECTED: UserX,
+  DAILY_SCHEDULE_CHANGED: CalendarClock,
   OWNER_ANSWERED: MessageCircleReply,
   HANDOVER_CREATED: ClipboardList,
 }
 
 /**
- * 누르면 갈 곳: 대타 → 근무표(받은 대타 카드) · 사장님 답변 → AI 사수 채팅(사장님 답변 위치로) · 그 외 → 홈.
+ * 누르면 갈 곳: 대타 · 근무 변경 → 근무표 · 사장님 답변 → AI 사수 채팅(사장님 답변 위치로) · 그 외 → 홈.
+ * 근무 변경(daily_schedule)의 target.id 는 날짜가 아니라 변경 기록 ID 라서 그날이 아닌 근무 탭으로 간다 (날짜는 본문에만)
  * 사장님 답변의 target.id 는 채팅방 ID 지만, 알바 채팅은 매장마다 방 1개(useAssistantChat 의 chats[0])라 /staff/chat 으로 가면 그 방이다
  */
 const targetPath = (n: AppNotification) =>
-  n.target.kind === 'substitute_request'
+  n.target.kind === 'substitute_request' || n.target.kind === 'daily_schedule'
     ? '/staff/schedule'
     : n.target.kind === 'assistant_chat'
       ? '/staff/chat'
