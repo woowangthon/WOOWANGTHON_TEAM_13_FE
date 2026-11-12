@@ -106,11 +106,13 @@
   background-image: var(--texture);
 }
 
-/* SUITE 글꼴: 사장님 홈 인사말에만 (11/13, 다른 글씨는 Pretendard). 불러오기 실패하면 시스템 글꼴 */
+/* SUITE 글꼴: 사장님 홈 인사말에만 (11/13, 다른 글씨는 Pretendard). 불러오기 실패하면 Pretendard → 시스템 글꼴 */
 @utility font-suite {
   font-family:
     'SUITE Variable',
     SUITE,
+    'Pretendard Variable',
+    Pretendard,
     -apple-system,
     system-ui,
     sans-serif;
