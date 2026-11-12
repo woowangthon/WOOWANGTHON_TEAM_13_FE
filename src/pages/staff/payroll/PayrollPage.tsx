@@ -2,11 +2,14 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useMyPayrollEstimates } from '@/lib/api/payroll'
-import { myUserId, useMySchedule, useScheduleCalendars } from '@/lib/api/schedule'
+import { myUserId, overlaps, useMySchedule, useScheduleCalendars } from '@/lib/api/schedule'
+import { useScheduleWorkersOf } from '@/lib/api/substitute'
 import type { PayWorkDay, PayrollEstimate, TaxType } from '@/lib/api/types'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import { formatDate, formatHours, formatLongDate, formatWon } from '@/lib/format'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
 import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
+import { personColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
@@ -294,6 +297,24 @@ function PayCalendar({
       )
       ?.name.trim() || '근무'
 
+  // 함께 일한 사람: 같은 매장 · 같은 날 근무표에서 내 근무와 시간이 조금이라도 겹치는 다른 사람 (사장님 포함, 한 사람은 한 번, 시작 시간 순).
+  // 근무표를 못 불러왔으면 null → 그 줄을 숨긴다. 색은 근무표 탭과 같은 사람별 파스텔
+  const workersOf = useScheduleWorkersOf(stores.map((s) => s.id))
+  const coworkersOf = (storeIndex: number, workDay: PayWorkDay) => {
+    const shifts = calendars[storeIndex]?.data?.shifts
+    if (!shifts) return null
+    const seen = new Set<string>()
+    return shifts
+      .filter((s) => s.date === workDay.date && s.assignee.userId !== me && overlaps(s, workDay))
+      .sort((a, b) => a.start.localeCompare(b.start))
+      .filter((s) => !seen.has(s.assignee.userId) && seen.add(s.assignee.userId))
+      .map((s) => ({
+        userId: s.assignee.userId,
+        name: s.assignee.name,
+        color: personColor(s.assignee.userId, workersOf[storeIndex]?.data?.workers),
+      }))
+  }
+
   // 그날 매장별 내 근무 (일한 날 · 예정)
   const infoOf = (day: number) =>
     targets.flatMap(({ store, estimate }, storeIndex) =>
@@ -486,6 +507,7 @@ function PayCalendar({
                         .join(' · ')}
                       {selected.length > 1 && !worked && selectedWorked ? ' · 예정' : ''}
                     </span>
+                    <Coworkers people={coworkersOf(storeIndex, workDay)} />
                   </span>
                 </li>
               ))}
@@ -499,5 +521,36 @@ function PayCalendar({
         </section>
       )}
     </>
+  )
+}
+
+/** 상세 카드 근무 덩어리 아래 "함께 · (동그라미) 민수 · 도윤" — 없으면 "혼자 근무", 근무표를 못 불러왔으면(null) 숨김 */
+function Coworkers({
+  people,
+}: {
+  people: { userId: string; name: string; color: readonly [string, string] }[] | null
+}) {
+  if (!people) return null
+  return (
+    <span className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
+      <span className="sr-only">
+        {people.length ? `함께 일한 사람 ${people.map((p) => p.name).join(', ')}` : '혼자 근무'}
+      </span>
+      <span aria-hidden="true" className="text-xs font-bold text-muted-foreground">
+        함께
+      </span>
+      {people.length === 0 ? (
+        <span aria-hidden="true" className="text-muted-foreground">
+          혼자 근무
+        </span>
+      ) : (
+        people.map((p) => (
+          <span key={p.userId} aria-hidden="true" className="flex items-center gap-1 font-semibold">
+            <PersonInitial name={p.name} color={p.color} size={22} />
+            {p.name}
+          </span>
+        ))
+      )}
+    </span>
   )
 }

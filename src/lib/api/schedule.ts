@@ -117,7 +117,8 @@ export function shiftHours(shift: Pick<CalendarShift, 'start' | 'end'>) {
 export const shiftKey = (shift: CalendarShift) =>
   `${shift.dailyShiftId ?? shift.assignmentId}|${shift.date}`
 
-const overlaps = (
+/** 두 근무 시간이 조금이라도 겹치는지 ("09:00"~"13:30" 문자열 비교) */
+export const overlaps = (
   a: Pick<CalendarShift, 'start' | 'end'>,
   b: Pick<CalendarShift, 'start' | 'end'>,
 ) => a.start < b.end && b.start < a.end
