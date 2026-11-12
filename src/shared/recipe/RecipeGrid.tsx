@@ -10,7 +10,7 @@ import { Badge } from '@/ui/Badge'
 // 사진 자리는 납작하게 둬서 한 화면에 더 많이 보이게 한다. 메뉴 사진(imageUrl)이 있으면 사진, 없으면 카테고리 아이콘
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
 // variant
-//   default: 카드마다 그림자 · 모서리 26 · 사진 위 온도 알약 (지금 사장님 화면)
+//   default: 카드마다 그림자 · 모서리 22 · 사진이 카드 위쪽을 꽉 채움(여백 없이) · 이름 14px / 아래 줄 11px · 사진 위 온도 알약 (사장님 화면, 11/13 나현 · 민지 OK)
 //   clean:   그림자 없는 카드(24) + 사진 2:1(16) · 이름 16px / 아래 줄 13px · 온도는 아래 줄 글자로 (docs/08 · 알바 화면)
 interface RecipeGridProps {
   recipes: RecipeSummary[]
@@ -32,12 +32,12 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
             // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
             preventScrollReset
             className={cn(
-              'flex flex-col gap-2 rounded-[26px] bg-card px-2.5 pt-2.5 pb-3 text-foreground shadow-soft',
+              'flex flex-col gap-2 overflow-hidden rounded-[22px] bg-card pb-3 text-foreground shadow-soft',
               PRESSABLE_CARD,
             )}
           >
             <span
-              className="relative flex aspect-[2.4] w-full items-center justify-center overflow-hidden rounded-[18px]"
+              className="relative flex aspect-[2.4] w-full items-center justify-center overflow-hidden"
               style={{ background: tint }}
             >
               <RecipePhoto
@@ -65,9 +65,9 @@ export function RecipeGrid({ recipes, getHref, variant = 'default' }: RecipeGrid
                 </Badge>
               )}
             </span>
-            <span className="flex flex-col gap-[3px] px-1">
-              <span className="text-[15px] leading-[1.3] font-bold break-keep">{r.name}</span>
-              <span className="text-xs text-subtle">
+            <span className="flex flex-col gap-0.5 px-3">
+              <span className="text-sm leading-[1.3] font-bold break-keep">{r.name}</span>
+              <span className="text-[11px] text-subtle">
                 {[r.size, `재료 ${r.ingredients.length}가지`].filter(Boolean).join(' · ')}
               </span>
             </span>
