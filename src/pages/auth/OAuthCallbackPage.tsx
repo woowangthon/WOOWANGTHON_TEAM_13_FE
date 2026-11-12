@@ -57,11 +57,11 @@ export default function OAuthCallbackPage() {
   return (
     <AuthFrame tone="white" className="items-center justify-center gap-2">
       <Spinner className="py-0" label="로그인하는 중" />
-      <p className="m-0 text-[15px] font-semibold text-subtle">로그인하는 중이에요</p>
+      <p className="m-0 text-[15px] font-medium text-muted-foreground">로그인하는 중이에요</p>
       {slow && (
         <p
           role="status"
-          className="m-0 px-6 text-center text-[13px] leading-[1.55] text-balance break-keep text-subtle"
+          className="m-0 px-6 text-center text-[13px] leading-[1.45] font-medium text-balance break-keep text-subtle"
         >
           서버를 깨우는 중이에요. 처음엔 최대 1분 걸릴 수 있어요
         </p>

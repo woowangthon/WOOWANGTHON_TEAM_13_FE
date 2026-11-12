@@ -2,6 +2,7 @@ import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
 import { cn } from '@/ui/utils'
 
 // 초대코드 6칸: 보이는 칸 6개 위에 투명한 입력창 하나를 덮는다 (붙여넣기 · 자동 완성 그대로 동작)
+// 칸 모양 (docs/08 챕터 7): 앱 글꼴 + 고정폭 숫자, 빈 칸 옅은 테두리(흰 바탕 위 구분) · 채운 칸 진한 선 · 입력 중 칸 매장 색 2px · 틀림 빨간 선
 
 interface CodeCellsProps {
   value: string
@@ -17,14 +18,14 @@ export function CodeCells({ value, onChange, error, disabled }: CodeCellsProps) 
         <span
           key={i}
           className={cn(
-            'flex aspect-[0.82] items-center justify-center rounded-[16px] border-2 bg-card font-mono text-2xl font-bold shadow-soft',
+            'flex aspect-[0.82] items-center justify-center rounded-2xl border bg-card text-[26px] font-bold tabular-nums transition-colors duration-150 motion-reduce:transition-none',
             error
               ? 'border-destructive/55'
               : i === value.length
-                ? 'border-brand'
+                ? 'border-brand ring-1 ring-brand ring-inset'
                 : value[i]
                   ? 'border-line'
-                  : 'border-transparent',
+                  : 'border-line/60',
           )}
         >
           {value[i] ?? ''}
