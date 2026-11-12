@@ -89,6 +89,21 @@ export function useScheduleCalendar(storeId: string, startDate: string, endDate:
   })
 }
 
+/**
+ * 여러 매장의 공유 근무 달력 (같은 기간). useScheduleCalendar 와 같은 키라 근무표 탭에서 불러온 게 있으면 그대로 쓴다.
+ * 예상 급여 상세 카드가 근무 이름(오픈 · 마감)을 찾는 데만 써서, 실패해도 토스트 없이 "근무"로 보여 준다
+ */
+export function useScheduleCalendars(storeIds: string[], startDate: string, endDate: string) {
+  return useQueries({
+    queries: storeIds.map((storeId) => ({
+      queryKey: scheduleKeys.calendar(storeId, startDate, endDate),
+      queryFn: () => fetchCalendar(storeId, startDate, endDate),
+      enabled: !!storeId,
+      meta: { silent: true },
+    })),
+  })
+}
+
 /** 근무 시간 (시간 단위, "18:00" ~ "23:00" → 5) */
 export function shiftHours(shift: Pick<CalendarShift, 'start' | 'end'>) {
   const minutes = (time: string) => {
