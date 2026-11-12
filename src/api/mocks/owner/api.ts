@@ -50,6 +50,7 @@ import type {
   WeekShift,
   WorkShift,
 } from '@/pages/owner/api/types'
+import { TAX_RATE, type TaxType } from '@/pages/owner/payroll/tax'
 
 /*
  * 가짜 서버: 사장님 화면 API (제안 모양: src/pages/owner/api/types.ts) — 담당: 나현
@@ -244,6 +245,16 @@ export async function updateHourlyWage(memberId: string, hourlyWage: number): Pr
   if (!member) fail(404, 'NOT_FOUND', '직원을 찾지 못했어요')
   checkWage(hourlyWage)
   member.hourlyWage = hourlyWage
+  return { ...member }
+}
+
+/** PUT /stores/{storeId}/members/{memberId}/tax-type (BE 요청 중) — 급여 공제 */
+export async function updateTaxType(memberId: string, taxType: TaxType): Promise<Member> {
+  await wait()
+  const member = db.members.find((m) => m.memberId === memberId)
+  if (!member) fail(404, 'NOT_FOUND', '직원을 찾지 못했어요')
+  if (member.status !== 'active') fail(400, 'MEMBER_NOT_JOINED', '입장한 뒤에 정할 수 있어요')
+  member.taxType = taxType
   return { ...member }
 }
 
@@ -706,6 +717,10 @@ export async function getStorePayroll(
       const weeklyAllowance = round10(
         weeks.filter((w) => w.eligible).reduce((sum, w) => sum + (w.hours / 5) * m.hourlyWage, 0),
       )
+      const total = basePay + weeklyAllowance
+      const taxType = m.taxType ?? 'none'
+      // 공제는 10원 단위로 (BE 와 같게)
+      const deduction = round10(total * TAX_RATE[taxType])
       return {
         memberId: m.memberId,
         storeId,
@@ -713,7 +728,10 @@ export async function getStorePayroll(
         hours,
         basePay,
         weeklyAllowance,
-        total: basePay + weeklyAllowance,
+        total,
+        taxType,
+        deduction,
+        netPay: total - deduction,
         weeks,
       }
     })

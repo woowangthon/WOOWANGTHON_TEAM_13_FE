@@ -12,7 +12,7 @@ import type { MemberPay, PayrollEstimateList } from '@/pages/owner/api/types'
 
 /*
  * 직원별 이번 달 급여. BE 이름을 화면 모양(MemberPay)으로 바꾼다 (연서 공유):
- * staffName → name · grossPay → total (공제 후는 netPay) · weeklyAllowanceEligible → eligible · today 는 BE 에 없다
+ * staffName → name · grossPay → total · deduction · netPay(공제 후 실수령, 공제는 직원별 taxType) · weeklyAllowanceEligible → eligible · today 는 BE 에 없다
  */
 const fetchStorePayroll = async (
   storeId: string,
@@ -32,6 +32,9 @@ const fetchStorePayroll = async (
       basePay: m.basePay,
       weeklyAllowance: m.weeklyAllowance,
       total: m.grossPay,
+      taxType: m.taxType,
+      deduction: m.deduction,
+      netPay: m.netPay,
       weeks: m.weeks.map((w) => ({
         weekStart: w.weekStart,
         hours: w.hours,

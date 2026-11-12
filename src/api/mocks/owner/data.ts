@@ -59,7 +59,16 @@ function m(
   inviteCode: string,
   shiftLabel: string,
 ): Member {
-  return { memberId, storeId, name, hourlyWage, status, inviteCode, shiftLabel }
+  // 시연: 지은 3.3% · 민수 4대보험, 나머지는 공제 없음 (입장 전은 없음)
+  const taxType =
+    status !== 'active'
+      ? undefined
+      : memberId === 'mbr_jieun'
+        ? '3.3'
+        : memberId === 'mbr_minsu'
+          ? 'ins'
+          : 'none'
+  return { memberId, storeId, name, hourlyWage, status, inviteCode, shiftLabel, taxType }
 }
 
 /** 고정 근무 (요일 0=일 … 6=토). 'owner' 는 사장님 본인 근무 */

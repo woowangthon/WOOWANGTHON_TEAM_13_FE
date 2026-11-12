@@ -1,4 +1,5 @@
 import type { ManualIcon, RecipeTemp, ScheduleWorker, StoreTheme } from '@/lib/api/types'
+import type { TaxType } from '@/pages/owner/payroll/tax'
 
 /*
  * 사장님 화면 API 타입 (임시) — 담당: 나현
@@ -155,6 +156,8 @@ export interface MemberResponse {
   staffName: string
   role: string
   hourlyWage: number
+  /** 급여 공제 (입장 전은 null) */
+  taxType: TaxType | null
   status: 'ACTIVE' | 'LEFT'
   joinedAt: string
   leftAt: string | null
@@ -181,6 +184,8 @@ export interface Member {
   shiftLabel: string
   /** 입장 전에 정해 둔 고정 근무 (초대할 때, BE 칸이 생기기 전에는 가짜 서버만) */
   schedule?: WeekShift[]
+  /** 급여 공제 (입장한 직원만, 입장 전은 없음) */
+  taxType?: TaxType
 }
 
 /** 알바생 추가 (POST /stores/{storeId}/members 제안) — 응답에 초대코드 */
@@ -383,7 +388,7 @@ export interface PayrollEstimateSummary {
   memberId: string
   staffName: string
   hourlyWage: number
-  taxType: 'none' | '3.3' | 'ins'
+  taxType: TaxType
   hours: number
   basePay: number
   weeklyAllowance: number
@@ -416,6 +421,12 @@ export interface MemberPay {
   hours: number
   basePay: number
   weeklyAllowance: number
+  /** 세전 (기본급 + 주휴) */
   total: number
+  taxType: TaxType
+  /** 공제 (3.3% · 4대보험 근로자 부담분) */
+  deduction: number
+  /** 공제 후 실수령 */
+  netPay: number
   weeks: { weekStart: string; hours: number; eligible: boolean }[]
 }

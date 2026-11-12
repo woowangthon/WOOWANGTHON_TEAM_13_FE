@@ -5,10 +5,12 @@ import {
   removeMember,
   updateHourlyWage,
   updateInviteSchedule,
+  updateTaxType,
 } from '@/api/mocks/owner/api'
 import { http, isRealApi } from '@/lib/api/source'
 import { ApiError, apiFetch } from '@/lib/apiClient'
 import { ownerKeys } from '@/pages/owner/api/stores'
+import type { TaxType } from '@/pages/owner/payroll/tax'
 import type {
   InvitationResponse,
   InvitationSummary,
@@ -73,6 +75,7 @@ const fetchMembers = async (storeId: string): Promise<{ members: Member[] }> => 
       storeId,
       name: m.staffName,
       hourlyWage: m.hourlyWage,
+      taxType: m.taxType ?? 'none',
       status: 'active',
       inviteCode: invitations.find((i) => i.invitationId === m.invitationId)?.code ?? '',
       shiftLabel: '알바생',
@@ -134,6 +137,39 @@ const putHourlyWage = async (storeId: string, { memberId, hourlyWage, invited }:
   await apiFetch(`/stores/${storeId}/members/${memberId}/hourly-wage`, {
     method: 'PUT',
     body: JSON.stringify({ hourlyWage }),
+  })
+}
+
+/**
+ * 급여 공제(taxType) 바꾸기 — BE 는 저장 · 계산은 하지만 바꾸는 API 가 아직 없다 (요청 중, 제안: PUT …/members/{memberId}/tax-type).
+ * 생기면 true 로. 그 전에는 진짜 모드에서 고를 수 없게 안내만
+ */
+const TAX_TYPE_IN_BE = false
+export const canSetTaxType = () => !isRealApi('members') || TAX_TYPE_IN_BE
+
+const putTaxType = async (
+  storeId: string,
+  { memberId, taxType }: { memberId: string; taxType: TaxType },
+) => {
+  if (!isRealApi('members')) {
+    await updateTaxType(memberId, taxType)
+    return
+  }
+  await apiFetch(`/stores/${storeId}/members/${memberId}/tax-type`, {
+    method: 'PUT',
+    body: JSON.stringify({ taxType }),
+  })
+}
+
+/** 직원 급여 공제 바꾸기 (입장한 직원만) → 급여 다시 계산 */
+export function useUpdateTaxType(storeId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { memberId: string; taxType: TaxType }) => putTaxType(storeId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ownerKeys.members(storeId) })
+      queryClient.invalidateQueries({ queryKey: ownerKeys.payroll(storeId) })
+    },
   })
 }
 
