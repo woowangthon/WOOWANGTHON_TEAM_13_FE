@@ -8,24 +8,28 @@ import { LoadError } from '@/shared/LoadError'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
+import { SectionHeader } from '@/shared/SectionHeader'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
-import { EmptyState } from '@/ui/EmptyState'
-import { Spinner } from '@/ui/Spinner'
+import { Input } from '@/ui/Input'
 import { Tabs } from '@/ui/Tabs'
 
 export type BoardSegment = 'recipe' | 'manual'
 
 // 레시피 (포스기처럼 카테고리 → 메뉴 격자) · 매뉴얼 (바둑판 카드)
+// 공용 부품은 variant="clean" (docs/08: 가로 알약 칩 · 그림자 없는 카드 · 글자 단계)
 export function RecipeBoard({ segment }: { segment: BoardSegment }) {
   const { store } = useCurrentStore()
   const navigate = useNavigate()
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-end justify-between gap-2.5 px-1">
-        <div className="flex flex-col gap-1">
-          <span className="text-[13px] text-muted-foreground">{store.name}</span>
-          <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.03em]">
+      <div className="flex items-end justify-between gap-3 px-1">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="truncate text-[13px] font-medium text-muted-foreground">
+            {store.name}
+          </span>
+          <h1 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
             {segment === 'recipe' ? '레시피' : '매뉴얼'}
           </h1>
         </div>
@@ -89,7 +93,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
         message="아직 레시피가 없어요"
         hint="메뉴가 올라오면 바로 여기서 볼 수 있어요"
         action={
-          <Button size="md" className="h-[46px] px-5" onClick={() => askAi('')}>
+          <Button size="md" onClick={() => askAi('')}>
             AI 사수에게 묻기
           </Button>
         }
@@ -98,20 +102,34 @@ function RecipeSection({ storeId }: { storeId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <label className="flex h-[54px] items-center gap-2.5 rounded-[20px] bg-card px-[18px] shadow-soft">
-        <Search className="size-5 text-subtle" />
-        <input
-          value={params.get('q') ?? ''}
-          onChange={(event) => update({ q: event.target.value })}
-          placeholder="메뉴, 재료 검색"
-          aria-label="메뉴, 재료 검색"
-          className="min-w-0 flex-1 border-none bg-transparent text-[15px] placeholder:text-subtle"
-        />
-      </label>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <label className="relative flex items-center">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 size-5 text-subtle"
+          />
+          <Input
+            variant="card"
+            value={params.get('q') ?? ''}
+            onChange={(event) => update({ q: event.target.value })}
+            placeholder="메뉴, 재료 검색"
+            aria-label="메뉴, 재료 검색"
+            className="w-full pl-11"
+          />
+        </label>
+        {recipesQuery.isSuccess && (
+          <CategoryTabs
+            variant="clean"
+            categories={categories}
+            value={q ? null : category}
+            onChange={(c) => update({ cat: c, q: '' })}
+          />
+        )}
+      </div>
 
       {recipesQuery.isPending ? (
-        <Spinner />
+        <RecipeSkeleton />
       ) : recipesQuery.isError ? (
         <LoadError
           what="레시피를"
@@ -119,19 +137,18 @@ function RecipeSection({ storeId }: { storeId: string }) {
           onRetry={() => recipesQuery.refetch()}
         />
       ) : (
-        <>
-          <CategoryTabs
-            categories={categories}
-            value={q ? null : category}
-            onChange={(c) => update({ cat: c, q: '' })}
+        <section aria-labelledby="recipe-results" className="flex flex-col gap-3">
+          <SectionHeader
+            id="recipe-results"
+            title={
+              <span className="tabular-nums">
+                {q ? `"${q}" 검색 결과 ${shown.length}개` : `${category} ${shown.length}개`}
+              </span>
+            }
           />
-
-          <h2 className="m-0 px-1 text-lg font-extrabold tracking-[-0.02em]">
-            {q ? `"${q}" 검색 결과 ${shown.length}개` : `${category} ${shown.length}개`}
-          </h2>
-
           {shown.length > 0 ? (
             <RecipeGrid
+              variant="clean"
               recipes={shown}
               getHref={(r) => ({
                 pathname: `/staff/recipes/${r.recipeId}`,
@@ -139,16 +156,16 @@ function RecipeSection({ storeId }: { storeId: string }) {
               })}
             />
           ) : (
-            <EmptyState
+            <EmptyGuide
               message="검색 결과가 없어요"
               action={
-                <Button size="md" className="h-[46px] px-5" onClick={() => askAi(q)}>
+                <Button size="md" onClick={() => askAi(q)}>
                   AI 사수에게 묻기
                 </Button>
               }
             />
           )}
-        </>
+        </section>
       )}
     </div>
   )
@@ -158,7 +175,7 @@ function ManualCards({ storeId }: { storeId: string }) {
   const navigate = useNavigate()
   const manualsQuery = useManuals(storeId)
 
-  if (manualsQuery.isPending) return <Spinner />
+  if (manualsQuery.isPending) return <ManualSkeleton />
   if (manualsQuery.isError) {
     return (
       <LoadError
@@ -170,6 +187,7 @@ function ManualCards({ storeId }: { storeId: string }) {
   }
   return (
     <ManualGrid
+      variant="clean"
       manuals={manualsQuery.data?.manuals ?? []}
       getHref={(m) => `/staff/manuals/${m.manualId}`}
       empty={
@@ -177,16 +195,55 @@ function ManualCards({ storeId }: { storeId: string }) {
           message="아직 매뉴얼이 없어요"
           hint="와이파이 · 오픈 순서 같은 매장 안내가 여기 모여요"
           action={
-            <Button
-              size="md"
-              className="h-[46px] px-5"
-              onClick={() => navigate('/staff/chat', { state: { draft: '' } })}
-            >
+            <Button size="md" onClick={() => navigate('/staff/chat', { state: { draft: '' } })}>
               AI 사수에게 묻기
             </Button>
           }
         />
       }
     />
+  )
+}
+
+// 로딩 뼈대: 카테고리 칩 줄 + 섹션 제목 + 레시피 카드 격자 (RecipeGrid clean 과 같은 자리 · 모서리)
+function RecipeSkeleton() {
+  return (
+    <SkeletonGroup label="레시피를 불러오는 중" className="flex flex-col gap-6">
+      {/* 칩 줄은 진짜 화면에서 검색창 바로 아래(12px)라 묶음 간격 24px 에서 12px 를 당긴다 */}
+      <div className="-mt-3 flex gap-2 overflow-hidden">
+        {['w-16', 'w-20', 'w-20', 'w-16'].map((w, i) => (
+          <Skeleton key={i} shape="circle" className={`h-10 ${w}`} />
+        ))}
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton shape="line" className="mx-1 my-2.5 h-4 w-24" />
+        <div className="grid grid-cols-2 gap-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <span key={i} className="flex flex-col gap-2 rounded-3xl bg-card p-2 pb-3">
+              <Skeleton className="aspect-2/1 w-full" />
+              <span className="flex flex-col gap-2 px-1 py-1">
+                <Skeleton shape="line" className="h-4 w-3/4" />
+                <Skeleton shape="line" className="w-1/2" />
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </SkeletonGroup>
+  )
+}
+
+// 로딩 뼈대: 매뉴얼 카드 격자 (ManualGrid clean 과 같은 자리 · 모서리)
+function ManualSkeleton() {
+  return (
+    <SkeletonGroup label="매뉴얼을 불러오는 중" className="grid grid-cols-2 gap-2">
+      {Array.from({ length: 6 }, (_, i) => (
+        <span key={i} className="flex flex-col gap-2 rounded-3xl bg-card p-4">
+          <Skeleton shape="line" className="h-4 w-3/4" />
+          <Skeleton shape="line" className="w-full" />
+          <Skeleton shape="line" className="w-1/2" />
+        </span>
+      ))}
+    </SkeletonGroup>
   )
 }

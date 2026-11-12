@@ -161,6 +161,7 @@ function RecipePicture() {
   return (
     <Phone tab="recipe">
       <CategoryTabs
+        variant="clean"
         categories={[
           { name: '커피', count: 6 },
           { name: '라떼', count: 5 },
@@ -171,6 +172,7 @@ function RecipePicture() {
         onChange={noop}
       />
       <RecipeGrid
+        variant="clean"
         recipes={[
           recipe('1', '아메리카노', '커피', 'americano'),
           recipe('2', '카페라떼', '커피', 'cafe-latte'),
