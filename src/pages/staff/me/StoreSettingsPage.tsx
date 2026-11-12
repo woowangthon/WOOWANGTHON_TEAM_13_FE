@@ -6,9 +6,10 @@ import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCloseTo } from '@/lib/useCloseTo'
 import { useCurrentStore, type StaffStoreView } from '@/pages/staff/useCurrentStore'
 import { LoadError } from '@/shared/LoadError'
-import { Card } from '@/ui/Card'
+import { SectionHeader } from '@/shared/SectionHeader'
+import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
+import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { Header } from '@/ui/Header'
-import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 
 // 소속 매장 정보 + 내 급여 설정 보기 (시급 · 급여일 · 공제 방식 · 주휴수당)
@@ -53,7 +54,7 @@ export default function StoreSettingsPage() {
         {current.error ? (
           <LoadError what="매장 정보를" error={current.error} onRetry={() => current.retry()} />
         ) : (
-          <Spinner />
+          <SettingsSkeleton />
         )}
         <Toaster bottom={96} />
       </StaffFrame>
@@ -70,7 +71,7 @@ export default function StoreSettingsPage() {
             onRetry={() => estimateQuery.refetch()}
           />
         ) : (
-          <Spinner />
+          <SettingsSkeleton />
         )}
         <Toaster bottom={96} />
       </StaffFrame>
@@ -94,45 +95,53 @@ function SettingsView({ store, settings }: { store: StaffStoreView; settings: Pa
   ]
 
   return (
-    <StaffFrame store={store} className="gap-5">
+    <StaffFrame store={store} className="gap-8">
       <Header onBack={close} />
 
-      <Card variant="dark" className="gap-[18px] rounded-[30px] p-[22px]">
-        <span className="flex size-[46px] items-center justify-center rounded-full bg-white text-brand">
+      {/* 옅은 머리: 매장 아바타 + 매장 이름(화면 제목) · 종류 · 주소 (진한 히어로 카드 대신 — docs/08 챕터 6) */}
+      <section className="-mt-4 flex items-start gap-4 px-1">
+        <StoreAvatar color={store.color} size={48}>
           <Icon className="size-6" fill="currentColor" />
-        </span>
-        <div className="flex flex-col gap-1.5">
-          <h1 className="m-0 text-[28px] leading-[1.15] font-extrabold tracking-[-0.03em]">
+        </StoreAvatar>
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] break-keep">
             {store.name}
           </h1>
-          {store.kind && <span className="text-sm opacity-85">{store.kind}</span>}
-          {store.address && <span className="text-sm break-keep opacity-85">{store.address}</span>}
+          {store.kind && (
+            <span className="text-[13px] font-medium text-muted-foreground">{store.kind}</span>
+          )}
+          {store.address && (
+            <span className="text-[13px] font-medium break-keep text-muted-foreground">
+              {store.address}
+            </span>
+          )}
         </div>
-      </Card>
+      </section>
 
-      <div className="flex flex-col gap-1 px-1">
-        <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">급여 설정</h2>
-        <p className="m-0 text-[13px] text-muted-foreground">
-          사장님이 정한 급여 설정이에요. 바꾸려면 사장님께 말씀해 주세요
-        </p>
-      </div>
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <SectionHeader title="급여 설정" />
+          <p className="m-0 px-1 text-[13px] leading-[1.45] font-medium text-muted-foreground">
+            사장님이 정한 급여 설정이에요. 바꾸려면 사장님께 말씀해 주세요
+          </p>
+        </div>
 
-      <Card className="gap-0 px-5 py-1">
-        <dl className="m-0 flex flex-col">
+        {/* 목록: 왼쪽 항목 · 오른쪽 값(고정폭 숫자), 줄 사이 옅은 선 */}
+        <dl className="m-0 flex flex-col rounded-3xl border border-line/60 bg-card px-4">
           {rows.map(({ label, value, hint, muted }) => (
             <div
               key={label}
-              className="flex items-center justify-between gap-3 border-b border-[#F0EBE2] py-4 last:border-b-0"
+              className="flex items-center justify-between gap-3 border-b border-line/60 py-3.5 last:border-b-0"
             >
               <dt className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-base font-bold">{label}</span>
-                {hint && <span className="text-[13px] text-muted-foreground">{hint}</span>}
+                <span className="text-[15px] font-medium">{label}</span>
+                {hint && <span className="text-xs font-medium text-muted-foreground">{hint}</span>}
               </dt>
               <dd
                 className={
                   muted
-                    ? 'm-0 text-right text-base font-semibold text-muted-foreground'
-                    : 'm-0 text-right text-lg font-extrabold tabular-nums'
+                    ? 'm-0 text-right text-[15px] font-medium text-muted-foreground'
+                    : 'm-0 text-right text-[15px] font-bold tabular-nums'
                 }
               >
                 {value}
@@ -140,9 +149,32 @@ function SettingsView({ store, settings }: { store: StaffStoreView; settings: Pa
             </div>
           ))}
         </dl>
-      </Card>
+      </section>
 
       <Toaster />
     </StaffFrame>
+  )
+}
+
+/** 매장 설정 로딩 뼈대: 머리(아바타 · 이름) + 급여 설정 줄 4개 */
+function SettingsSkeleton() {
+  return (
+    <SkeletonGroup label="매장 정보를 불러오는 중" className="flex flex-col gap-8 pt-14">
+      <span className="flex items-center gap-4 px-1">
+        <Skeleton shape="circle" className="size-12" />
+        <Skeleton shape="line" className="h-6 w-40" />
+      </span>
+      <span className="flex flex-col rounded-3xl border border-line/60 bg-card px-4">
+        {[0, 1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className="flex items-center justify-between border-b border-line/60 py-4 last:border-b-0"
+          >
+            <Skeleton shape="line" className="h-4 w-16" />
+            <Skeleton shape="line" className="h-4 w-24" />
+          </span>
+        ))}
+      </span>
+    </SkeletonGroup>
   )
 }
