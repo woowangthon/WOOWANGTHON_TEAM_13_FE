@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeftRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import {
   myUserId,
@@ -19,7 +19,7 @@ import { usePersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
-import { Button } from '@/ui/Button'
+import { PRESSABLE } from '@/shared/pressable'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
@@ -346,16 +346,34 @@ export function ScheduleMonth() {
                       </span>
                     </span>
                   </div>
-                  {canRequest &&
-                    (pendingSent ? (
-                      <span className="self-start rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
-                        {pendingSent.target.name}님에게 대타 요청 중
-                      </span>
-                    ) : (
-                      <Button size="sm" className="self-start" onClick={() => setSheetShift(shift)}>
-                        대타 요청
-                      </Button>
-                    ))}
+                  {/* 대타를 요청할 수 있는 내 근무만: 얇은 구분선 아래 오른쪽에 작은 [대타 요청] (대기 중이면 그 자리에 "○○님에게 대타 요청 중") */}
+                  {canRequest && (
+                    <div className="-mt-0.5 flex justify-end border-t border-line/70 pt-2.5">
+                      {pendingSent ? (
+                        <span className="flex h-8 items-center gap-1.5 rounded-full bg-brand-soft py-0 pr-3 pl-1.5 text-[13px] font-bold text-brand">
+                          <PersonInitial
+                            name={pendingSent.target.name}
+                            color={colorOf(pendingSent.target.userId)}
+                            size={20}
+                          />
+                          {pendingSent.target.name}님에게 대타 요청 중
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSheetShift(shift)}
+                          className={cn(
+                            'flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand',
+                            PRESSABLE,
+                          )}
+                        >
+                          <ArrowLeftRight className="size-3.5" strokeWidth={2.4} />
+                          대타 요청
+                          <ChevronRight className="-mr-1 size-3.5" strokeWidth={2.4} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })
