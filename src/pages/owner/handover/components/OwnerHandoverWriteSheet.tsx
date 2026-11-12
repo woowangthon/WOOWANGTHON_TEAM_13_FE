@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { useCreateHandoverNote, useHandoverDraft } from '@/lib/api/handover'
 import type { NewHandoverNote } from '@/lib/api/types'
@@ -19,7 +20,12 @@ export function OwnerHandoverWriteSheet({
   const draft = useHandoverDraft(storeId)
   const create = useCreateHandoverNote(storeId)
 
-  const save = (note: NewHandoverNote, doneMessage: string) =>
+  /** 저장 중 (폼의 [저장] · [특이사항 없음]을 빨리 두 번 눌러도 한 번만 저장) */
+  const saving = useRef(false)
+
+  const save = (note: NewHandoverNote, doneMessage: string) => {
+    if (saving.current) return
+    saving.current = true
     create.mutate(note, {
       onSuccess: () => {
         onClose()
@@ -29,7 +35,11 @@ export function OwnerHandoverWriteSheet({
         toastApiError(error, '저장하지 못했어요. 다시 시도해 주세요', () =>
           save(note, doneMessage),
         ),
+      onSettled: () => {
+        saving.current = false
+      },
     })
+  }
 
   return (
     <BottomSheet open onClose={onClose} label="인수인계 남기기" closeButton>
