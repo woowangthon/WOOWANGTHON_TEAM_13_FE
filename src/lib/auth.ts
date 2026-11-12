@@ -3,6 +3,7 @@ import { useAuthStore, type LoginProvider, type Me } from '@/lib/authStore'
 import { fetchMe as getMe } from '@/lib/api/users'
 import { http, isRealApi } from '@/lib/api/source'
 import { env } from '@/lib/env'
+import { wakeServer } from '@/lib/wakeServer'
 
 /*
  * 로그인 — 담당: 민지
@@ -110,6 +111,8 @@ export async function restoreSession() {
   const session = await getSession()
   setLoggedIn(Boolean(session))
   if (!session) return setMe(null)
+  // 앱 첫 진입 · 로그인 상태: 잠든 서버를 먼저 깨운다 (me 요청과 같이 출발)
+  wakeServer()
   try {
     setMe(await fetchMe())
   } catch (error) {
@@ -177,6 +180,8 @@ let loginInFlight: Promise<Me | null> | null = null
 export function completeLogin(): Promise<Me | null> {
   loginInFlight ??= (async () => {
     const { setLoggedIn, setMe } = useAuthStore.getState()
+    // 카카오 · 구글에서 돌아오면 페이지가 새로 열려서, 세션을 기다리는 동안 서버를 한 번 더 깨운다
+    wakeServer()
     // 주소에 code(PKCE) · access_token(implicit)이 있으면 토큰 교환을 기다리고, 없으면(취소 · 에러) 짧게만 본다
     const hasAuthParams = /[?&#](code|access_token)=/.test(window.location.href)
     const session = await waitForSession(hasAuthParams ? 10_000 : 1500)
