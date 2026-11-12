@@ -347,8 +347,7 @@ export function WorkCalendar({
                     className={cn(
                       // 사장님 근무도 연한 카드 + 매장 색 테두리 (알바 근무표와 같게)
                       'flex items-center gap-3 rounded-[20px] bg-card px-4 py-3.5 shadow-soft',
-                      mine &&
-                        'shadow-[inset_0_0_0_1.5px_var(--brand),0_8px_24px_rgba(40,46,36,0.06)]',
+                      mine && 'ring-[1.5px] ring-brand ring-inset',
                     )}
                   >
                     <PersonInitial

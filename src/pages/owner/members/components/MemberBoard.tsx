@@ -84,8 +84,8 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                     aria-current={selected ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-foreground shadow-soft transition-shadow',
-                      // 데스크톱에서 고른 직원은 흰 바탕 + 2px 매장 색 테두리 (휴대폰은 시트가 떠서 표시 없음)
-                      selected && 'lg:bg-white lg:shadow-[inset_0_0_0_2px_var(--brand)]',
+                      // 데스크톱에서 고른 직원은 흰 바탕 + 2px 매장 색 테두리(ring — 카드 그림자와 따로) (휴대폰은 시트가 떠서 표시 없음)
+                      selected && 'lg:bg-white lg:ring-2 lg:ring-brand lg:ring-inset',
                     )}
                   >
                     <PersonAvatar
