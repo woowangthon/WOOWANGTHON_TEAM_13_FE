@@ -183,6 +183,7 @@ docs/                  # 서비스 개요 · 우선순위 · 시나리오 · 화
 - **폴더 주인 제도**: 각자 폴더만 고치고, 남의 폴더는 import만 합니다. (`.github/CODEOWNERS`)
 - **브랜치**: `main`(배포) ← `dev`(통합) ← `feat/…` · `fix/…` · `docs/…`
   - 내 폴더만 바꾼 PR은 올린 사람이 merge, 상대 폴더를 바꾼 PR은 상대 승인 후 merge, `main`은 승인 1명
+  - Vercel은 `dev` · `main`만 배포해요. 작업 브랜치(`feat/` · `fix/` · `style/` · `chore/` · `docs/` · `perf/` · `refactor/` · `pr-assets/`)는 미리보기를 만들지 않아요 (무료 플랜 하루 배포 한도 때문, `vercel.json` `git.deploymentEnabled`)
 - **작게 자주**: 기능 단위 챕터로 나눠 PR → 화면 확인 → merge
 - **문서 같이 고치기**: 파일 · 화면 · 주소가 바뀌면 `docs/04`도 같은 PR에서
 - **AI 페어 프로그래밍**: 규칙은 [`CLAUDE.md`](./CLAUDE.md), 맥락은 [`docs/`](./docs)에 두고 Claude Code와 함께 개발
