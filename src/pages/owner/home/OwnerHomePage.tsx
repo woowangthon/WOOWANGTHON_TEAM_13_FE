@@ -14,11 +14,12 @@ import { toDateKey } from '@/lib/date'
 import { formatDate, formatTime, formatWon } from '@/lib/format'
 import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
-import type { OnDuty, OwnerQuestionItem } from '@/pages/owner/api/types'
+import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { useStorePayroll } from '@/pages/owner/api/work'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
+import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { MANUAL_ICON, DEFAULT_MANUAL_ICON } from '@/shared/icons'
 import { cn } from '@/ui/utils'
@@ -107,80 +108,48 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = !!store.photoUrl && !photoFailed
   const people = query.data?.people ?? []
-  const label = (p: OnDuty) => (p.isOwner ? '사장님' : p.name)
-  // 매장 사진 위 글씨는 반투명 어두운 판 위에 (그라데이션 없이, 11/12)
-  const glass = showPhoto ? 'bg-black/35 backdrop-blur-md' : ''
+  const [editingPhoto, setEditingPhoto] = useState(false)
 
   return (
-    <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
-      {showPhoto && (
-        <img
-          src={store.photoUrl ?? undefined}
-          alt=""
-          onError={() => setPhotoFailed(true)}
-          className="absolute inset-0 -z-10 size-full object-cover"
-        />
-      )}
-      <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
-        <span
-          className={cn(
-            'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
-            showPhoto ? 'bg-black/35' : 'bg-white/15',
-          )}
-        >
-          <span className="flex size-7 items-center justify-center rounded-full bg-white">
-            <span
-              className={cn('size-2.5 rounded-full', people.length ? 'bg-[#6FA97B]' : 'bg-faint')}
-            />
-          </span>
-          {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
-        </span>
-        <div className="flex items-end justify-between gap-3.5">
-          <div
+    <>
+      <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
+        {showPhoto && (
+          <img
+            src={store.photoUrl ?? undefined}
+            alt=""
+            onError={() => setPhotoFailed(true)}
+            className="absolute inset-0 -z-10 size-full object-cover"
+          />
+        )}
+        <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
+          <span
             className={cn(
-              'flex min-w-0 flex-col gap-2 rounded-[22px]',
-              glass && `${glass} px-4 py-3`,
+              'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
+              showPhoto ? 'bg-black/35' : 'bg-white/15',
             )}
           >
-            {people.length === 0 ? (
-              <span className="text-[22px] font-extrabold tracking-[-0.02em] break-keep">
-                {store.name}
-              </span>
-            ) : (
-              <>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex shrink-0 -space-x-2">
-                    {people.slice(0, 3).map((p) => (
-                      <span
-                        key={p.userId}
-                        className="flex size-9 items-center justify-center rounded-full border-2 border-white bg-card text-sm font-extrabold text-brand"
-                      >
-                        {label(p).slice(0, 1)}
-                      </span>
-                    ))}
-                  </span>
-                  <span className="truncate text-[24px] leading-[1.15] font-extrabold tracking-[-0.03em]">
-                    {people.length === 1
-                      ? `${label(people[0])} 근무 중`
-                      : `${people.length}명 근무 중`}
-                  </span>
-                </div>
-                <span className="text-[13px] leading-relaxed break-keep opacity-90">
-                  {people.map((p) => `${label(p)} ${p.shiftName} ${p.start}–${p.end}`).join(' · ')}
-                </span>
-              </>
-            )}
-          </div>
-          <Link
-            to="/owner/schedule"
-            aria-label="근무 보기"
-            className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-white text-foreground"
+            <span className="flex size-7 items-center justify-center rounded-full bg-white">
+              <span
+                className={cn('size-2.5 rounded-full', people.length ? 'bg-[#6FA97B]' : 'bg-faint')}
+              />
+            </span>
+            {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
+          </span>
+          {/* 아래는 버튼만 — 누르면 매장 사진 바꾸기 (11/12) */}
+          <button
+            type="button"
+            onClick={() => setEditingPhoto(true)}
+            aria-label="매장 사진 바꾸기"
+            className="flex size-[46px] shrink-0 items-center justify-center self-end rounded-full bg-white text-foreground transition-transform active:scale-[0.97]"
           >
             <ChevronRight className="size-6" />
-          </Link>
+          </button>
         </div>
-      </div>
-    </section>
+      </section>
+      {editingPhoto && (
+        <StorePhotoSheet storeId={store.storeId} onClose={() => setEditingPhoto(false)} />
+      )}
+    </>
   )
 }
 
