@@ -222,11 +222,11 @@ function RecipeSkeleton() {
   return (
     <SkeletonGroup label="레시피를 불러오는 중" className="flex flex-col gap-6">
       {/* 카테고리 줄은 진짜 화면에서 검색창 바로 아래(12px)라 묶음 간격 24px 에서 12px 를 당긴다 */}
-      <div className="-mt-3 flex gap-2 overflow-hidden">
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className="flex w-[76px] shrink-0 flex-col items-center gap-2 pt-3 pb-3">
-            <Skeleton shape="circle" className="size-10" />
-            <Skeleton shape="line" className="w-12" />
+      <div className="-mt-3 grid grid-cols-6 gap-1">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <span key={i} className="flex flex-col items-center gap-1.5 pt-2.5 pb-2">
+            <Skeleton shape="circle" className="size-9" />
+            <Skeleton shape="line" className="w-10" />
           </span>
         ))}
       </div>
