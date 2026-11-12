@@ -31,6 +31,7 @@ import type {
   AvailabilityStatus,
   BizVerification,
   BizVerifyInput,
+  ManualDraft,
   ManualInput,
   Member,
   MemberPay,
@@ -324,6 +325,22 @@ export async function answerOwnerQuestion(
     })
   }
   return { ...question }
+}
+
+/**
+ * POST /stores/{storeId}/owner-questions/{questionId}/manual-draft — 가짜 서버용 초안.
+ * AI 를 부르지 않는다: 질문 제목과 답변을 그대로 돌려줄 뿐이다 (진짜 AI 정리는 BE + Gemini)
+ */
+export async function draftManualFromAnswer(
+  storeId: string,
+  questionId: string,
+  answer: string,
+): Promise<ManualDraft> {
+  await wait(600)
+  const question = db.questions.find((q) => q.storeId === storeId && q.questionId === questionId)
+  if (!question) fail(404, 'NOT_FOUND', '질문을 찾지 못했어요')
+  if (!answer.trim()) fail(422, 'VALIDATION_ERROR', '답변을 입력해 주세요')
+  return { title: question.title.replace(/ 문의$/, ''), body: answer.trim() }
 }
 
 /** GET /owner/notifications (제안) — 모든 내 매장의 확인 필요 질문 + 재고 알림 */

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   answerOwnerQuestion,
   dismissNotification,
+  draftManualFromAnswer,
   getNotifications,
   getOnDuty,
   getHandoverNotices,
@@ -18,6 +19,7 @@ import { fetchOwnerReceived } from '@/pages/owner/api/fixedSchedule'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import type {
+  ManualDraft,
   OnDuty,
   OwnerAnswer,
   OwnerNotification,
@@ -43,6 +45,14 @@ const postAnswer = (storeId: string, questionId: string, input: OwnerAnswer) =>
         input.addToManual ? input : { answer: input.answer, addToManual: false },
       )
     : answerOwnerQuestion(storeId, questionId, input)
+
+// AI 매뉴얼 초안 (BE #37): 저장하지 않고 제목 · 본문만 받는다
+const postManualDraft = (storeId: string, questionId: string, answer: string) =>
+  isRealApi('assistantChat')
+    ? http.post<ManualDraft>(`/stores/${storeId}/owner-questions/${questionId}/manual-draft`, {
+        answer,
+      })
+    : draftManualFromAnswer(storeId, questionId, answer)
 
 // 질문 알림: 진짜 모드는 내 매장마다 답하지 않은 질문을 모은다 (재고 알림은 BE 가 없어서 가짜 서버만)
 const fetchQuestionNotifications = async (
@@ -211,6 +221,14 @@ export function useDismissNotification() {
   return useMutation({
     mutationFn: dismissNotification,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ownerKeys.notifications }),
+  })
+}
+
+/** 사장님 답변을 AI 로 매뉴얼 제목 · 본문 초안으로 정리한다 (저장 안 함, 2~5초) */
+export function useManualDraft(storeId: string) {
+  return useMutation({
+    mutationFn: ({ questionId, answer }: { questionId: string; answer: string }) =>
+      postManualDraft(storeId, questionId, answer),
   })
 }
 
