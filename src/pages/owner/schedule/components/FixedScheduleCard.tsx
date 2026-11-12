@@ -18,6 +18,7 @@ import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { Spinner } from '@/ui/Spinner'
 import { toast } from '@/ui/toastStore'
+import { cn } from '@/ui/utils'
 
 // 고정 근무표: 사람마다 매주 근무(타임별 요일) + [수정] → 요일 × 타임 칸 (같은 날 여러 타임 가능)
 // 코드로 입장하기 전 직원도 초대에 근무를 정해 두고 고칠 수 있다 (BE #38 PATCH /invitations/{id}, 입장하면 고정 스케줄로) · 쉬는 요일은 막힘
@@ -96,7 +97,8 @@ export function FixedScheduleCard({
   ) => (
     <div
       key={key}
-      className="flex items-center gap-3 border-b border-[#F0EBE2] py-3 last:border-b-0"
+      // group: 마우스를 올린 줄에서만 연필이 보인다 (아래 버튼)
+      className="group flex items-center gap-3 border-b border-[#F0EBE2] py-3 last:border-b-0"
     >
       <span
         className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
@@ -115,7 +117,11 @@ export function FixedScheduleCard({
         onClick={onEdit}
         aria-label={`${name} 근무 수정`}
         disabled={templates.length === 0}
-        className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft active:bg-brand-soft disabled:text-faint disabled:hover:bg-transparent"
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-full text-brand transition-[opacity,background-color] hover:bg-brand-soft active:bg-brand-soft disabled:text-faint disabled:hover:bg-transparent',
+          // 마우스가 있는 기기: 줄에 올렸을 때 · 키보드로 왔을 때만 보임 (휴대폰처럼 마우스가 없으면 늘 보임)
+          '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100',
+        )}
       >
         <Pencil className="size-[17px]" />
       </button>
