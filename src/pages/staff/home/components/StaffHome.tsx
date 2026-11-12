@@ -22,6 +22,7 @@ import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { PRESSABLE } from '@/shared/pressable'
 import { SectionHeader } from '@/shared/SectionHeader'
+import { useReveal, useRevealChildren } from '@/shared/useReveal'
 import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
@@ -81,6 +82,8 @@ function HomeBody({
   const navigate = useNavigate()
   const todayDate = todayOfStore.getDate()
   const [selected, setSelected] = useState(todayDate)
+  // 스크롤해서 처음 보일 때 살짝 떠오르기 (첫 화면에 보이는 것은 그대로 — shared/useReveal)
+  const todayRef = useReveal<HTMLElement>()
 
   // 배치 (docs/08): 알림 배너 → 오늘(날짜 제목 + 오늘 근무) → 인수인계. 섹션 사이 32px · 섹션 안 12px.
   // 진한 덩어리는 오늘 근무 사진 카드 하나 (배너 · AI 요약은 옅은 바탕)
@@ -92,7 +95,7 @@ function HomeBody({
         <ReceivedSubstituteBanner storeId={store.id} />
       </div>
 
-      <section aria-labelledby="home-today" className="flex flex-col gap-3">
+      <section ref={todayRef} aria-labelledby="home-today" className="flex flex-col gap-3">
         <h1
           id="home-today"
           className="m-0 px-1 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] tabular-nums"
@@ -310,10 +313,12 @@ function HandoverSection({
   const summary = (aiIsCurrent && ai.summary?.trim()) || dayHandoverSummary(withItems)
 
   const title = live ? '오늘의 인수인계' : `${formatDate(selectedDate)} 인수인계`
+  // 요일 줄 · 제목 · 내용이 스크롤해서 처음 보일 때 차례로 떠오르기 (불러온 내용이 바뀌면 다시 본다)
+  const revealRef = useRevealChildren<HTMLElement>([notesQuery.status, withItems.length > 0])
 
   return (
     // 출근 전 배너 [인수인계 보기]가 여기로 내려온다: 요일 줄부터 보이게 (scroll-mt: 위 헤더만큼)
-    <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3">
+    <section ref={revealRef} id="today-handover" className="flex scroll-mt-20 flex-col gap-3">
       <WeekStrip week={week} today={today} selected={selectedDay} onSelect={onSelectDay} />
       <SectionHeader
         title={title}
@@ -329,7 +334,8 @@ function HandoverSection({
           onRetry={() => notesQuery.refetch()}
         />
       ) : withItems.length > 0 ? (
-        <div className="flex flex-col gap-2">
+        // data-reveal-group: AI 요약 · 목록이 따로따로 떠오르게 (useRevealChildren 이 이 안의 자식을 본다)
+        <div data-reveal-group className="flex flex-col gap-2">
           <AiSummaryCard
             from={`${authors}명이 남김`}
             summary={summary}
