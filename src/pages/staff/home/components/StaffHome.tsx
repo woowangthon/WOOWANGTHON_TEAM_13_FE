@@ -307,7 +307,9 @@ function HandoverSection({
             done={live ? items.filter((item) => item.checked).length : items.length}
             total={items.length}
           />
+          {/* 알바 홈: 카드 한 장 안의 할 일 목록 모양 (사장님 홈은 기본 card 그대로) */}
           <HandoverList
+            variant="list"
             items={items}
             live={live}
             meta={(item) => {
