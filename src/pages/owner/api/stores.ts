@@ -28,7 +28,7 @@ import type {
 /*
  * 사장님 매장 · 프로필 훅 — 담당: 나현
  * .env VITE_REAL_API 에 'stores'를 넣으면 매장은 진짜 API(/stores), 아니면 가짜 서버(api/mocks/owner) — lib/api/source.
- * 사업자 확인도 'stores'를 따른다 (POST /business-verifications, 국세청 진위확인 → 매장 등록에 verificationId).
+ * 사업자 확인도 'stores'를 따른다 (POST /stores/business-verifications, 국세청 상태조회 → 매장 등록에 verificationId).
  */
 
 /** 사업장 규모: 화면 under5 · over5 ↔ BE UNDER_FIVE · FIVE_OR_MORE */
@@ -251,7 +251,7 @@ export function useDeleteStore() {
 // 사업자 확인: 번호만 → 국세청 상태조회, 계속사업자면 VERIFIED (휴업 · 폐업 · 미등록은 INVALID, 에러 아님 · BE #40)
 const postBizVerification = (input: BizVerifyInput): Promise<BizVerification> =>
   isRealApi('stores')
-    ? http.post<BizVerification>('/business-verifications', {
+    ? http.post<BizVerification>('/stores/business-verifications', {
         businessRegistrationNumber: input.bizNo,
       })
     : verifyBizNo(input)

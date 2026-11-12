@@ -34,7 +34,7 @@ export interface NewStore {
   address: string
   size: StoreSize
   bizNo?: string | null
-  /** 사업자 확인(VERIFIED) 결과 번호 — POST /business-verifications */
+  /** 사업자 확인(VERIFIED) 결과 번호 — POST /stores/business-verifications */
   businessVerificationId: number
   /** 근무 타임 (오픈 · 미들 · 마감 …) — 매장과 함께 만든다 */
   shiftTemplates: ShiftTemplateInput[]
@@ -82,7 +82,7 @@ export interface OwnerSubstituteRequest {
   requester: ScheduleWorker
 }
 
-/** 사업자 확인 요청 (POST /business-verifications, 국세청 상태조회 · 시연 000-00-00000) */
+/** 사업자 확인 요청 (POST /stores/business-verifications, 국세청 상태조회 · 시연 000-00-00000) */
 export interface BizVerifyInput {
   /** 000-00-00000 (BE 가 - 를 뺀다) */
   bizNo: string

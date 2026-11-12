@@ -153,7 +153,7 @@ export async function deleteStore(storeId: string): Promise<void> {
   })
 }
 
-/** POST /business-verifications (국세청 상태조회) — 시연: 10자리면 정상 */
+/** POST /stores/business-verifications (국세청 상태조회) — 시연: 10자리면 정상 */
 export async function verifyBizNo(input: BizVerifyInput): Promise<BizVerification> {
   await wait(1200)
   if (input.bizNo.replace(/\D/g, '').length !== 10) {
