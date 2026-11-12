@@ -318,35 +318,25 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
   )
 }
 
-/** 바로가기 (휴대폰의 동그라미 4개를 데스크톱에서는 색 타일로) */
-const QUICK_TILE: Record<string, [string, string]> = {
-  '/owner/manuals': ['#E4EEE6', '#2F6B45'],
-  '/owner/recipes': ['#FBEADF', '#B25E2E'],
-  '/owner/members/new': ['#E3ECF7', '#3B6698'],
-  '/owner/schedule': ['#EEE8F7', '#6E4BA6'],
-}
+/** 바로가기 (휴대폰의 동그라미 4개를 데스크톱에서는 타일로) — 네 칸 모두 매장 색 한 가지 (연한 바탕 + 진한 글자) */
 
 function QuickTiles() {
   return (
     <section className="hidden flex-col gap-3 lg:flex">
       <h2 className="m-0 px-1 text-[17px] font-extrabold">바로가기</h2>
       <nav aria-label="바로가기" className="grid grid-cols-2 gap-2.5">
-        {QUICK.map(({ to, label, icon: Icon }) => {
-          const [bg, fg] = QUICK_TILE[to]
-          return (
-            <Link
-              key={to}
-              to={to}
-              className="flex items-center gap-2.5 rounded-[18px] px-3.5 py-3.5 text-sm font-bold transition-transform active:scale-[0.98]"
-              style={{ background: bg, color: fg }}
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/70">
-                <Icon className="size-[18px]" />
-              </span>
-              {label}
-            </Link>
-          )
-        })}
+        {QUICK.map(({ to, label, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex items-center gap-2.5 rounded-[18px] bg-brand-soft px-3.5 py-3.5 text-sm font-bold text-brand transition-transform active:scale-[0.98]"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/70">
+              <Icon className="size-[18px]" />
+            </span>
+            {label}
+          </Link>
+        ))}
       </nav>
     </section>
   )
