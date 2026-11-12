@@ -13,6 +13,7 @@ import { formatDate } from '@/lib/format'
 import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
 import type { PersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
+import { PRESSABLE } from '@/shared/pressable'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
@@ -157,13 +158,17 @@ export function ReceivedSubstituteBanner({ storeId }: { storeId: string }) {
   return (
     <Link
       to="/staff/schedule"
-      className="flex items-center gap-3 rounded-[18px] bg-warm px-4 py-3 text-warm-foreground"
+      // 한 줄 배너: 살구 바탕(사람이 기다리는 것) + 진한 글자, 모서리 16px (docs/08)
+      className={cn(
+        'flex items-center gap-3 rounded-2xl bg-warm px-4 py-3.5 text-foreground',
+        PRESSABLE,
+      )}
     >
-      <ArrowLeftRight className="size-[18px] shrink-0" />
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+      <ArrowLeftRight aria-hidden="true" className="size-5 shrink-0 text-warm-foreground" />
+      <span className="min-w-0 flex-1 truncate text-[15px] font-medium">
         {unread.length > 1 ? `받은 대타 요청 ${unread.length}건이 있어요` : unread[0].body}
       </span>
-      <ChevronRight className="size-[18px] shrink-0" />
+      <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-warm-foreground" />
     </Link>
   )
 }
