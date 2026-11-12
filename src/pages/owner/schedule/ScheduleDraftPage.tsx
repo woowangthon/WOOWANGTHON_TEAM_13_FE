@@ -11,7 +11,7 @@ import { cn } from '@/ui/utils'
 
 // 근무 · 스케줄 (11/10 회의: 추천 스케줄 대신 고정 근무 + 대타)
 //   받은 대타 요청 → 근무 달력 → [근무 설정 ▾] 고정 근무표(사람마다 요일 × 타임) · 근무 타임(시간 · 인원)
-// 고정 근무표 · 근무 타임은 자주 안 바꿔서 접어 두고, 누르면 펼친다 (11/12)
+// [근무 설정] 고정 근무표 · 근무 타임은 자주 안 바꿔서 접어 두고, 누르면 펼친다 (11/12)
 export default function ScheduleDraftPage() {
   const { store, today } = useOwnerStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -38,7 +38,7 @@ export default function ScheduleDraftPage() {
         className="flex items-center gap-3 rounded-[22px] bg-card px-[18px] py-4 text-left shadow-soft transition-transform active:scale-[0.99]"
       >
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[15px] font-extrabold">고정 근무표 · 근무 타임</span>
+          <span className="text-[15px] font-extrabold">근무 설정</span>
           <span className="text-[13px] text-muted-foreground">
             {summary || '매주 반복되는 근무 · 시간'}
           </span>
