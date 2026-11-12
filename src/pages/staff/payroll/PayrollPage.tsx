@@ -339,12 +339,43 @@ function PayCalendar({
     ? selected[0]?.store
     : null
 
-  // 날짜를 누르면 상세 카드가 화면에 보이게 (375px 에서 달력이 한 화면을 거의 채워서). 아래 하단 탭만큼 띄운다
+  // 날짜를 누를 때마다(카드가 이미 열려 있어도) 상세 카드 전체가 하단 탭 위에 보이게 (375px 에서 달력이 한 화면을 거의 채워서).
+  // 여백은 카드의 scroll-margin(하단 탭 높이 + safe-area · 위 헤더)으로 정한다. 이미 다 보이면 움직이지 않는다.
+  // 카드 높이는 나타나는 애니메이션 · "함께" 줄(근무표를 늦게 받으면)로 바뀔 수 있어서, 처음 그린 뒤 · 애니메이션 끝 · 높이가 바뀔 때 다시 본다
   const detailRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (selectedDay === null) return
+    const card = detailRef.current
+    if (selectedDay === null || !card) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    detailRef.current?.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
+    const reveal = (behavior: ScrollBehavior) => {
+      const style = getComputedStyle(card)
+      const top = parseFloat(style.scrollMarginTop) || 0
+      const bottom = parseFloat(style.scrollMarginBottom) || 0
+      const rect = card.getBoundingClientRect()
+      const below = rect.bottom - (window.innerHeight - bottom)
+      const above = top - rect.top
+      // 아래가 가렸으면 올리되, 카드가 남은 칸보다 크면 위가 헤더 밑으로 가지 않게 위 기준
+      const delta = below > 0 ? Math.min(below, -above) : above > 0 ? -above : 0
+      if (Math.abs(delta) > 1) window.scrollBy({ top: delta, behavior })
+    }
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => reveal(reduce ? 'auto' : 'smooth'))
+    })
+    const onSettle = () => reveal(reduce ? 'auto' : 'smooth')
+    card.addEventListener('animationend', onSettle)
+    const resize = new ResizeObserver(onSettle)
+    resize.observe(card)
+    // 부드러운 스크롤이 다른 스크롤에 끊겼어도 끝에는 꼭 보이게 (그때는 바로)
+    const last = setTimeout(() => {
+      resize.disconnect()
+      reveal('auto')
+    }, 700)
+    return () => {
+      cancelAnimationFrame(frame)
+      card.removeEventListener('animationend', onSettle)
+      resize.disconnect()
+      clearTimeout(last)
+    }
   }, [selectedDay])
 
   return (
@@ -456,7 +487,7 @@ function PayCalendar({
           key={selectedDay}
           ref={detailRef}
           aria-live="polite"
-          className="flex animate-in scroll-mb-28 flex-col gap-3 rounded-[24px] bg-card px-5 pt-[18px] pb-4 shadow-soft duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
+          className="flex animate-in scroll-mt-20 scroll-mb-[calc(108px+env(safe-area-inset-bottom))] flex-col gap-3 rounded-[24px] bg-card px-5 pt-[18px] pb-4 shadow-soft duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
         >
           <div className="flex items-center justify-between gap-2.5">
             <h3 className="m-0 text-[17px] font-extrabold tracking-[-0.01em]">
