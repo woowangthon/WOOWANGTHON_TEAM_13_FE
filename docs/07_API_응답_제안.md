@@ -438,13 +438,13 @@ FE는 채팅 탭에 들어오면 **목록을 먼저 불러서**, 방이 있으�
   "storeId": "str_dalbit",
   "createdAt": "2026-11-20T11:19:00+09:00",
   "lastMessageAt": "2026-11-20T11:19:00+09:00",
-  "lastMessageText": "무엇이 궁금하세요?",
+  "lastMessageText": "매장 레시피 · 매뉴얼에서 찾아 답해요",
   "suggestions": ["화장실 비번", "마감 순서", "환불", "손님이 우산 빌려 달래"],
   "messages": [
     {
       "messageId": "msg_001",
       "sender": "ai",
-      "text": "무엇이 궁금하세요?",
+      "text": "매장 레시피 · 매뉴얼에서 찾아 답해요",
       "answerType": null,
       "sources": [],
       "canAskOwner": false,
