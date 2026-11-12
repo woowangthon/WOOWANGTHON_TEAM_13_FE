@@ -21,6 +21,7 @@ import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
 import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
+import { ShiftBanner } from '@/pages/staff/home/components/ShiftBanner'
 import { MANUAL_ICON, DEFAULT_MANUAL_ICON } from '@/shared/icons'
 import { cn } from '@/ui/utils'
 
@@ -53,6 +54,9 @@ export default function OwnerHomePage() {
           {surname} 사장님
         </h1>
       </div>
+
+      {/* 사장님 근무 30분 전 ~ 끝까지: 체크 안 된 인수인계 (BE #41, 알바 홈과 같은 배너) */}
+      <ShiftBanner storeId={store.storeId} today={today} />
 
       <OnDutyCard store={store} />
 

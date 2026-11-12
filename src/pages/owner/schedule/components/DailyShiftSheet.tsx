@@ -22,7 +22,7 @@ import { WheelPicker } from '@/ui/WheelPicker'
 
 // 하루 근무 수정 (BE #38 PUT /schedule-calendar/{workDate}): 그날만 근무를 넣고 · 바꾸고 · 뺀다. 고정 근무표는 그대로
 // 줄을 누르면 펼쳐져서 타임 칩(누르면 그 타임 시간) + 한 줄에 시작 ~ 끝 시간 · 담당자 (누르면 휠)
-// 시간은 BE start · end 칸이 생기기 전까지 진짜 모드에서 잠긴다 (canSetDailyTime)
+// 시간은 그날만 바뀐다 (BE #39 start · end). 끝이 시작보다 늦어야 한다
 // 저장하면 그날 대기 중인 대타 요청은 BE 가 취소한다. 그날 조정한 근무가 있으면 [고정 근무로 되돌리기] (DELETE)
 
 interface Row {
@@ -96,7 +96,11 @@ export function DailyShiftSheet({
     setOpen(key)
   }
 
-  const submit = () =>
+  const submit = () => {
+    // BE 도 막지만(422) 먼저 알려 준다
+    if (rows.some((r) => r.end <= r.start)) {
+      return toast.error('끝 시간이 시작 시간보다 늦어야 해요')
+    }
     save.mutate(
       {
         date: dateKey,
@@ -120,6 +124,7 @@ export function DailyShiftSheet({
         },
       },
     )
+  }
 
   const restore = () =>
     reset.mutate(dateKey, {

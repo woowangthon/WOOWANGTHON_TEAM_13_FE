@@ -269,10 +269,15 @@ export interface AlreadyJoinedDetail {
 
 // ── 알림 (docs/07 10, BE feature_notifications) ──
 
-/** 알바: SUBSTITUTE_REQUESTED · SUBSTITUTE_ACCEPTED · OWNER_ANSWERED / 사장님: HANDOVER_CREATED · OWNER_QUESTION_ASKED */
+/**
+ * 알바: SUBSTITUTE_REQUESTED · SUBSTITUTE_ACCEPTED · SUBSTITUTE_REJECTED · DAILY_SCHEDULE_CHANGED · OWNER_ANSWERED
+ * 사장님: HANDOVER_CREATED · OWNER_QUESTION_ASKED
+ */
 export type NotificationType =
   | 'SUBSTITUTE_REQUESTED'
   | 'SUBSTITUTE_ACCEPTED'
+  | 'SUBSTITUTE_REJECTED'
+  | 'DAILY_SCHEDULE_CHANGED'
   | 'OWNER_ANSWERED'
   | 'HANDOVER_CREATED'
   | 'OWNER_QUESTION_ASKED'
@@ -285,7 +290,7 @@ export interface AppNotification {
   body: string
   createdAt: string
   isRead: boolean
-  /** 누르면 갈 곳: substitute_request · assistant_chat · handover · owner_question */
+  /** 누르면 갈 곳: substitute_request · daily_schedule · assistant_chat · handover · owner_question */
   target: { kind: string; id: string }
 }
 
