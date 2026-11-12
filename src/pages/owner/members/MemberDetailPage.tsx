@@ -8,23 +8,55 @@ import { useMembers, useRemoveMember, useUpdateHourlyWage } from '@/pages/owner/
 import type { Member } from '@/pages/owner/api/types'
 import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
 import { MemberBoard } from '@/pages/owner/members/components/MemberBoard'
+import { MemberSummary } from '@/pages/owner/members/components/MemberSummary'
 import { TaxTypeField } from '@/pages/owner/members/components/TaxTypeField'
 import { WageInput } from '@/pages/owner/members/components/WageInput'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { useWide } from '@/pages/owner/useWide'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
 // 직원 상세: 초대코드(복사 · 카톡) · 시급 · 급여 공제(4대보험 · 3.3% · 없음) · 퇴사 처리(입장한 직원은 퇴사 → 바로 차단, 기록은 남김 · 입장 전이면 코드 삭제)
+// 휴대폰: 목록 위 상세 시트 / 데스크톱: 목록 오른쪽 칸에 직원 정보(MemberSummary), [정보 수정]을 누르면 같은 상세가 대화창으로
 export default function MemberDetailPage() {
   const { memberId } = useParams()
   const { store } = useOwnerStore()
   const query = useMembers(store.storeId)
   const close = useCloseTo('/owner/members')
   const member = query.data?.members.find((m) => m.memberId === memberId)
+  const wide = useWide()
+  const [editing, setEditing] = useState(false)
 
   if (query.data && !member) return <Navigate to="/owner/members" replace />
+
+  if (wide) {
+    return (
+      <>
+        <MemberBoard
+          selectedId={memberId}
+          panel={
+            member && (
+              <MemberSummary
+                key={member.memberId}
+                member={member}
+                onEdit={() => setEditing(true)}
+              />
+            )
+          }
+        />
+        {member && editing && (
+          <MemberSheet
+            key={member.memberId}
+            member={member}
+            storeName={store.name}
+            onClose={() => setEditing(false)}
+          />
+        )}
+      </>
+    )
+  }
 
   return (
     <>
