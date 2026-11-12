@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from 'react'
 import { IconButton } from '@/ui/IconButton'
 import { cn } from '@/ui/utils'
 
-// 아래에서 올라오는 시트 (Modal) — 담당: 나현. 바깥 · Esc · (closeButton 이면) 오른쪽 위 X 로 닫힌다.
+// 아래에서 올라오는 시트 (Modal) — 담당: 나현. 사장님 데스크톱(.owner-wide 안 · lg)에서는 가운데 대화창. 바깥 · Esc · (closeButton 이면) 오른쪽 위 X 로 닫힌다.
 interface BottomSheetProps {
   open: boolean
   onClose: () => void
@@ -42,7 +42,11 @@ export function BottomSheet({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(20,28,22,0.45)] backdrop-blur-[2px] animate-in fade-in-0"
+      className={cn(
+        'fixed inset-0 z-40 flex items-end justify-center bg-[rgba(20,28,22,0.45)] backdrop-blur-[2px] animate-in fade-in-0',
+        // 사장님 데스크톱(.owner-wide · lg): 아래 시트 대신 가운데 대화창
+        'lg:in-[.owner-wide]:items-center lg:in-[.owner-wide]:p-8 lg:in-[.owner-wide]:pl-[calc(256px+32px)]',
+      )}
     >
       <div
         role="dialog"
@@ -51,10 +55,11 @@ export function BottomSheet({
         onClick={(event) => event.stopPropagation()}
         className={cn(
           'relative flex max-h-[88vh] w-full max-w-[460px] flex-col gap-[18px] overflow-y-auto rounded-t-[30px] bg-card px-5 pt-6 pb-8 animate-in slide-in-from-bottom-10',
+          'lg:in-[.owner-wide]:max-w-[540px] lg:in-[.owner-wide]:rounded-[30px] lg:in-[.owner-wide]:px-7 lg:in-[.owner-wide]:pt-7 lg:in-[.owner-wide]:pb-7 lg:in-[.owner-wide]:shadow-float lg:in-[.owner-wide]:slide-in-from-bottom-4',
           className,
         )}
       >
-        <div className="-mt-2.5 h-1 w-10 shrink-0 self-center rounded-sm bg-[#DDD6C9]" />
+        <div className="-mt-2.5 h-1 w-10 shrink-0 self-center rounded-sm bg-[#DDD6C9] lg:in-[.owner-wide]:hidden" />
         {closeButton && (
           <IconButton
             aria-label="닫기"

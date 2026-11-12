@@ -143,13 +143,16 @@ function RecipeSection({ storeId }: { storeId: string }) {
             </Link>
           </div>
           {shown.length > 0 ? (
-            <RecipeGrid
-              recipes={shown}
-              getHref={(r) => ({
-                pathname: `/owner/recipes/${r.recipeId}`,
-                search: params.toString(),
-              })}
-            />
+            // 공용 RecipeGrid(2열)를 데스크톱에서는 3 · 4열로 (바로 안의 grid 칸 수만 바꾼다)
+            <div className="lg:*:grid-cols-3 lg:*:gap-3 xl:*:grid-cols-4">
+              <RecipeGrid
+                recipes={shown}
+                getHref={(r) => ({
+                  pathname: `/owner/recipes/${r.recipeId}`,
+                  search: params.toString(),
+                })}
+              />
+            </div>
           ) : q ? (
             <EmptyState message="검색 결과가 없어요" />
           ) : (
@@ -183,7 +186,7 @@ function ManualSection({ storeId }: { storeId: string }) {
   if (query.error) return <LoadError error={query.error} onRetry={() => query.refetch()} />
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
       {manuals.map((m) => (
         <ManualCard key={m.manualId} manual={m} href={`/owner/manuals/${m.manualId}`} />
       ))}

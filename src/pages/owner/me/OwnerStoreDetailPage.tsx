@@ -32,7 +32,7 @@ export default function OwnerStoreDetailPage() {
   if (!isPending && !store) return <Navigate to="/owner/me" replace />
   if (!store || !members.data) {
     return (
-      <OwnerFrame colors={{ color: '#2A4536', soft: '#E3E8DC' }}>
+      <OwnerFrame colors={{ color: '#2A4536', soft: '#E3E8DC' }} narrow>
         <Spinner />
       </OwnerFrame>
     )
@@ -99,7 +99,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
   }
 
   return (
-    <OwnerFrame colors={store} className="gap-[22px] pb-10">
+    <OwnerFrame colors={store} narrow className="gap-[22px] pb-10">
       <Header title="매장 상세" onBack={close} />
       {/* 이름 옆 연필 · 점선 밑줄로 고칠 수 있다는 힌트 (알바 마이페이지와 같은 모양) */}
       <label className="group flex min-w-0 items-center gap-2 px-1">
