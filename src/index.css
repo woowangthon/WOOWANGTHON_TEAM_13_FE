@@ -161,3 +161,13 @@
     outline: none;
   }
 }
+
+/*
+ * 사장님 화면(OwnerFrame 의 .owner-wide 안)에서만 카드 그림자를 조금 더 — 알바 화면의 shadow-soft 는 그대로.
+ * Tailwind 4 는 shadow-soft 값을 클래스 안에 넣어서, 토큰 대신 --tw-shadow 를 덮어쓴다 (레이어 밖이라 유틸리티보다 우선)
+ */
+.owner-wide .shadow-soft {
+  --tw-shadow:
+    0 1px 3px var(--tw-shadow-color, rgba(40, 46, 36, 0.06)),
+    0 10px 28px var(--tw-shadow-color, rgba(40, 46, 36, 0.1));
+}

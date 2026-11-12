@@ -138,7 +138,7 @@ export default function OwnerPayrollPage() {
                 key={m.memberId}
                 type="button"
                 onClick={() => setOpenId(m.memberId)}
-                className="grid grid-cols-[2fr_1.6fr_1.2fr_1.2fr] items-center gap-3 rounded-[18px] bg-white px-4 py-3 text-left transition-shadow hover:shadow-soft"
+                className="grid grid-cols-[2fr_1.6fr_1.2fr_1.2fr] items-center gap-3 rounded-[18px] bg-white px-4 py-3 text-left shadow-soft transition-shadow hover:shadow-float"
               >
                 <span className="flex min-w-0 items-center gap-3">
                   <PersonAvatar name={m.name} index={i} size={38} />
