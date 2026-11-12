@@ -7,6 +7,8 @@ import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
 import { LoadError } from '@/shared/LoadError'
 import { Skeleton, SkeletonGroup } from '@/shared/Skeleton'
+import { STORE_ICON } from '@/shared/icons'
+import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { StoreSwitcher } from '@/shared/store/StoreSwitcher'
 import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
 import { Toaster } from '@/ui/Toast'
@@ -45,11 +47,14 @@ export default function StaffLayout() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const StoreIcon = STORE_ICON[store.icon]
+
   return (
     <StaffFrame store={store}>
+      {/* 위 줄은 사장님 헤더(OwnerLayout)와 같은 배치: 좌우 칸 92px 로 같게 해서 로고(124px)가 가운데 · 버튼 36px */}
       <header
         className={cn(
-          'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
+          'sticky top-(--offline-banner,0px) z-20 -mx-4 -mt-3.5 grid grid-cols-[92px_1fr_92px] items-center gap-2 px-4.5 pt-[max(14px,env(safe-area-inset-top))] pb-2 transition-[background-color,box-shadow,backdrop-filter] duration-200',
           scrolled &&
             'bg-white/80 shadow-[0_1px_0_rgba(40,46,36,0.06)] backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-white',
         )}
@@ -58,12 +63,16 @@ export default function StaffLayout() {
           type="button"
           onClick={() => setStoreSheetOpen(true)}
           aria-label={`매장 바꾸기 · 지금 ${store.name}`}
-          // 왼쪽 칸 폭(375px 에서 124px) 안에서만: 이름 + ▾ 만 (꾸밈 아이콘 원 없이), 길면 "달빛…"처럼 말줄임.
-          // 흰 바탕 위 크림색 알약이라 옅은 테두리로 구분 (docs/08 4)
-          className="flex h-10 max-w-full min-w-0 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold"
+          // 사장님 StoreMenu compact 와 같은 모양: 매장 동그라미 24px + 이름(92px 칸 안에서 "달빛…" 말줄임) + ▾, 테두리 없음
+          className="flex h-9 w-full items-center gap-1 rounded-full bg-card py-1 pr-1.5 pl-1 text-xs font-bold"
         >
-          <span className="min-w-0 truncate">{store.name}</span>
-          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          <span className="shrink-0">
+            <StoreAvatar color={store.color} size={24}>
+              <StoreIcon className="size-3.5" fill="currentColor" />
+            </StoreAvatar>
+          </span>
+          <span className="min-w-0 flex-1 truncate text-left">{store.name}</span>
+          <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
         </button>
         <Link
           to="/staff"
@@ -76,32 +85,31 @@ export default function StaffLayout() {
           }}
           className="flex h-10 items-center justify-self-center"
         >
-          {/* 글자 로고만 24px (public/logo-crewbean.png, 나현). 360px 에서도 왼쪽 매장 이름 칸이 101px 남는 크기 */}
+          {/* 글자 로고 (public/logo-crewbean.png, 나현) 사장님과 같은 124px, 높이는 비율대로 */}
           <img
             src="/logo-crewbean.png"
             alt="crewBean"
             width={528}
             height={120}
-            className="h-6 w-auto"
+            className="h-auto w-[124px]"
           />
         </Link>
-        <span className="flex items-center gap-2 justify-self-end">
+        <span className="flex items-center justify-end gap-1.5">
           <Link
             to="/staff/notifications"
             aria-label={unread > 0 ? `알림 · 안 읽은 알림 ${unread}개` : '알림'}
-            className="relative flex size-[42px] items-center justify-center rounded-full bg-card text-foreground"
+            // 사장님 알림 버튼과 같은 36px · 아이콘 19px · 새 알림은 종 오른쪽 위 작은 빨간 점 (개수는 aria-label 에)
+            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-foreground"
           >
-            <Bell className="size-5" />
+            <Bell className="size-[19px]" />
             {unread > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-white tabular-nums">
-                {unread > 9 ? '9+' : unread}
-              </span>
+              <span className="absolute top-2 right-[9px] size-2 rounded-full border-2 border-card bg-destructive" />
             )}
           </Link>
           <Link
             to="/staff/me"
             aria-label="마이페이지"
-            className="flex size-[42px] items-center justify-center rounded-full bg-brand text-base font-extrabold text-background"
+            className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-background"
           >
             {profileName.slice(0, 1)}
           </Link>
