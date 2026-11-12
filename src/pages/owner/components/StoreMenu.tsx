@@ -29,7 +29,7 @@ export function StoreMenu({ store, stores, onSelect, compact }: StoreMenuProps) 
         className={cn(
           'flex items-center gap-2 rounded-full bg-card py-1.5 pr-2.5 pl-1.5 text-[15px] font-bold',
           compact &&
-            'h-9 w-full gap-1 bg-background py-1 pr-1.5 pl-1 text-xs lg:h-auto lg:w-auto lg:gap-2 lg:py-1.5 lg:pr-2.5 lg:pl-1.5 lg:text-[15px]',
+            'h-9 w-full gap-1 py-1 pr-1.5 pl-1 text-xs lg:h-auto lg:w-auto lg:gap-2 lg:py-1.5 lg:pr-2.5 lg:pl-1.5 lg:text-[15px]',
         )}
       >
         <span className="shrink-0">

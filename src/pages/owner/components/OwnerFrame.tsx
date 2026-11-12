@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { OwnerSidebar } from '@/pages/owner/components/OwnerSidebar'
 import { cn } from '@/ui/utils'
 
-// 사장님 화면 바탕: 흰색 · 가운데 460px 기둥 (모바일 디자인) + 매장 색(--brand)
+// 사장님 화면 바탕: 알바(StaffFrame)와 같게 가운데 460px 기둥은 흰색 · 바깥은 canvas (모바일 디자인) + 매장 색(--brand)
 // 데스크톱(lg 1024px 이상): 왼쪽 메뉴(OwnerSidebar) + 넓은 본문 (가운데 최대 1180px). 하단 탭은 OwnerLayout 이 숨긴다
 // .owner-wide: 이 안의 시트(ui/BottomSheet)는 데스크톱에서 가운데 대화창으로 뜬다
 export function OwnerFrame({
@@ -19,7 +19,7 @@ export function OwnerFrame({
 }) {
   const brand = { '--brand': colors.color, '--brand-soft': colors.soft } as CSSProperties
   return (
-    <div className="owner-wide min-h-dvh bg-white" style={brand}>
+    <div className="owner-wide min-h-dvh bg-canvas lg:bg-white" style={brand}>
       <OwnerSidebar />
       <div
         className={cn(

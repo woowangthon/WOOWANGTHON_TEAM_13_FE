@@ -82,11 +82,11 @@ export default function OwnerLayout() {
             to="/owner/notifications"
             aria-label={hasNotification ? '알림, 새 알림 있음' : '알림'}
             // IconButton(card · md)과 같은 모양 — 주소로 가서 Link
-            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-foreground lg:size-[42px] transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
+            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-foreground lg:size-[42px] transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
           >
             <Bell className="size-[19px] lg:size-[22px]" />
             {hasNotification && (
-              <span className="absolute top-2 right-[9px] size-2 rounded-full border-2 border-background bg-destructive lg:top-2.5 lg:right-[11px]" />
+              <span className="absolute top-2 right-[9px] size-2 rounded-full border-2 border-card bg-destructive lg:top-2.5 lg:right-[11px]" />
             )}
           </Link>
           <Link
