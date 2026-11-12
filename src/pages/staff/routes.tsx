@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router'
 import AvailabilityPage from '@/pages/staff/schedule/AvailabilityPage'
 import ChatPage from '@/pages/staff/chat/ChatPage'
 import HandoverPage from '@/pages/staff/handover/HandoverPage'
+import StaffGuidePage from '@/pages/staff/guide/StaffGuidePage'
 import JoinPage from '@/pages/staff/join/JoinPage'
 import ManualDetailPage from '@/pages/staff/manual/ManualDetailPage'
 import ManualListPage from '@/pages/staff/manual/ManualListPage'
@@ -18,6 +19,8 @@ import StaffLayout from '@/pages/staff/StaffLayout'
 // 알바 화면 주소 — 담당: 민지
 export const staffRoutes: RouteObject[] = [
   { path: '/staff/join', element: <JoinPage /> },
+  // 앱 사용법: 하단 탭 없이 전체 화면 (입장 직후 · 홈 첫 진입 · 마이페이지 "앱 사용법")
+  { path: '/staff/guide', element: <StaffGuidePage /> },
   // 하단 탭 없이 전체 화면으로 보이는 하위 화면 (디자인 알바생 v3)
   { path: '/staff/me', element: <MyPage /> },
   { path: '/staff/stores/:storeId', element: <StoreSettingsPage /> },
