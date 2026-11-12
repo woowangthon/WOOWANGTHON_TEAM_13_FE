@@ -110,28 +110,31 @@ export function SentSubstitutesOfDay({
 }) {
   if (requests.length === 0) return null
   return (
-    <div className="flex flex-col border-t border-line/60 first:border-t-0">
-      <span className="px-4 pt-3 pb-1 text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
-      {requests.map((r) => (
-        <ScheduleRow
-          key={r.requestId}
-          start={r.start}
-          end={r.end}
-          color={colorOf(r.target.userId)[1]}
-          title={<span className="truncate">{r.target.name}님에게 요청</span>}
-          sub={r.shiftName || '근무'}
-          right={
-            <span
-              className={cn(
-                'rounded-full px-2.5 py-1 text-xs font-bold',
-                STATUS[r.status].className,
-              )}
-            >
-              {STATUS[r.status].label}
-            </span>
-          }
-        />
-      ))}
+    // 근무 줄과 같은 모양: 카드 · 구분선 없이 작은 라벨 + 줄(사이 20px), 상태 칩은 줄 오른쪽
+    <div className="flex flex-col gap-3 pt-2">
+      <span className="text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
+      <div className="flex flex-col gap-5">
+        {requests.map((r) => (
+          <ScheduleRow
+            key={r.requestId}
+            start={r.start}
+            end={r.end}
+            color={colorOf(r.target.userId)[1]}
+            title={<span className="truncate">{r.target.name}님에게 요청</span>}
+            sub={r.shiftName || '근무'}
+            right={
+              <span
+                className={cn(
+                  'rounded-full px-2.5 py-1 text-xs font-bold',
+                  STATUS[r.status].className,
+                )}
+              >
+                {STATUS[r.status].label}
+              </span>
+            }
+          />
+        ))}
+      </div>
     </div>
   )
 }

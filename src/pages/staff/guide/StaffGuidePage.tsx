@@ -403,8 +403,8 @@ function SchedulePicture() {
           ))}
         </div>
       </section>
-      {/* 고른 날 근무 목록 (실제 근무표 날짜 목록과 같은 줄 모양 ScheduleRow: 시간 · 사람 색 줄 · 이름 · [⇄ 대타 요청 ›]) */}
-      <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card">
+      {/* 고른 날 근무 목록 (실제 근무표 날짜 목록과 같은 줄 모양 ScheduleRow: 카드 · 구분선 없이 시간 · 사람 색 줄 · 이름 · [⇄ 대타 요청 ›], 줄 사이 20px) */}
+      <div className="flex flex-col gap-5 px-1">
         <ScheduleRow
           start="09:00"
           end="13:30"
