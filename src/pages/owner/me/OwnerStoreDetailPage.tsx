@@ -1,5 +1,5 @@
 import { Pencil } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { MIN_WAGE } from '@/api/mocks/owner/data'
 import { toastApiError } from '@/lib/api/errors'
@@ -10,6 +10,7 @@ import type { Member, StoreSize } from '@/pages/owner/api/types'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { ClosedDaysField } from '@/pages/owner/store/components/ClosedDaysField'
+import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { Button } from '@/ui/Button'
@@ -21,10 +22,6 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 매장 상세 (마이페이지 › 내 매장): 매장 이름 · 급여일 · 사업장 규모 · 쉬는 날(요일 · 공휴일) · 직원별 시급 → 저장
-
-// 급여일: 1~30일 · 말일(31) — BE 마이그레이션 17로 1~31 을 받는다 (31 은 짧은 달에도 마지막 날)
-const DAYS = [...Array.from({ length: 30 }, (_, i) => i + 1), 31]
-const ROW = 44
 
 export default function OwnerStoreDetailPage() {
   const { storeId } = useParams()
@@ -54,21 +51,9 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
     Object.fromEntries(members.map((m) => [m.memberId, String(m.hourlyWage)])),
   )
   const [saving, setSaving] = useState(false)
-  const wheel = useRef<HTMLDivElement>(null)
   const updateStore = useUpdateStore(store.storeId)
   const updateWage = useUpdateHourlyWage(store.storeId)
   const low = members.some((m) => Number(wages[m.memberId]) < MIN_WAGE)
-
-  // 처음 열 때 저장된 급여일로 휠을 맞춘다
-  useEffect(() => {
-    wheel.current?.scrollTo({ top: Math.max(0, DAYS.indexOf(store.payday)) * ROW })
-  }, [store.payday])
-
-  const onWheel = () => {
-    if (!wheel.current) return
-    const index = Math.max(0, Math.min(DAYS.length - 1, Math.round(wheel.current.scrollTop / ROW)))
-    if (DAYS[index] !== payday) setPayday(DAYS[index])
-  }
 
   const save = async () => {
     if (low || !name.trim()) return
@@ -141,33 +126,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
       </label>
 
       <Section label="급여일">
-        <div className="relative overflow-hidden rounded-[22px] bg-card shadow-soft">
-          <div className="pointer-events-none absolute inset-x-3 top-11 h-11 rounded-[14px] bg-brand-soft" />
-          <div
-            ref={wheel}
-            onScroll={onWheel}
-            role="listbox"
-            aria-label="급여일"
-            className="no-scrollbar relative h-[132px] snap-y snap-mandatory overflow-y-auto py-11"
-          >
-            {DAYS.map((day) => {
-              const on = day === payday
-              return (
-                <div
-                  key={day}
-                  role="option"
-                  aria-selected={on}
-                  className={cn(
-                    'flex h-11 snap-center items-center justify-center',
-                    on ? 'text-xl font-extrabold text-brand' : 'text-base font-medium text-faint',
-                  )}
-                >
-                  매월 {day === 31 ? '말일' : `${day}일`}
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        <PaydayField value={payday} onChange={setPayday} />
       </Section>
 
       <Section label="사업장 규모">

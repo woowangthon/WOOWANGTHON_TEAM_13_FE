@@ -10,14 +10,19 @@ import {
 } from '@/api/mocks/owner/api'
 import { manualKeys } from '@/lib/api/manuals'
 import { http, isRealApi } from '@/lib/api/source'
-import type { NotificationFeed } from '@/lib/api/types'
+import type { CalendarShift, NotificationFeed, ScheduleCalendar } from '@/lib/api/types'
 import { ApiError } from '@/lib/apiClient'
-import { fromDateKey } from '@/lib/date'
+import { fromDateKey, todayInKst, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { fetchOwnerReceived } from '@/pages/owner/api/fixedSchedule'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
 import { questionSentence } from '@/pages/owner/components/questionText'
-import type { OwnerAnswer, OwnerNotification, OwnerQuestionItem } from '@/pages/owner/api/types'
+import type {
+  OnDuty,
+  OwnerAnswer,
+  OwnerNotification,
+  OwnerQuestionItem,
+} from '@/pages/owner/api/types'
 
 /*
  * 사장님 홈 · 알림 · 확인 필요 질문 훅 — 담당: 나현
@@ -142,11 +147,48 @@ export function useReadHandoverNotifications() {
   })
 }
 
+/** 한국 시간 지금 "HH:MM" */
+const nowInKst = () => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(11, 16)
+
+/**
+ * 지금 근무 중인 사람 (직원 · 사장님 모두): 오늘 근무 달력에서 시작 ≤ 지금 < 끝 인 칸 (하루 조정 · 대타 반영된 BE 달력 그대로)
+ * 진짜는 'schedule' 스위치를 따른다. 1분마다 다시 계산
+ */
+const fetchOnDuty = async (storeId: string): Promise<{ people: OnDuty[] }> => {
+  if (!isRealApi('schedule')) return getOnDuty(storeId)
+  const today = toDateKey(todayInKst())
+  let shifts: CalendarShift[] = []
+  try {
+    ;({ shifts } = await http.get<ScheduleCalendar>(
+      `/stores/${storeId}/schedule-calendar?startDate=${today}&endDate=${today}`,
+    ))
+  } catch (error) {
+    // 근무표를 아직 안 만든 매장
+    if (!(error instanceof ApiError && error.status === 404)) throw error
+  }
+  const now = nowInKst()
+  // 한 사람이 겹치는 칸에 두 번 나오면 한 번만
+  const byUser = new Map<string, OnDuty>()
+  for (const s of shifts) {
+    if (s.date !== today || s.start > now || now >= s.end || byUser.has(s.assignee.userId)) continue
+    byUser.set(s.assignee.userId, {
+      userId: s.assignee.userId,
+      name: s.assignee.name,
+      isOwner: s.assignee.role === 'owner',
+      shiftName: s.name,
+      start: s.start,
+      end: s.end,
+    })
+  }
+  return { people: [...byUser.values()] }
+}
+
 export function useOnDuty(storeId: string) {
   return useQuery({
     queryKey: ownerKeys.onDuty(storeId),
-    queryFn: () => getOnDuty(storeId),
+    queryFn: () => fetchOnDuty(storeId),
     enabled: !!storeId,
+    refetchInterval: 60_000,
   })
 }
 

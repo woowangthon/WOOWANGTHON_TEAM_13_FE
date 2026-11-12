@@ -19,8 +19,10 @@ import { useStorePayroll } from '@/pages/owner/api/work'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
+import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { MANUAL_ICON, DEFAULT_MANUAL_ICON } from '@/shared/icons'
+import { cn } from '@/ui/utils'
 
 // 사장님 홈: 인사 · 지금 근무 중 · 바로가기 · 확인 필요(질문 · 인건비) · 인수인계
 
@@ -105,60 +107,49 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
   const query = useOnDuty(store.storeId)
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = !!store.photoUrl && !photoFailed
-  const duty = query.data?.onDuty
+  const people = query.data?.people ?? []
+  const [editingPhoto, setEditingPhoto] = useState(false)
 
   return (
-    <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
-      {showPhoto && (
-        <>
+    <>
+      <section className="relative isolate min-h-[220px] overflow-hidden rounded-[30px] bg-brand texture">
+        {showPhoto && (
           <img
             src={store.photoUrl ?? undefined}
             alt=""
             onError={() => setPhotoFailed(true)}
             className="absolute inset-0 -z-10 size-full object-cover"
           />
-          <div className="absolute inset-0 -z-10" style={{ background: store.scrim }} />
-        </>
-      )}
-      <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
-        <span className="flex items-center gap-2 self-start rounded-full bg-white/15 py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md">
-          <span className="flex size-7 items-center justify-center rounded-full bg-white">
-            <span
-              className={
-                duty ? 'size-2.5 rounded-full bg-[#6FA97B]' : 'size-2.5 rounded-full bg-faint'
-              }
-            />
+        )}
+        <div className="relative flex min-h-[220px] flex-col justify-between gap-[18px] p-5 text-white">
+          <span
+            className={cn(
+              'flex items-center gap-2 self-start rounded-full py-[5px] pr-[13px] pl-[5px] text-[13px] font-bold whitespace-nowrap backdrop-blur-md',
+              showPhoto ? 'bg-black/35' : 'bg-white/15',
+            )}
+          >
+            <span className="flex size-7 items-center justify-center rounded-full bg-white">
+              <span
+                className={cn('size-2.5 rounded-full', people.length ? 'bg-[#6FA97B]' : 'bg-faint')}
+              />
+            </span>
+            {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
           </span>
-          {duty ? '지금 영업 중' : '근무 중인 직원 없음'}
-        </span>
-        <div className="flex items-end justify-between gap-3.5">
-          {duty ? (
-            <div className="flex min-w-0 flex-col gap-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-[15px] font-extrabold text-brand">
-                  {duty.name.slice(0, 1)}
-                </span>
-                <span className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] whitespace-nowrap">
-                  {duty.name} 근무 중
-                </span>
-              </div>
-              <span className="text-[13px] opacity-85">
-                {duty.role} {duty.start} – {duty.end} · {duty.clockIn} 출근
-              </span>
-            </div>
-          ) : (
-            <span className="text-[22px] font-extrabold tracking-[-0.02em]">{store.name}</span>
-          )}
-          <Link
-            to="/owner/schedule"
-            aria-label="근무 보기"
-            className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-white text-foreground"
+          {/* 아래는 버튼만 — 누르면 매장 사진 변경 (11/12) */}
+          <button
+            type="button"
+            onClick={() => setEditingPhoto(true)}
+            aria-label="매장 사진 변경"
+            className="flex size-[46px] shrink-0 items-center justify-center self-end rounded-full bg-black/35 text-white backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             <ChevronRight className="size-6" />
-          </Link>
+          </button>
         </div>
-      </div>
-    </section>
+      </section>
+      {editingPhoto && (
+        <StorePhotoSheet storeId={store.storeId} onClose={() => setEditingPhoto(false)} />
+      )}
+    </>
   )
 }
 

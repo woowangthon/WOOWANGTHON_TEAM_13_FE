@@ -7,7 +7,8 @@ import { toast } from '@/ui/toastStore'
 // 매장 주소: 직접 쓰지 않고 카카오(다음) 우편번호 검색에서 고른 도로명 주소만 넣는다 + 상세 주소(층 · 호)
 // 검색 창은 npm 이 아니라 공개 스크립트(키 없음)를 처음 열 때 한 번 불러온다 (lib/kakao 의 SDK 와 같은 방식)
 
-const POSTCODE_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+// t1.daumcdn.net 은 2026-11-30 에 끝나서 카카오 주소로 (우편번호 서비스 공지)
+const POSTCODE_URL = 'https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
 
 interface PostcodeResult {
   roadAddress: string

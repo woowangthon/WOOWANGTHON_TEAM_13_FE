@@ -34,8 +34,10 @@ export interface NewStore {
   name: string
   address: string
   size: StoreSize
+  /** 급여일 1~31 (31 = 말일) */
+  payday: number
   bizNo?: string | null
-  /** 사업자 확인(VERIFIED) 결과 번호 — POST /business-verifications */
+  /** 사업자 확인(VERIFIED) 결과 번호 — POST /stores/business-verifications */
   businessVerificationId: number
   /** 근무 타임 (오픈 · 미들 · 마감 …) — 매장과 함께 만든다 */
   shiftTemplates: ShiftTemplateInput[]
@@ -83,13 +85,10 @@ export interface OwnerSubstituteRequest {
   requester: ScheduleWorker
 }
 
-/** 사업자 확인 요청 (POST /business-verifications, 국세청 진위확인) */
+/** 사업자 확인 요청 (POST /stores/business-verifications, 국세청 상태조회 · 시연 000-00-00000) */
 export interface BizVerifyInput {
   /** 000-00-00000 (BE 가 - 를 뺀다) */
   bizNo: string
-  ownerName: string
-  /** 개업일 YYYY-MM-DD */
-  startDate: string
 }
 
 /** 사업자 확인 결과 — VERIFIED 여야 매장을 등록할 수 있다 */
@@ -197,14 +196,15 @@ export interface NewMember {
   schedule?: WeekShift[]
 }
 
-/** 지금 근무 중인 사람 (홈 카드) */
+/** 지금 근무 중인 사람 (홈 카드) — 직원 · 사장님 모두, 근무 달력에서 지금 시간이 근무 시간 안인 사람 */
 export interface OnDuty {
+  userId: string
   name: string
-  role: string
+  isOwner: boolean
+  /** 근무 이름 (오픈 · 미들 · 마감 …) */
+  shiftName: string
   start: string
   end: string
-  /** 출근 시각 */
-  clockIn: string
 }
 
 /** 홈 · 알림의 "확인 필요": AI 가 답하지 못해 알바생이 사장님께 물어본 질문 */
