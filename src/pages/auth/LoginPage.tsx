@@ -1,8 +1,9 @@
 import { Coffee, LoaderCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { rememberRedirect, signIn, type OAuthProvider } from '@/lib/auth'
 import { getHomePath, useAuthStore } from '@/lib/authStore'
+import { wakeServer } from '@/lib/wakeServer'
 import loginPhoto from '@/pages/auth/assets/login-photo.webp'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
@@ -18,9 +19,13 @@ export default function LoginPage() {
   const from = (location.state as { from?: string } | null)?.from ?? null
   const [pending, setPending] = useState<OAuthProvider | null>(null)
 
+  // 잠든 서버(Render 무료)를 미리 깨운다: 화면을 열 때 · 로그인 버튼을 누를 때 (30초 안에는 한 번만)
+  useEffect(() => wakeServer(), [])
+
   if (isReady && isLoggedIn && me) return <Navigate to={from ?? getHomePath(me)} replace />
 
   const start = async (provider: OAuthProvider) => {
+    wakeServer()
     setPending(provider)
     rememberRedirect(from)
     try {
