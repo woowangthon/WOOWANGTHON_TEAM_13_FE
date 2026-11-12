@@ -10,7 +10,7 @@ import {
 import type { SubstituteRequest, SubstituteStatus } from '@/lib/api/types'
 import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
-import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { ScheduleRow } from '@/pages/staff/schedule/components/ScheduleRow'
 import type { PersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { PRESSABLE } from '@/shared/pressable'
@@ -97,8 +97,9 @@ const STATUS: Record<SubstituteStatus, { label: string; className: string }> = {
 }
 
 /**
- * 그날 내가 보낸 대타 요청 — 근무표에서 날짜를 누르면 그날 근무 목록 아래 작은 카드 (없으면 안 보임).
- * 줄마다 "마감 18:00–23:00" + (동그라미) "민수님에게 요청" + 상태 칩. 수락돼서 근무가 넘어간 날도 여기서 기록이 보인다
+ * 그날 내가 보낸 대타 요청 — 근무표에서 날짜를 누르면 그날 근무 목록 카드 아래 작은 섹션 (없으면 안 보임).
+ * "보낸 대타 요청" 라벨 + 근무 줄과 같은 모양(ScheduleRow: 시간 · 받는 사람 색 줄 · "민수님에게 요청" / 근무 이름 · 상태 칩).
+ * 수락돼서 근무가 넘어간 날도 여기서 기록이 보인다. 근무 목록 카드(ScheduleMonth) 안에 넣는다
  */
 export function SentSubstitutesOfDay({
   requests,
@@ -109,34 +110,28 @@ export function SentSubstitutesOfDay({
 }) {
   if (requests.length === 0) return null
   return (
-    <div className="flex flex-col gap-1 rounded-3xl border border-line/60 bg-card px-4 pt-3 pb-1">
-      <span className="text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
-      <ul className="m-0 flex list-none flex-col p-0">
-        {requests.map((r) => (
-          <li
-            key={r.requestId}
-            className="flex items-center justify-between gap-3 border-b border-line/60 py-2.5 last:border-b-0"
-          >
-            <span className="flex min-w-0 flex-col gap-1">
-              <span className="text-[15px] font-bold tabular-nums">
-                {r.shiftName || '근무'} {r.start}–{r.end}
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <PersonInitial name={r.target.name} color={colorOf(r.target.userId)} size={18} />
-                {r.target.name}님에게 요청
-              </span>
-            </span>
+    <div className="flex flex-col border-t border-line/60 first:border-t-0">
+      <span className="px-4 pt-3 pb-1 text-xs font-bold text-muted-foreground">보낸 대타 요청</span>
+      {requests.map((r) => (
+        <ScheduleRow
+          key={r.requestId}
+          start={r.start}
+          end={r.end}
+          color={colorOf(r.target.userId)[1]}
+          title={<span className="truncate">{r.target.name}님에게 요청</span>}
+          sub={r.shiftName || '근무'}
+          right={
             <span
               className={cn(
-                'shrink-0 rounded-full px-2.5 py-1 text-xs font-bold',
+                'rounded-full px-2.5 py-1 text-xs font-bold',
                 STATUS[r.status].className,
               )}
             >
               {STATUS[r.status].label}
             </span>
-          </li>
-        ))}
-      </ul>
+          }
+        />
+      ))}
     </div>
   )
 }

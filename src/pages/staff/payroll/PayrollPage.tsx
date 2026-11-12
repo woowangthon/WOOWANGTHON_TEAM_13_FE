@@ -490,7 +490,7 @@ function PayCalendar({
           key={selectedDay}
           ref={detailRef}
           aria-live="polite"
-          className="flex animate-in scroll-mt-20 scroll-mb-[calc(108px+env(safe-area-inset-bottom))] flex-col gap-3 rounded-3xl border border-line/60 bg-card p-5 pb-4 duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
+          className="flex animate-in scroll-mt-20 scroll-mb-[calc(88px+env(safe-area-inset-bottom))] flex-col gap-3 rounded-3xl border border-line/60 bg-card p-5 pb-4 duration-200 fade-in-0 slide-in-from-top-2 motion-reduce:animate-none"
         >
           <div className="flex items-center justify-between gap-2.5">
             <h3 className="m-0 text-base leading-[1.4] font-bold tracking-[-0.01em]">
