@@ -95,7 +95,8 @@ export default function OwnerMyPage() {
       </section>
 
       <div className="mt-1.5 flex flex-col gap-2.5">
-        <Button variant="soft" className="h-[54px] text-base" onClick={logout}>
+        {/* 박스 없이 글자만 */}
+        <Button variant="ghost" className="h-12 text-base text-foreground" onClick={logout}>
           <LogOut className="size-5" />
           로그아웃
         </Button>
