@@ -47,6 +47,8 @@ export function OwnerHandoverWriteSheet({
         requestDraft={draft.mutateAsync}
         onSave={(note) => save(note, '저장했어요. 알바생 화면에 보여요')}
         onNoIssue={() => save(NO_ISSUE, '특이사항 없음으로 저장했어요')}
+        // 저장 중에는 [저장] · [특이사항 없음] 끄고 "저장 중…" (민지 #90 폼 saving)
+        saving={create.isPending}
       />
     </BottomSheet>
   )
