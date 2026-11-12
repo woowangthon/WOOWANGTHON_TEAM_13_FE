@@ -23,7 +23,7 @@ export function OwnerFrame({
       <OwnerSidebar />
       <div
         className={cn(
-          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-5 bg-white px-4 pt-3.5 pb-[calc(130px+env(safe-area-inset-bottom))]',
+          'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-5 bg-white px-4 pt-3.5 pb-[calc(104px+env(safe-area-inset-bottom))]',
           // 데스크톱: 메뉴 옆 넓은 칸, 본문은 가운데 1180px 까지
           'lg:ml-[256px] lg:w-auto lg:max-w-none lg:gap-6 lg:px-[max(40px,calc((100vw-256px-1180px)/2))] lg:pt-7 lg:pb-14',
           narrow && 'lg:px-[max(40px,calc((100vw-256px-760px)/2))]',
