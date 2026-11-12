@@ -16,6 +16,7 @@ import type {
 } from '@/lib/api/types'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { LengthHint } from '@/shared/LengthHint'
+import { MEMO_CARD, MEMO_FOLD } from '@/shared/handover/memoCorner'
 import { Skeleton } from '@/shared/Skeleton'
 import { Button } from '@/ui/Button'
 import { Textarea } from '@/ui/Textarea'
@@ -60,7 +61,7 @@ interface HandoverWriteFormProps {
   saving?: boolean
   /**
    * 모양. default = 지금 모양(사장님 시트) · note = 메모지 카드 (알바 시트, docs/08 챕터 4):
-   * 각진 흰 카드 + 옅은 테두리 + 오른쪽 위 살짝 접힌 면 · 위에 noteMeta 한 줄 · 예시 안내 문구 ·
+   * 각진 흰 카드 + 옅은 테두리 + 오른쪽 위가 대각선으로 잘린 접힌 면 · 위에 noteMeta 한 줄 · 예시 안내 문구 ·
    * 정리 중 뼈대 · 결과 항목도 같은 카드 안에 줄로 이어짐 · ✦ 없음
    */
   variant?: 'default' | 'note'
@@ -222,13 +223,9 @@ export function HandoverWriteForm({
         </h2>
 
         {/* 메모지 카드: 맨 위 날짜 · 매장 → (쓰기) 입력칸 / (정리 중) 뼈대 / (결과) 항목 줄.
-            진짜 메모장처럼 각진 모서리. 오른쪽 위에는 접혀 내려온 면(옅은 회색 삼각형) 하나만 — 카드 테두리 안쪽에 붙여서
-            위 · 오른쪽 테두리가 접힌 면 위로 그대로 이어지고, 접힌 선(빗변)에는 아주 옅은 그림자 */}
-        <div className="relative flex flex-col overflow-hidden border border-line/60 bg-white">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-0 right-0 size-7 bg-linear-to-bl from-transparent from-50% to-muted to-50% drop-shadow-xs"
-          />
+            진짜 메모장처럼 각진 모서리. 오른쪽 위는 대각선으로 잘려 나가고(시트 바탕이 비침), 접혀 내려온 옅은 회색 면만 보인다 (shared/handover/memoCorner) */}
+        <div className={MEMO_CARD}>
+          <span aria-hidden="true" className={MEMO_FOLD} />
           {noteMeta && (
             <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">
               {noteMeta}

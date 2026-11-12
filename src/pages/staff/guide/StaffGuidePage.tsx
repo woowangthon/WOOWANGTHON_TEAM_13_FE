@@ -23,6 +23,7 @@ import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { GuideSlides, type GuideSlide } from '@/shared/guide/GuideSlides'
 import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
+import { MEMO_CARD, MEMO_FOLD } from '@/shared/handover/memoCorner'
 import { HANDOVER_TAG_LABEL, HANDOVER_TAG_PILL } from '@/shared/icons'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
@@ -232,11 +233,8 @@ function WritePicture() {
   return (
     <Phone tab="write">
       <span className="px-1 text-[26px] leading-[1.25] font-extrabold">인수인계 남기기</span>
-      <div className="relative flex flex-col overflow-hidden border border-line/60 bg-white">
-        <span
-          aria-hidden="true"
-          className="absolute top-0 right-0 size-7 bg-linear-to-bl from-transparent from-50% to-muted to-50% drop-shadow-xs"
-        />
+      <div className={MEMO_CARD}>
+        <span aria-hidden="true" className={MEMO_FOLD} />
         <span className="border-b border-line/60 py-3 pr-10 pl-5 text-[13px] font-medium text-muted-foreground tabular-nums">
           11/20(금) · 달빛 카페
         </span>
