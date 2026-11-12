@@ -11,7 +11,8 @@ import { Badge } from '@/ui/Badge'
 // 누르면 갈 주소는 화면마다 달라서 getHref 로 받는다 (알바 /staff/recipes/:id · 사장 /owner/recipes/:id)
 // variant
 //   default: 카드마다 그림자 · 모서리 26 · 사진 위 온도 알약 (지금 사장님 화면)
-//   clean:   그림자 없는 카드(24) + 사진 2:1(16) · 이름 16px / 아래 줄 13px · 온도는 아래 줄 글자로 (docs/08 · 알바 화면)
+//   clean:   그림자 없는 카드(24 · 옅은 테두리 1px) 위쪽을 사진 2:1이 꽉 채움(카드 overflow-hidden 으로 위 모서리만 둥글게) ·
+//            아래 글자 영역만 여백 12px · 이름 16px(두 줄까지) / 아래 줄 13px · 온도는 아래 줄 글자로 (docs/08 · 알바 화면)
 interface RecipeGridProps {
   recipes: RecipeSummary[]
   getHref: (recipe: RecipeSummary) => To
@@ -91,12 +92,12 @@ function CleanGrid({ recipes, getHref }: Omit<RecipeGridProps, 'variant'>) {
             // 상세는 목록 위에 뜨는 시트라 목록 스크롤 자리를 그대로 둔다
             preventScrollReset
             className={cn(
-              'flex flex-col gap-2 rounded-3xl bg-card p-2 pb-3 text-foreground',
+              'flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card text-foreground',
               PRESSABLE,
             )}
           >
             <span
-              className="relative flex aspect-2/1 w-full items-center justify-center overflow-hidden rounded-2xl"
+              className="relative flex aspect-2/1 w-full items-center justify-center"
               style={{ background: tint }}
             >
               <RecipePhoto
@@ -104,13 +105,13 @@ function CleanGrid({ recipes, getHref }: Omit<RecipeGridProps, 'variant'>) {
                 fallback={<Icon aria-hidden="true" className="size-6" style={{ color: ink }} />}
               />
               {r.isNew && (
-                <Badge className="absolute top-2 right-2" aria-label="새 레시피">
+                <Badge className="absolute top-3 right-3" aria-label="새 레시피">
                   NEW
                 </Badge>
               )}
             </span>
-            <span className="flex flex-col gap-0.5 px-1">
-              <span className="text-base leading-[1.4] font-bold tracking-[-0.01em] break-keep">
+            <span className="flex flex-col gap-0.5 p-3">
+              <span className="line-clamp-2 text-base leading-[1.4] font-bold tracking-[-0.01em] break-keep">
                 {r.name}
               </span>
               <span className="text-[13px] font-medium text-muted-foreground tabular-nums">
