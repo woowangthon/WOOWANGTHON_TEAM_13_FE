@@ -90,36 +90,6 @@ function HomeBody({
         {formatDate(todayOfStore)}
       </span>
 
-      <div className="grid grid-cols-7 items-center gap-1">
-        {week.map(({ date, work }) => {
-          const day = date.getDate()
-          const on = day === selected
-          const today = isSameDay(date, todayOfStore)
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => setSelected(day)}
-              aria-pressed={on}
-              className={cn(
-                'flex flex-col items-center gap-[5px] rounded-full transition-colors',
-                on ? 'bg-brand pt-3.5 pb-3 text-white shadow-lift' : 'py-2',
-                !on && (today ? 'text-brand' : work ? 'text-foreground' : 'text-faint'),
-              )}
-            >
-              <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[date.getDay()]}</span>
-              <span className="text-[17px] font-bold tabular-nums">{day}</span>
-              <span
-                className={cn(
-                  'size-[5px] rounded-full',
-                  work ? (on ? 'bg-white' : 'bg-brand') : 'bg-transparent',
-                )}
-              />
-            </button>
-          )
-        })}
-      </div>
-
       {todayShift ? (
         <TodayShiftCard store={store} shift={todayShift} />
       ) : week.some((d) => d.work) ? (
@@ -157,7 +127,59 @@ function HomeBody({
         />
       )}
 
-      <HandoverSection store={store} today={todayOfStore} week={week} selectedDay={selected} />
+      {/* 요일 줄은 인수인계 볼 날짜만 바꿔서 인수인계 섹션 맨 위에 */}
+      <HandoverSection
+        store={store}
+        today={todayOfStore}
+        week={week}
+        selectedDay={selected}
+        onSelectDay={setSelected}
+      />
+    </div>
+  )
+}
+
+/** 이번 주 요일 줄 (월~일): 고른 날 · 오늘 · 근무 있는 날 점. 누르면 그날 인수인계를 본다 */
+function WeekStrip({
+  week,
+  today: todayOfStore,
+  selected,
+  onSelect,
+}: {
+  week: WeekDay[]
+  today: Date
+  selected: number
+  onSelect: (day: number) => void
+}) {
+  return (
+    <div className="grid grid-cols-7 items-center gap-1">
+      {week.map(({ date, work }) => {
+        const day = date.getDate()
+        const on = day === selected
+        const today = isSameDay(date, todayOfStore)
+        return (
+          <button
+            key={day}
+            type="button"
+            onClick={() => onSelect(day)}
+            aria-pressed={on}
+            className={cn(
+              'flex flex-col items-center gap-[5px] rounded-full transition-colors',
+              on ? 'bg-brand pt-3.5 pb-3 text-white shadow-lift' : 'py-2',
+              !on && (today ? 'text-brand' : work ? 'text-foreground' : 'text-faint'),
+            )}
+          >
+            <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[date.getDay()]}</span>
+            <span className="text-[17px] font-bold tabular-nums">{day}</span>
+            <span
+              className={cn(
+                'size-[5px] rounded-full',
+                work ? (on ? 'bg-white' : 'bg-brand') : 'bg-transparent',
+              )}
+            />
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -239,11 +261,13 @@ function HandoverSection({
   today,
   week,
   selectedDay,
+  onSelectDay,
 }: {
   store: StaffStoreView
   today: Date
   week: WeekDay[]
   selectedDay: number
+  onSelectDay: (day: number) => void
 }) {
   const todayDate = today.getDate()
   const live = selectedDay === todayDate
@@ -278,7 +302,9 @@ function HandoverSection({
   const title = live ? '오늘의 인수인계' : `${formatDate(selectedDate)} 인수인계`
 
   return (
+    // 출근 전 배너 [인수인계 보기]가 여기로 내려온다: 요일 줄부터 보이게 (scroll-mt: 위 헤더만큼)
     <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3.5">
+      <WeekStrip week={week} today={today} selected={selectedDay} onSelect={onSelectDay} />
       <div className="flex items-baseline justify-between gap-2.5 px-1">
         <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">{title}</h2>
         {live && (
