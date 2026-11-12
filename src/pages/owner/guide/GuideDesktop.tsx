@@ -4,7 +4,7 @@ import type { GuideSlide } from '@/shared/guide/GuideSlides'
 import { cn } from '@/ui/utils'
 
 // 사장님 앱 사용법 데스크톱(lg 1024px 이상) 모양 — 휴대폰은 공용 틀 GuideSlides 그대로.
-// 가운데 큰 카드: 왼쪽 로고 · 단계 목록(눌러서 이동) · 지금 단계 제목 · 설명 · [이전] [다음/시작하기] / 오른쪽 그 단계 그림을 크게.
+// 가운데 큰 카드: 왼쪽 로고 · 단계 목록(눌러서 이동) · 지금 단계 제목 · 설명 · [이전] [다음/시작하기](두 버튼 같은 너비) / 오른쪽 그 단계 그림을 크게.
 // 키보드 ← → 로 넘긴다 (마지막에서 → 는 끝내지 않음). [건너뛰기] · 마지막 [시작하기] 둘 다 onDone
 
 export function GuideDesktop({
@@ -67,16 +67,19 @@ export function GuideDesktop({
                     aria-current={on ? 'step' : undefined}
                     onClick={() => go(i)}
                     className={cn(
+                      // 블록 없이: 지금 단계는 번호 동그라미가 매장 색 + 바깥 링, 글자 굵고 진하게 · 나머지는 흐리게
                       'flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left text-[15px] transition-colors',
                       on
-                        ? 'bg-brand-soft font-extrabold text-brand'
-                        : 'font-semibold text-muted-foreground hover:bg-background',
+                        ? 'font-extrabold text-foreground'
+                        : 'font-semibold text-subtle hover:text-foreground',
                     )}
                   >
                     <span
                       className={cn(
-                        'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold tabular-nums',
-                        on ? 'bg-brand text-white' : 'bg-background text-muted-foreground',
+                        'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold tabular-nums transition-[background-color,box-shadow]',
+                        on
+                          ? 'bg-brand text-white ring-4 ring-brand-soft'
+                          : 'bg-background text-muted-foreground',
                       )}
                     >
                       {i + 1}
@@ -94,11 +97,6 @@ export function GuideDesktop({
             aria-live="polite"
             className="flex flex-col gap-2.5 animate-in duration-300 ease-out fade-in-0 slide-in-from-bottom-2 motion-reduce:animate-none"
           >
-            {slide.tab && (
-              <span className="self-start rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
-                {slide.tab}
-              </span>
-            )}
             <h2 className="m-0 text-[30px] leading-[1.3] font-extrabold tracking-[-0.03em] text-balance break-keep">
               {slide.title}
             </h2>
@@ -116,7 +114,7 @@ export function GuideDesktop({
                 type="button"
                 aria-label="이전 장"
                 onClick={() => go(index - 1)}
-                className="flex h-12 items-center gap-1 rounded-full bg-background pr-5 pl-4 text-[15px] font-bold transition-transform active:scale-[0.98]"
+                className="flex h-12 w-[110px] items-center justify-center gap-1 rounded-full bg-background text-[15px] font-bold transition-transform active:scale-[0.98]"
               >
                 <ChevronLeft className="size-5" />
                 이전
@@ -125,7 +123,7 @@ export function GuideDesktop({
             <button
               type="button"
               onClick={() => (isLast ? onDone() : go(index + 1))}
-              className="h-12 min-w-[132px] rounded-full bg-brand px-7 text-[15px] font-extrabold text-white transition-transform active:scale-[0.98]"
+              className="h-12 w-[110px] rounded-full bg-brand text-[15px] font-extrabold text-white transition-transform active:scale-[0.98]"
             >
               {isLast ? doneLabel : '다음'}
             </button>
