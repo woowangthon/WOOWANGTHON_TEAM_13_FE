@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ClipboardList,
   House,
+  LogOut,
   Plus,
   Store,
   UserRound,
@@ -11,14 +12,15 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router'
+import { NavLink, useLocation, useNavigate } from 'react-router'
+import { signOut } from '@/lib/auth'
 import { useOwnerQuestions } from '@/pages/owner/api/home'
 import { AddMenuSheet } from '@/pages/owner/components/AddMenuSheet'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { cn } from '@/ui/utils'
 
 // 데스크톱(lg 1024px 이상) 왼쪽 메뉴 — 하단 탭 대신. 휴대폰 · 태블릿에서는 안 보인다 (OwnerFrame 이 넣는다)
-// 하단 탭(홈 · 매장 정보 · ＋ · 직원 · 근무)에 급여 · 인수인계를 따로 꺼내고, 아래에 마이페이지 · 앱 사용법
+// 하단 탭(홈 · 매장 정보 · ＋ · 직원 · 근무)에 급여 · 인수인계를 따로 꺼내고, 아래에 마이페이지 · 앱 사용법 · 로그아웃
 
 interface SideItem {
   to: string
@@ -34,6 +36,11 @@ export function OwnerSidebar() {
   const questions = useOwnerQuestions(store.storeId)
   const { pathname } = useLocation()
   const [adding, setAdding] = useState(false)
+  const navigate = useNavigate()
+  const logout = async () => {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   const main: SideItem[] = [
     {
@@ -87,6 +94,15 @@ export function OwnerSidebar() {
             state={item.to === '/owner/guide' ? { returnTo: pathname } : undefined}
           />
         ))}
+        {/* 로그아웃 (마이페이지와 같은 signOut → 로그인 화면) */}
+        <button
+          type="button"
+          onClick={logout}
+          className="flex h-11 items-center gap-3 rounded-[14px] px-3.5 text-left text-[15px] font-semibold text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+        >
+          <LogOut className="size-5" strokeWidth={1.9} />
+          로그아웃
+        </button>
       </nav>
 
       <AddMenuSheet open={adding} onClose={() => setAdding(false)} />
