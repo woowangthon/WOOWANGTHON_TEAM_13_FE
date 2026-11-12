@@ -10,6 +10,8 @@ import {
 import type { CalendarShift } from '@/lib/api/types'
 import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
+import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { personColor } from '@/pages/staff/schedule/personColor'
 import { LoadError } from '@/shared/LoadError'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -99,7 +101,13 @@ export function SubstituteSheet({
                       on ? 'border-brand' : 'border-transparent',
                     )}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2.5">
+                      {/* 근무표 달력과 같은 사람별 색 (전체 목록 순서 기준) */}
+                      <PersonInitial
+                        name={w.name}
+                        color={personColor(w.userId, workersQuery.data?.workers)}
+                        size={36}
+                      />
                       <span className="text-base font-bold">{w.name}</span>
                       {/* 이름에 이미 "사장님"이 있으면 또 붙이지 않는다 */}
                       {w.role === 'owner' && !w.name.includes('사장님') && (
