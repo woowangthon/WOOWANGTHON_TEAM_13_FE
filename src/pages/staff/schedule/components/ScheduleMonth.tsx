@@ -23,7 +23,8 @@ import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
 
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
-// 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로. 사람마다 파스텔 색(personColor), 내 근무는 진한 테두리 · 굵게, 대타는 점선 테두리.
+// 날짜 칸 안에 그날 근무를 타임블록(시작 시간 · 이름, 이름이 길면 두 줄)으로: 사람마다 파스텔 바탕 + 왼쪽 세로 줄(personColor), 내 근무는 굵게, 대타는 옅은 빗금.
+// 보고 있는 달의 날짜만 보여 주고 다른 달 칸은 빈칸 (‹ › 로 넘겼을 때만 그 달).
 // 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중"). ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -47,6 +48,12 @@ const blockName = (shift: CalendarShift) =>
   shift.assignee.role === 'owner' ? '사장' : shift.assignee.name.trim()
 /** 4글자 이상 이름은 한 단계 작게 — 4글자까지는 칸에 다 보이고, 더 길면 … */
 const LONG_NAME = 4
+
+/** 블록 바탕: 대타 칸은 그 사람 바탕에 글자색을 옅게 섞은 빗금 (테두리 없이 구분) */
+const blockBackground = (bg: string, fg: string, substituted: boolean) =>
+  substituted
+    ? `repeating-linear-gradient(135deg, ${bg} 0 4px, color-mix(in srgb, ${fg} 18%, ${bg}) 4px 6px)`
+    : bg
 
 export function ScheduleMonth() {
   const { store } = useCurrentStore()
@@ -171,6 +178,16 @@ export function ScheduleMonth() {
               const inMonth = day.getMonth() === view.month - 1
               const isToday = isSameDay(day, today)
               const isSelected = isSameDay(day, selected)
+              // 다른 달 칸은 빈칸 (숫자 · 블록 없음, 누를 수 없음). 달력 줄은 1일 ~ 말일이 있는 주만이라 5줄 또는 6줄
+              if (!inMonth) {
+                return (
+                  <div
+                    key={key}
+                    aria-hidden="true"
+                    className="min-h-[78px] border-t border-[#F0EBE2]"
+                  />
+                )
+              }
               return (
                 <button
                   key={key}
@@ -180,7 +197,6 @@ export function ScheduleMonth() {
                   aria-label={`${formatDate(day)} 근무 ${shifts.length}개`}
                   className={cn(
                     'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
-                    !inMonth && 'opacity-40',
                     isSelected && 'rounded-[10px] bg-background',
                   )}
                 >
@@ -197,21 +213,18 @@ export function ScheduleMonth() {
                     const mine = isMine(shift)
                     const [bg, fg] = colorOf(shift.assignee.userId)
                     // 시간 · 이름이 한 줄에 들어가면 한 줄("15 지은"), 안 들어가면 이름이 아랫줄로 ("15" / "김민수")
-                    // 사람마다 파스텔 색. 내 근무는 같은 색 + 진한 테두리 · 굵게, 대타는 점선 테두리
+                    // 타임블록: 파스텔 바탕 + 왼쪽 3px 세로 줄(글자색), 테두리 없음. 내 근무는 굵게, 대타는 빗금 바탕
                     return (
                       <span
                         key={shiftKey(shift)}
                         className={cn(
-                          'flex min-w-0 flex-wrap items-baseline gap-x-[3px] rounded-[5px] px-[2px] py-px text-[10px] leading-[1.3]',
-                          mine ? 'font-extrabold' : 'font-semibold',
-                          mine && !shift.substituted && 'shadow-[inset_0_0_0_1.5px_currentColor]',
-                          shift.substituted &&
-                            cn(
-                              '-outline-offset-1 outline-current outline-dashed',
-                              mine ? 'outline-[1.5px]' : 'outline-1',
-                            ),
+                          'flex min-w-0 flex-wrap items-baseline gap-x-[2px] rounded-[4px] py-px pr-[2px] pl-[5px] text-[10px] leading-[1.3] shadow-[inset_3px_0_0_currentColor]',
+                          mine ? 'font-extrabold' : 'font-medium',
                         )}
-                        style={{ background: bg, color: fg }}
+                        style={{
+                          background: blockBackground(bg, fg, shift.substituted),
+                          color: fg,
+                        }}
                       >
                         <span className="shrink-0 tabular-nums">{hourText(shift.start)}</span>
                         <span
@@ -238,12 +251,11 @@ export function ScheduleMonth() {
           <div className="flex flex-col gap-1.5 px-1.5 pt-0.5 text-[11px] text-muted-foreground">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="flex items-center gap-1">
-                <span className="size-2.5 rounded-[3px] shadow-[inset_0_0_0_1.5px_currentColor]" />
-                내 근무
+                <LegendBlock bold />내 근무(굵게)
               </span>
               <span className="flex items-center gap-1">
-                <span className="size-2.5 rounded-[3px] outline-1 -outline-offset-1 outline-muted-foreground outline-dashed" />
-                대타
+                <LegendBlock substituted />
+                대타(빗금)
               </span>
             </div>
             {/* 이 달에 근무하는 사람 색 (4명이 넘으면 색이 반복돼서 이름을 같이) */}
@@ -346,5 +358,24 @@ export function ScheduleMonth() {
         />
       )}
     </>
+  )
+}
+
+/** 범례용 작은 블록 (회색): 내 근무 = 굵은 글자, 대타 = 빗금 */
+function LegendBlock({ bold, substituted }: { bold?: boolean; substituted?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'rounded-[3px] py-px pr-[3px] pl-[5px] text-[9px] leading-[1.3] shadow-[inset_3px_0_0_currentColor]',
+        bold ? 'font-extrabold' : 'font-medium',
+      )}
+      style={{
+        background: blockBackground('var(--muted)', 'var(--muted-foreground)', !!substituted),
+        color: 'var(--muted-foreground)',
+      }}
+    >
+      9
+    </span>
   )
 }
