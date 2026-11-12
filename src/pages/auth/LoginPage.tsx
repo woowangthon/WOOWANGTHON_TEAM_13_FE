@@ -39,13 +39,13 @@ export default function LoginPage() {
 
   return (
     <AuthFrame tone="white" className="gap-6">
-      {/* 글자 로고 (public/logo-crewbean.png, 사장님 화면과 같은 그림) */}
+      {/* 글자 로고 (public/logo-crewbean.png, 사장님 화면과 같은 그림) · 첫 화면이라 높이 36px */}
       <img
         src="/logo-crewbean.png"
         alt="crewBean"
         width={528}
         height={120}
-        className="mt-1 h-6 w-auto self-start"
+        className="mt-1 h-9 w-auto self-start"
       />
 
       <section className="relative isolate flex min-h-[380px] flex-1 flex-col justify-end overflow-hidden rounded-3xl p-6 text-white">
@@ -55,10 +55,15 @@ export default function LoginPage() {
           className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(24,36,29,0.25)_0%,rgba(24,36,29,0.1)_35%,rgba(24,36,29,0.88)_88%)]"
         />
         <div className="flex flex-col gap-2">
-          <h1 className="m-0 text-[34px] leading-[1.22] font-extrabold tracking-[-0.035em]">
-            매장 일,
-            <br />
-            묻고 바로 알기
+          {/* 슬로건은 글자 그대로. 줄바꿈은 보기용(가장 긴 줄 276px, 360px 카드 안 280px 에 들어감),
+              화면 읽기는 aria-label 로 한 문장 */}
+          <h1
+            aria-label="혼자 막막했던 근무를 함께하는 크루로, crewBean"
+            className="m-0 text-[34px] leading-[1.22] font-extrabold tracking-[-0.035em]"
+          >
+            혼자 막막했던 근무를 <br />
+            함께하는 크루로, <br />
+            crewBean
           </h1>
           <p className="m-0 text-[15px] font-medium text-white/85">
             레시피 · 매뉴얼 · 인수인계 · 근무
