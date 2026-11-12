@@ -68,6 +68,8 @@ export default function StoreCreatePage() {
   /** 사장님 근무 칸: cellKey(줄 key, 요일) */
   const [ownerCells, setOwnerCells] = useState<Set<string>>(new Set())
   const [photo, setPhoto] = useState<File | null>(null)
+  /** 매장 사진 자르는 중 (아래 [완료] · [건너뛰기]를 숨긴다) */
+  const [cropping, setCropping] = useState(false)
   /** ③ 끝에서 만든 매장 (다시 시도해도 두 번 만들지 않게) */
   const [created, setCreated] = useState<OwnerStore | null>(null)
   const [done, setDone] = useState(false)
@@ -288,8 +290,8 @@ export default function StoreCreatePage() {
 
   return (
     <StepFrame step={4} title="매장 사진" onBack={() => setDone(true)}>
-      <StorePhotoStep value={photo} onChange={setPhoto} />
-      {photo ? (
+      <StorePhotoStep value={photo} onChange={setPhoto} onCroppingChange={setCropping} />
+      {cropping ? null : photo ? (
         <Button
           className="mt-auto h-14 text-base"
           disabled={savePhoto.isPending}

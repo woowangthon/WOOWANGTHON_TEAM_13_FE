@@ -10,6 +10,7 @@ import { toast } from '@/ui/toastStore'
 // 사장님 홈 매장 카드 오른쪽 아래 버튼 → 매장 사진 변경 (찍기 · 갤러리, POST /stores/{storeId}/photo)
 export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose: () => void }) {
   const [photo, setPhoto] = useState<File | null>(null)
+  const [cropping, setCropping] = useState(false)
   const save = useSaveStorePhoto()
 
   const submit = () => {
@@ -35,10 +36,12 @@ export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose
     <BottomSheet open onClose={onClose} label="매장 사진 변경" closeButton>
       <div className="flex flex-col gap-4">
         <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">매장 사진 변경</h2>
-        <StorePhotoStep value={photo} onChange={setPhoto} />
-        <Button className="h-[54px]" disabled={!photo || save.isPending} onClick={submit}>
-          {save.isPending ? '올리는 중…' : '저장'}
-        </Button>
+        <StorePhotoStep value={photo} onChange={setPhoto} onCroppingChange={setCropping} />
+        {!cropping && (
+          <Button className="h-[54px]" disabled={!photo || save.isPending} onClick={submit}>
+            {save.isPending ? '올리는 중…' : '저장'}
+          </Button>
+        )}
       </div>
     </BottomSheet>
   )
