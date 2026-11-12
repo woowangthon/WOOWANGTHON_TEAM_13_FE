@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
   dayHandoverSummary,
@@ -176,9 +176,7 @@ function HomeBody({
         week={shownWeek}
         selectedDate={fromDateKey(selectedKey)}
         onSelectDate={(date) => setSelectedKey(toDateKey(date))}
-        weekNav={
-          <WeekNav thisWeek={weekOffset === 0} onMove={moveWeek} onThisWeek={backToThisWeek} />
-        }
+        weekNav={{ thisWeek: weekOffset === 0, onMove: moveWeek, onThisWeek: backToThisWeek }}
       />
     </div>
   )
@@ -197,7 +195,8 @@ function WeekStrip({
   onSelect: (date: Date) => void
 }) {
   return (
-    <div className="grid grid-cols-7 gap-1">
+    // 양옆 ‹ › 32px 가 들어가도록 칸 사이 2px (360px 에서 칸 33px)
+    <div className="grid grid-cols-7 gap-0.5">
       {week.map(({ date, work }) => {
         const day = date.getDate()
         const on = isSameDay(date, selected)
@@ -322,8 +321,8 @@ function HandoverSection({
   week: WeekDay[]
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  /** 요일 줄 위 오른쪽 ‹ › (WeekNav) */
-  weekNav: ReactNode
+  /** 요일 줄 양옆 ‹ › · [이번 주로] (shared/WeekNav) */
+  weekNav: { thisWeek: boolean; onMove: (step: number) => void; onThisWeek: () => void }
 }) {
   const live = isSameDay(selectedDate, today)
   const date = toDateKey(selectedDate)
@@ -358,11 +357,10 @@ function HandoverSection({
   return (
     // 출근 전 배너 [인수인계 보기]가 여기로 내려온다: 요일 줄부터 보이게 (scroll-mt: 위 헤더만큼)
     <section ref={revealRef} id="today-handover" className="flex scroll-mt-20 flex-col gap-3">
-      {/* 요일 줄 위 오른쪽 ‹ › 와 요일 줄은 한 덩어리 (스크롤 떠오르기도 같이) */}
-      <div data-reveal-group className="flex flex-col gap-2">
-        {weekNav}
+      {/* [‹] 요일 줄 [›] 한 줄 (+ 이번 주가 아니면 아래 가운데 [이번 주로]) */}
+      <WeekNav {...weekNav}>
         <WeekStrip week={week} today={today} selected={selectedDate} onSelect={onSelectDate} />
-      </div>
+      </WeekNav>
       <SectionHeader
         title={title}
         action={live ? { label: '남기기', to: '/staff/handover' } : undefined}

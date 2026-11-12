@@ -82,21 +82,22 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
           setWeekOffset(0)
           setSelected(toDateKey(today))
         }}
-      />
-      <div className="grid grid-cols-7 items-center gap-1">
-        {weekOf(
-          new Date(today.getFullYear(), today.getMonth(), today.getDate() + weekOffset * 7),
-        ).map((day) => (
-          <WeekDay
-            key={toDateKey(day)}
-            storeId={storeId}
-            day={day}
-            today={today}
-            selected={toDateKey(day) === selected}
-            onSelect={() => setSelected(toDateKey(day))}
-          />
-        ))}
-      </div>
+      >
+        <div className="grid grid-cols-7 items-center gap-0.5">
+          {weekOf(
+            new Date(today.getFullYear(), today.getMonth(), today.getDate() + weekOffset * 7),
+          ).map((day) => (
+            <WeekDay
+              key={toDateKey(day)}
+              storeId={storeId}
+              day={day}
+              today={today}
+              selected={toDateKey(day) === selected}
+              onSelect={() => setSelected(toDateKey(day))}
+            />
+          ))}
+        </div>
+      </WeekNav>
 
       {notesQuery.isPending ? (
         <Spinner />
