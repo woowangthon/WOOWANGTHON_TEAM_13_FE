@@ -1,7 +1,8 @@
 import { Camera, CircleHelp, Plus, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { MANUAL_TEMPLATES, OWNER_CATEGORIES } from '@/api/mocks/owner/data'
+import { MANUAL_TEMPLATES } from '@/api/mocks/owner/data'
+import { DEFAULT_CATEGORIES as OWNER_CATEGORIES } from '@/shared/recipe/categories'
 import { useManuals } from '@/lib/api/manuals'
 import { useRecipes } from '@/lib/api/recipes'
 import { RecipeGuide } from '@/pages/owner/recipe/components/RecipeGuide'
@@ -194,7 +195,14 @@ function ManualSection({ storeId }: { storeId: string }) {
   if (query.error) return <LoadError error={query.error} onRetry={() => query.refetch()} />
 
   return (
+    // [직접 추가]는 첫 칸(왼쪽 위) 고정 → 그 옆부터 매뉴얼 최신 순(API 순서 그대로, docs/07 4-1) → 추천 템플릿
     <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
+      <DashedCard
+        to="/owner/manuals/new"
+        icon={<Plus className="size-5" />}
+        title="직접 추가"
+        caption="새 매뉴얼"
+      />
       {manuals.map((m) => (
         <ManualCard key={m.manualId} manual={m} href={`/owner/manuals/${m.manualId}`} />
       ))}
@@ -210,12 +218,6 @@ function ManualSection({ storeId }: { storeId: string }) {
           />
         )
       })}
-      <DashedCard
-        to="/owner/manuals/new"
-        icon={<Plus className="size-5" />}
-        title="직접 추가"
-        caption="새 매뉴얼"
-      />
     </div>
   )
 }

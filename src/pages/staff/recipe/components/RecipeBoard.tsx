@@ -6,6 +6,7 @@ import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
 import { ManualGrid } from '@/shared/manual/ManualGrid'
+import { categoryCounts } from '@/shared/recipe/categories'
 import { CategoryTabs } from '@/shared/recipe/CategoryTabs'
 import { RecipeGrid } from '@/shared/recipe/RecipeGrid'
 import { SectionHeader } from '@/shared/SectionHeader'
@@ -58,15 +59,20 @@ function RecipeSection({ storeId }: { storeId: string }) {
   const [params, setParams] = useSearchParams()
   const recipesQuery = useRecipes(storeId)
 
-  const categories = recipesQuery.data?.categories ?? []
   const all = recipesQuery.data?.recipes ?? []
+  // 사장님 매장 정보와 같은 줄: 기본 6개 + 그 밖의 카테고리를 늘 보여 주고 메뉴 수가 0이면 "티 0"
+  const categories = categoryCounts(all)
 
   const q = (params.get('q') ?? '').trim()
   const catParam = params.get('cat')
+  // 처음 고른 칸: 메뉴가 있는 첫 카테고리 (BE 가 정한 처음 카테고리에 메뉴가 있으면 그것)
+  const defaultCategory = recipesQuery.data?.defaultCategory
   const category =
     catParam && categories.some((c) => c.name === catParam)
       ? catParam
-      : (recipesQuery.data?.defaultCategory ?? categories[0]?.name ?? '')
+      : (categories.find((c) => c.name === defaultCategory && c.count > 0)?.name ??
+        categories.find((c) => c.count > 0)?.name ??
+        categories[0].name)
 
   const shown = q
     ? all.filter((r) => r.name.includes(q) || r.ingredients.some(({ name }) => name.includes(q)))
@@ -155,7 +161,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
                 search: params.toString(),
               })}
             />
-          ) : (
+          ) : q ? (
             <EmptyGuide
               message="검색 결과가 없어요"
               action={
@@ -163,6 +169,12 @@ function RecipeSection({ storeId }: { storeId: string }) {
                   AI 사수에게 묻기
                 </Button>
               }
+            />
+          ) : (
+            // 메뉴가 0개인 카테고리 (사장님 화면과 같은 문구)
+            <EmptyGuide
+              message={`아직 등록된 ${category} 메뉴가 없어요`}
+              hint="메뉴가 올라오면 바로 여기서 볼 수 있어요"
             />
           )}
         </section>

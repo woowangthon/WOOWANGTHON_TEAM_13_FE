@@ -7,6 +7,7 @@ import { useScheduleWorkers } from '@/pages/owner/api/fixedSchedule'
 import { useHandoverDaySummary } from '@/pages/owner/api/home'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { LoadError } from '@/shared/LoadError'
+import { WeekNav } from '@/shared/WeekNav'
 import { EmptyState } from '@/ui/EmptyState'
 import { Spinner } from '@/ui/Spinner'
 import { cn } from '@/ui/utils'
@@ -29,6 +30,16 @@ function weekOf(today: Date) {
 
 export function HomeHandover({ storeId, today }: { storeId: string; today: Date }) {
   const [selected, setSelected] = useState(toDateKey(today))
+  // 보고 있는 주 (0 = 이번 주). ‹ › 로 한 주씩, 같은 요일을 골라 둔다 · [이번 주로]는 오늘로 (민지 shared/WeekNav)
+  const [weekOffset, setWeekOffset] = useState(0)
+  const moveWeek = (step: number) => {
+    setWeekOffset((offset) => offset + step)
+    setSelected((key) => {
+      const next = fromDateKey(key)
+      next.setDate(next.getDate() + step * 7)
+      return toDateKey(next)
+    })
+  }
   const date = fromDateKey(selected)
   const live = isSameDay(date, today)
   const notesQuery = useHandoverNotes(storeId, selected)
@@ -64,8 +75,18 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
         )}
       </div>
 
+      <WeekNav
+        thisWeek={weekOffset === 0}
+        onMove={moveWeek}
+        onThisWeek={() => {
+          setWeekOffset(0)
+          setSelected(toDateKey(today))
+        }}
+      />
       <div className="grid grid-cols-7 items-center gap-1">
-        {weekOf(today).map((day) => (
+        {weekOf(
+          new Date(today.getFullYear(), today.getMonth(), today.getDate() + weekOffset * 7),
+        ).map((day) => (
           <WeekDay
             key={toDateKey(day)}
             storeId={storeId}

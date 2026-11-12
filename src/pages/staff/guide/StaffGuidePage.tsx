@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import logo from '@/assets/logo-crewbean.webp'
 import type { ChatMessage, HandoverItem as HandoverItemData, RecipeSummary } from '@/lib/api/types'
 import { ChatBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { markStaffGuideSeen } from '@/pages/staff/guide/staffGuideSeen'
@@ -111,7 +110,10 @@ function MiniHeader() {
         달빛 카페
         <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
       </span>
-      <img src={logo} alt="" width={451} height={144} className="h-6 w-auto" />
+      <span className="flex items-center gap-1">
+        <img src="/logo-bean.png" alt="" width={117} height={128} className="h-8 w-auto" />
+        <img src="/logo-crewbean.png" alt="" width={528} height={120} className="h-5 w-auto" />
+      </span>
       <span className="flex items-center gap-2 justify-self-end">
         <span className="flex size-10 items-center justify-center rounded-full bg-card">
           <Bell aria-hidden="true" className="size-5" />

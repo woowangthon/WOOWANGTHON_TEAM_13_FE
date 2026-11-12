@@ -25,7 +25,8 @@ export function CategoryTabs({ categories, value, onChange }: CategoryTabsProps)
             aria-pressed={on}
             onClick={() => onChange(c)}
             // 바깥 박스 없이 아이콘 동그라미 + 글자만 (칸 너비 · 간격은 그대로). 고른 칸은 동그라미를 매장 색으로 채우고 글자 굵게
-            className="flex w-[76px] shrink-0 flex-col items-center gap-2 px-0.5 pt-3 pb-[11px] text-foreground"
+            // 누를 때 브라우저 회색 네모(탭 하이라이트 · 포커스 테두리)는 없애고, 키보드로 왔을 때만 칸 모양 둥근 테두리
+            className="flex w-[76px] shrink-0 flex-col items-center gap-2 rounded-2xl px-0.5 pt-3 pb-[11px] text-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand/60"
           >
             <span
               className={cn(

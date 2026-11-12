@@ -80,12 +80,17 @@ async function fetchCalendar(
   }
 }
 
-/** 공유 근무 달력: startDate ~ endDate ("2026-11-01", 최대 63일) */
-export function useScheduleCalendar(storeId: string, startDate: string, endDate: string) {
+/** 공유 근무 달력: startDate ~ endDate ("2026-11-01", 최대 63일). enabled=false 면 부르지 않는다 (홈 요일 줄: 다른 주를 볼 때만) */
+export function useScheduleCalendar(
+  storeId: string,
+  startDate: string,
+  endDate: string,
+  enabled = true,
+) {
   return useQuery({
     queryKey: scheduleKeys.calendar(storeId, startDate, endDate),
     queryFn: () => fetchCalendar(storeId, startDate, endDate),
-    enabled: !!storeId,
+    enabled: !!storeId && enabled,
   })
 }
 
