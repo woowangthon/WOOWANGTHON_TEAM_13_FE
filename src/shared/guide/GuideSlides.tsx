@@ -4,7 +4,7 @@ import { cn } from '@/ui/utils'
 
 /*
  * 공용 보기 부품: 앱 사용법 카드 넘기기 · 사장/알바 화면이 함께 사용 — 담당: 민지
- * 전체 화면(하단 탭 없음). 위 [건너뛰기] · 가운데 그림 + 제목 + 설명 · 아래 점 + [다음](마지막 장은 doneLabel).
+ * 전체 화면(하단 탭 없음). 위 [건너뛰기] · 가운데 그림 + 제목 + 설명 · 아래 점 + [다음](마지막 장은 doneLabel), 2장부터 [이전]도.
  * 옆으로 밀거나(터치 · 마우스) 버튼 · 키보드 ← → 로 넘긴다. prefers-reduced-motion 이면 애니메이션 없이.
  * [건너뛰기] · 마지막 [시작하기] 둘 다 onDone (본 것으로 기록 · 어디로 갈지는 화면이 정한다).
  * 매장 색(--brand)은 바깥(화면)에서 정한다. 그림(visual)은 화면이 만들고, 이 부품이 조작 안 되게(inert · aria-hidden) 감싼다
@@ -46,6 +46,12 @@ export function GuideSlides({ slides, onDone, doneLabel = '시작하기' }: Guid
 
   const go = (next: number) => setIndex(Math.min(last, Math.max(0, next)))
   const next = () => (isLast ? onDone() : go(index + 1))
+  const buttonRow = useRef<HTMLDivElement>(null)
+  const prev = () => {
+    go(index - 1)
+    // 첫 장으로 오면 [이전]이 사라지니, 키보드 사용자를 위해 [다음]으로 초점을 옮긴다
+    if (index - 1 === 0) buttonRow.current?.querySelector<HTMLButtonElement>('[data-next]')?.focus()
+  }
 
   // 키보드 ← → (마지막 장에서 → 는 끝내지 않고 그대로)
   useEffect(() => {
@@ -179,9 +185,32 @@ export function GuideSlides({ slides, onDone, doneLabel = '시작하기' }: Guid
             </button>
           ))}
         </div>
-        <Button size="lg" className="h-[54px] w-full" onClick={next}>
-          {isLast ? doneLabel : '다음'}
-        </Button>
+        {/* 첫 장은 [다음]만 꽉 차게, 2장부터 [이전] + [다음](마지막은 doneLabel). 두 버튼 높이가 같아서 줄 높이는 그대로 */}
+        <div
+          ref={buttonRow}
+          className={cn('grid gap-2', index > 0 ? 'grid-cols-[1fr_1.6fr]' : 'grid-cols-1')}
+        >
+          {index > 0 && (
+            <Button
+              variant="soft"
+              size="lg"
+              className="h-[54px]"
+              aria-label="이전 장"
+              onClick={prev}
+            >
+              이전
+            </Button>
+          )}
+          <Button
+            data-next
+            size="lg"
+            className="h-[54px]"
+            aria-label={isLast ? undefined : '다음 장'}
+            onClick={next}
+          >
+            {isLast ? doneLabel : '다음'}
+          </Button>
+        </div>
       </div>
 
       {/* 화면 읽기 프로그램: 장이 바뀌면 읽어 준다 */}
