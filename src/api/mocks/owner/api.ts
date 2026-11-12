@@ -719,8 +719,30 @@ export async function getStorePayroll(
   month: string = OWNER_TODAY.slice(0, 7),
 ): Promise<{ month: string; members: MemberPay[] }> {
   await wait(200)
-  // 시연 데이터는 이번 달(OWNER_TODAY)만 있다. 다른 달은 근무 기록이 없는 것으로
-  if (month !== OWNER_TODAY.slice(0, 7)) return { month, members: [] }
+  // 시연 데이터는 이번 달(OWNER_TODAY)과 지난달(홈 "지난달보다" 비교용, 이번 달의 약 93%)만 있다. 다른 달은 근무 기록이 없는 것으로
+  const thisMonth = OWNER_TODAY.slice(0, 7)
+  const today = fromDateKey(OWNER_TODAY)
+  const lastMonth = toDateKey(new Date(today.getFullYear(), today.getMonth() - 1, 1)).slice(0, 7)
+  if (month === lastMonth) {
+    const current = await getStorePayroll(storeId, thisMonth)
+    return {
+      month,
+      members: current.members.map((m) => {
+        const total = round10(m.total * 0.93)
+        const deduction = round10(m.deduction * 0.93)
+        return {
+          ...m,
+          hours: Math.round(m.hours * 0.93),
+          basePay: round10(m.basePay * 0.93),
+          weeklyAllowance: round10(m.weeklyAllowance * 0.93),
+          total,
+          deduction,
+          netPay: total - deduction,
+        }
+      }),
+    }
+  }
+  if (month !== thisMonth) return { month, members: [] }
   const members = db.members
     .filter((m) => m.storeId === storeId && m.status === 'active' && monthHours[m.memberId])
     .map((m) => {
