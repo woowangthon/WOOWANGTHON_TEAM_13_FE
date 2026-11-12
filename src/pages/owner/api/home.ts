@@ -234,3 +234,29 @@ export function useAnswerQuestion(storeId: string) {
     },
   })
 }
+
+/** BE 하루 인수인계 AI 요약 (GET /stores/{storeId}/handover-summary?date=, BE #41) — 인수인계가 없으면 summary null */
+interface HandoverDaySummary {
+  date: string
+  summary: string | null
+  noteCount: number
+}
+
+/**
+ * 그날 인수인계 전체를 AI 가 2~4문장으로 요약 (진짜 'handover' 일 때만). 가짜 서버 · 실패(503 AI_UNAVAILABLE)면 null → 화면이 노트 요약을 이어 붙여 보여 준다.
+ * noteKey(그날 노트 ID 들)가 바뀌면 새 인수인계가 생긴 것이라 다시 부른다 (BE 가 같은 내용이면 캐시로 돌려준다)
+ */
+export function useHandoverDaySummary(storeId: string, date: string, noteKey: string) {
+  return useQuery({
+    queryKey: ['owner', 'stores', storeId, 'handover-summary', date, noteKey] as const,
+    queryFn: async () => {
+      const data = await http.get<HandoverDaySummary>(
+        `/stores/${storeId}/handover-summary?date=${date}`,
+      )
+      return data.summary?.trim() || null
+    },
+    enabled: !!storeId && !!noteKey && isRealApi('handover'),
+    retry: false,
+    staleTime: 5 * 60_000,
+  })
+}
