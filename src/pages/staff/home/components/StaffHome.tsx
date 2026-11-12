@@ -13,6 +13,7 @@ import {
   useMySchedule,
   useScheduleCalendar,
 } from '@/lib/api/schedule'
+import { daysUntil, payDateOf, useMyPayrollEstimate } from '@/lib/api/payroll'
 import { isRealApi } from '@/lib/api/source'
 import { useScheduleWorkers } from '@/lib/api/substitute'
 import type { Shift, UserRef } from '@/lib/api/types'
@@ -139,7 +140,7 @@ function HomeBody({
           {formatDate(todayOfStore)}
         </h1>
         {todayShift ? (
-          <TodayShiftCard store={store} shift={todayShift} />
+          <TodayShiftCard store={store} shift={todayShift} today={todayOfStore} />
         ) : week.some((d) => d.work) ? (
           <EmptyGuide
             message="오늘은 근무가 없어요"
@@ -235,50 +236,148 @@ function WeekStrip({
   )
 }
 
-function TodayShiftCard({ store, shift }: { store: StaffStoreView; shift: Shift }) {
+/** 지금 한국 시간 (0시부터 몇 분째, 0~1439) — 근무 시간 "13:00"과 비교한다 */
+function kstMinutes() {
+  return Math.floor(((Date.now() + 9 * 60 * 60 * 1000) % (24 * 60 * 60 * 1000)) / 60_000)
+}
+
+/** 1분마다 다시 읽는 지금 시각(분). 화면이 안 보이면(다른 앱 · 탭) 멈추고, 돌아오면 바로 다시 읽는다 */
+function useMinuteNow() {
+  const [now, setNow] = useState(kstMinutes)
+  useEffect(() => {
+    let timer: number | undefined
+    const run = () => {
+      window.clearInterval(timer)
+      timer = document.hidden ? undefined : window.setInterval(() => setNow(kstMinutes()), 60_000)
+    }
+    const onVisibility = () => {
+      if (!document.hidden) setNow(kstMinutes())
+      run()
+    }
+    run()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
+  return now
+}
+
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+/** 근무 전 "3시간 후"(1시간 미만 "40분 후") · 근무 중 "2시간 남음" + 지난 비율 · 퇴근 후 "오늘 근무 끝" (자정 넘는 근무는 끝 + 24시간) */
+function shiftPhase(start: string, end: string, now: number) {
+  const from = toMinutes(start)
+  let to = toMinutes(end)
+  if (to <= from) to += 24 * 60
+  const span = (minutes: number) =>
+    minutes < 60 ? `${minutes}분` : `${Math.round(minutes / 60)}시간`
+  if (now < from) return { kind: 'before' as const, text: `${span(from - now)} 후` }
+  if (now < to) {
+    return {
+      kind: 'during' as const,
+      text: `${span(to - now)} 남음`,
+      progress: (now - from) / (to - from),
+    }
+  }
+  return { kind: 'after' as const, text: '오늘 근무 끝' }
+}
+
+/** "민수와 함께" · "민수 · 도윤과 함께" (마지막 이름 받침에 맞춰 와/과), 없으면 "혼자 근무" */
+function crewText(crew: string[]) {
+  if (crew.length === 0) return '혼자 근무'
+  const names = crew.join(' · ')
+  const code = names.charCodeAt(names.length - 1) - 0xac00
+  const batchim = code >= 0 && code < 11172 && code % 28 !== 0
+  return `${names}${batchim ? '과' : '와'} 함께`
+}
+
+/**
+ * 오늘 근무 출근 티켓: 위 사진 띠(88px, 오른쪽 위 "월급날 D-20" 칩) + 아래 흰 영역 3줄
+ * (오늘 · 근무 이름 / 상태 → 시간 26px (+ 근무 중이면 진행 막대) → 같이 일하는 사람). 카드 전체가 근무 탭 링크
+ */
+function TodayShiftCard({
+  store,
+  shift,
+  today,
+}: {
+  store: StaffStoreView
+  shift: Shift
+  today: Date
+}) {
   const [photoFailed, setPhotoFailed] = useState(false)
   const showPhoto = store.photo && !photoFailed
+  const now = useMinuteNow()
+  const phase = shiftPhase(shift.start, shift.end, now)
+  const label = shiftLabel(shift)
+  const together = crewText(shift.crew)
+  // 월급날: 예상 급여 탭과 같은 데이터 · 계산 (lib/api/payroll). 급여일이 없거나 못 불러오면 칩 없음
+  const estimate = useMyPayrollEstimate(store.id, null, { silent: true }).data
+  const payDate = estimate ? payDateOf(estimate) : null
+  const dDay = payDate ? daysUntil(payDate, today) : null
+  const payday = dDay === null || dDay < 0 ? null : dDay === 0 ? '월급날 D-DAY' : `월급날 D-${dDay}`
+  const phaseSpoken = phase.kind === 'before' ? `${phase.text} 출근` : phase.text
 
   return (
     <Link
       to="/staff/schedule"
-      aria-label={`오늘 근무 · ${shiftLabel(shift)} ${shift.start} – ${shift.end} · 근무 보기`}
-      className={cn(
-        'relative isolate block min-h-44 overflow-hidden rounded-3xl bg-brand texture',
-        PRESSABLE,
-      )}
+      aria-label={`오늘 ${label} ${shift.start} – ${shift.end}, ${phaseSpoken}, ${together}${payday ? `, ${payday}` : ''} · 근무 보기`}
+      // 흰 바탕 위 흰 카드라 옅은 테두리로 구분 (docs/08 4). 모서리 24 그대로
+      className={cn('block overflow-hidden rounded-3xl border border-line/60 bg-white', PRESSABLE)}
     >
-      {showPhoto && (
-        <img
-          src={store.photo}
-          alt=""
-          onError={() => setPhotoFailed(true)}
-          className="absolute inset-0 -z-10 size-full object-cover"
-        />
-      )}
-      {showPhoto && (
-        // 아래쪽만 옅게 어둡게 (근무 시간 · 같이 일하는 사람 흰 글씨), 위쪽 절반은 사진 그대로
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: store.photoShade }}
-        />
-      )}
-      {/* 높이는 첫 화면의 1/4 정도(176px~). 왼쪽 위: 근무 시간(화면 제목 단계 26px) / 아래: 같이 일하는 사람. 카드 전체가 근무 탭 링크라 › 버튼은 없음.
-          사진 위쪽은 어둡게 하지 않아서 시간 글자에만 기본 글자 그림자(text-shadow-lg) */}
-      <div className="relative flex min-h-44 flex-col justify-between gap-4 p-5 text-white">
-        <span
-          className={cn(
-            'text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums',
-            showPhoto && 'text-shadow-lg',
-          )}
-        >
-          {shift.start} – {shift.end}
-        </span>
-        {shift.crew.length > 0 && (
-          <span className="text-[13px] font-medium text-balance break-keep text-white/85">
-            {shift.crew.join(' · ')}
+      {/* 사진 띠 (사진 없는 매장은 매장 색 바탕) */}
+      <div className={cn('relative isolate h-22', !showPhoto && 'bg-brand texture')}>
+        {showPhoto && (
+          <img
+            src={store.photo}
+            alt=""
+            onError={() => setPhotoFailed(true)}
+            className="absolute inset-0 -z-10 size-full object-cover"
+          />
+        )}
+        {payday && (
+          // 사진 위 칩 규칙: 사진이면 검정 반투명, 매장 색 바탕이면 흰 반투명 + 흐림
+          <span
+            aria-hidden="true"
+            className={cn(
+              'absolute top-3 right-3 rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap text-white tabular-nums backdrop-blur-md',
+              showPhoto ? 'bg-black/35' : 'bg-white/15',
+            )}
+          >
+            {payday}
           </span>
         )}
+      </div>
+      <div className="flex flex-col gap-1 p-5">
+        <div className="flex items-center justify-between gap-3 text-[13px] font-medium">
+          <span className="truncate text-muted-foreground">오늘 · {label}</span>
+          {/* 강조색은 이 상태 하나만 (퇴근 후는 회색) */}
+          <span
+            className={cn(
+              'shrink-0 font-bold tabular-nums',
+              phase.kind === 'after' ? 'text-muted-foreground' : 'text-brand',
+            )}
+          >
+            {phase.text}
+          </span>
+        </div>
+        <span className="text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em] whitespace-nowrap text-foreground tabular-nums">
+          {shift.start} – {shift.end}
+        </span>
+        {phase.kind === 'during' && (
+          // 근무 중일 때만: 지난 비율만큼 매장 색 (4px, 둥근 끝)
+          <span aria-hidden="true" className="my-1 h-1 overflow-hidden rounded-full bg-muted">
+            <span
+              className="block h-full rounded-full bg-brand"
+              style={{ width: `${Math.round(phase.progress * 100)}%` }}
+            />
+          </span>
+        )}
+        <span className="text-[13px] font-medium break-keep text-muted-foreground">{together}</span>
       </div>
     </Link>
   )
