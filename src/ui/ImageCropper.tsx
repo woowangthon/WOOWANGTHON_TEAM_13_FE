@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
 
-// 사진 자르기 (자유 사각형) — 담당: 나현. 네 모서리를 끌어 크기를, 안쪽을 끌어 위치를 바꾼다.
-// 처음엔 사진 전체가 선택돼 있고, 그대로 확인하면 원본 파일을 그대로 돌려준다.
+// 사진 자르기 — 담당: 나현. 네 모서리를 끌어 크기를, 안쪽을 끌어 위치를 바꾼다.
+// 자유형(aspect 없음, 레시피 종이 스캔): 처음엔 사진 전체가 선택돼 있고, 그대로 확인하면 원본 파일을 그대로 돌려준다.
+// 고정형(aspect = 가로 ÷ 세로, 메뉴 사진 · 매장 사진): 틀 비율 그대로만 늘리고 줄인다. 처음엔 가운데 가장 큰 틀, 확인하면 늘 그 틀로 자른다.
 // 브라우저가 띄우지 못하는 사진(크롬의 HEIC 등)은 자르지 않고 원본을 돌려준다.
 
 /** 사진 기준 비율 (0~1) */
@@ -31,8 +32,38 @@ const CORNERS: { corner: Corner; className: string }[] = [
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
-/** 끌기 시작 위치 · 사각형에서 dx · dy(비율)만큼 움직인 사각형 */
-function moved(start: Rect, mode: Corner | 'move', dx: number, dy: number): Rect {
+/**
+ * 고정형 틀의 비율 (사진 기준 0~1 좌표에서 w ÷ h). 사진이 가로로 길면 같은 틀도 비율 좌표에서는 세로로 길어진다
+ * ratio: 원하는 가로 ÷ 세로(픽셀), photo: 사진 가로 ÷ 세로(픽셀)
+ */
+const rectRatio = (ratio: number, photo: number) => ratio / photo
+
+/** 사진 가운데 가장 큰 고정형 틀 */
+function fitted(k: number): Rect {
+  const w = k >= 1 ? 1 : k
+  const h = k >= 1 ? 1 / k : 1
+  return { x: (1 - w) / 2, y: (1 - h) / 2, w, h }
+}
+
+/** 고정형 모서리 끌기: 반대쪽 모서리는 그대로 두고 비율(k)을 지키며 크기만 바꾼다 */
+function resizedFixed(start: Rect, mode: Corner, dx: number, dy: number, k: number): Rect {
+  const left = mode === 'nw' || mode === 'sw'
+  const top = mode === 'nw' || mode === 'ne'
+  const anchorX = left ? start.x + start.w : start.x
+  const anchorY = top ? start.y + start.h : start.y
+  // 가로 · 세로로 끈 것 중 더 많이 바뀐 쪽을 따른다
+  const fromX = start.w + (left ? -dx : dx)
+  const fromY = (start.h + (top ? -dy : dy)) * k
+  let w = Math.abs(fromX - start.w) >= Math.abs(fromY - start.w) ? fromX : fromY
+  const maxW = Math.min(left ? anchorX : 1 - anchorX, (top ? anchorY : 1 - anchorY) * k)
+  w = clamp(w, Math.max(MIN, MIN * k), maxW)
+  const h = w / k
+  return { x: left ? anchorX - w : anchorX, y: top ? anchorY - h : anchorY, w, h }
+}
+
+/** 끌기 시작 위치 · 사각형에서 dx · dy(비율)만큼 움직인 사각형. k 가 있으면 고정형 */
+function moved(start: Rect, mode: Corner | 'move', dx: number, dy: number, k?: number): Rect {
+  if (mode !== 'move' && k) return resizedFixed(start, mode, dx, dy, k)
   if (mode === 'move') {
     return {
       ...start,
@@ -76,6 +107,7 @@ export function ImageCropper({
   cancelLabel = '다시 고르기',
   confirmLabel = '자르기',
   hint = '모서리를 끌어 필요한 부분만 남겨 주세요',
+  aspect,
 }: {
   file: File
   onCancel: () => void
@@ -83,6 +115,8 @@ export function ImageCropper({
   cancelLabel?: string
   confirmLabel?: string
   hint?: string
+  /** 고정형 틀 비율 (가로 ÷ 세로, 예: 16 / 9). 없으면 자유형 */
+  aspect?: number
 }) {
   // data URL 로 읽는다 (blob 주소는 StrictMode 정리 단계에서 지워져 사진이 안 뜬다)
   const [src, setSrc] = useState<string>()
@@ -98,6 +132,8 @@ export function ImageCropper({
   const imageRef = useRef<HTMLImageElement>(null)
   const drag = useRef<{ mode: Corner | 'move'; x: number; y: number; rect: Rect } | null>(null)
   const [rect, setRect] = useState<Rect>(FULL)
+  /** 고정형 틀의 비율 좌표 w ÷ h (사진을 불러온 뒤 정한다) */
+  const [k, setK] = useState<number>()
   const [working, setWorking] = useState(false)
 
   const start = (event: PointerEvent<HTMLElement>, mode: Corner | 'move') => {
@@ -112,14 +148,24 @@ export function ImageCropper({
     const box = image.getBoundingClientRect()
     const dx = (event.clientX - drag.current.x) / box.width
     const dy = (event.clientY - drag.current.y) / box.height
-    setRect(moved(drag.current.rect, drag.current.mode, dx, dy))
+    setRect(moved(drag.current.rect, drag.current.mode, dx, dy, k))
   }
 
   const end = () => {
     drag.current = null
   }
 
-  const isFull = rect.x === 0 && rect.y === 0 && rect.w === 1 && rect.h === 1
+  // 자유형에서 사진 전체 그대로면 원본을 보낸다 (고정형은 늘 틀로 자른다)
+  const isFull = !aspect && rect.x === 0 && rect.y === 0 && rect.w === 1 && rect.h === 1
+
+  const onLoad = () => {
+    setStatus('ready')
+    const image = imageRef.current
+    if (!aspect || !image?.naturalWidth || !image.naturalHeight) return
+    const next = rectRatio(aspect, image.naturalWidth / image.naturalHeight)
+    setK(next)
+    setRect(fitted(next))
+  }
 
   const confirm = async () => {
     const image = imageRef.current
@@ -148,7 +194,7 @@ export function ImageCropper({
               src={src}
               alt="자를 사진"
               draggable={false}
-              onLoad={() => setStatus('ready')}
+              onLoad={onLoad}
               onError={() => setStatus('unsupported')}
               className="block max-h-[48vh] max-w-full"
             />
