@@ -26,6 +26,18 @@ export function formatRelative(value: string | Date, now: Date = new Date()): st
   return formatDate(date)
 }
 
+/** 2026-11-13 → "11월 13일 (금)" (상세 카드 제목처럼 크게 보여 줄 때) */
+export function formatLongDate(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`
+}
+
+/** 근무 시간 합계: 6 → "6시간" · 4.5 → "4.5시간", short 면 "6h" · "4.5h" (소수 첫째 자리까지, ".0" 없이) */
+export function formatHours(hours: number, short = false): string {
+  const rounded = Math.round(hours * 10) / 10
+  return short ? `${rounded}h` : `${rounded}시간`
+}
+
 /** Date → "18:00" */
 export function formatTime(value: string | Date): string {
   const date = typeof value === 'string' ? new Date(value) : value
