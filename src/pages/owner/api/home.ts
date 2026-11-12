@@ -14,7 +14,7 @@ import { http, isRealApi } from '@/lib/api/source'
 import type { CalendarShift, NotificationFeed, ScheduleCalendar } from '@/lib/api/types'
 import { ApiError } from '@/lib/apiClient'
 import { fromDateKey, todayInKst, toDateKey } from '@/lib/date'
-import { formatDate, formatTime } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { fetchOwnerReceived } from '@/pages/owner/api/fixedSchedule'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
 import { questionSentence } from '@/pages/owner/components/questionText'
@@ -67,8 +67,9 @@ const fetchQuestionNotifications = async (
       storeName: store.name,
       kind: 'question',
       title: questionSentence(q.question, 14),
-      sub: `${q.staffName} · ${formatTime(q.askedAt)}`,
+      sub: `${q.staffName} 님이 물어봤어요`,
       questionId: q.questionId,
+      createdAt: q.askedAt,
     })),
   )
 }
@@ -122,9 +123,10 @@ const fetchHandoverNotifications = async (
       storeName: store.name,
       kind: 'handover',
       title: n.title,
-      sub: `${n.body} · ${formatTime(n.createdAt)}`,
+      sub: n.body,
       questionId: null,
       isRead: n.isRead,
+      createdAt: n.createdAt,
     })),
   )
 }

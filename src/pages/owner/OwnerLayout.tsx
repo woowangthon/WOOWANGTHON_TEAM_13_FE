@@ -1,16 +1,14 @@
 import { Bell, CalendarDays, House, Plus, Store, Users } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, Outlet, useLocation } from 'react-router'
 import { useNotifications, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
 import { AddMenuSheet } from '@/pages/owner/components/AddMenuSheet'
-import { NotificationSheet } from '@/pages/owner/components/NotificationSheet'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { StoreMenu } from '@/pages/owner/components/StoreMenu'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { LoadError } from '@/shared/LoadError'
 import { BottomNav, type BottomNavItem } from '@/ui/BottomNav'
-import { IconButton } from '@/ui/IconButton'
 import { Spinner } from '@/ui/Spinner'
 import { Toaster } from '@/ui/Toast'
 
@@ -22,9 +20,8 @@ export default function OwnerLayout() {
   const profile = useOwnerProfile()
   const questions = useOwnerQuestions(store.storeId)
   const notifications = useNotifications()
-  const [sheet, setSheet] = useState<'add' | 'notif' | null>(null)
+  const [adding, setAdding] = useState(false)
   const { pathname } = useLocation()
-  const navigate = useNavigate()
 
   const hasQuestion = (questions.data?.questions.length ?? 0) > 0
   // 종 점: 처리할 질문 · 대타가 있거나 안 읽은 인수인계가 있을 때 (읽은 인수인계는 14일 동안 목록에만)
@@ -71,12 +68,18 @@ export default function OwnerLayout() {
           <span />
         )}
         <div className="flex items-center gap-2">
-          <IconButton aria-label="알림" className="relative" onClick={() => setSheet('notif')}>
-            <Bell />
+          {/* 알림은 전체 화면 (알바 알림과 같은 모양) */}
+          <Link
+            to="/owner/notifications"
+            aria-label={hasNotification ? '알림, 새 알림 있음' : '알림'}
+            // IconButton(card · md)과 같은 모양 — 주소로 가서 Link
+            className="relative inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-card text-foreground transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
+          >
+            <Bell className="size-[22px]" />
             {hasNotification && (
               <span className="absolute top-2.5 right-[11px] size-2 rounded-full border-2 border-card bg-destructive" />
             )}
-          </IconButton>
+          </Link>
           <Link
             to="/owner/me"
             aria-label="마이페이지"
@@ -92,20 +95,11 @@ export default function OwnerLayout() {
       <BottomNav
         items={navItems}
         pathname={pathname}
-        fab={{ label: '추가', icon: Plus, onClick: () => setSheet('add') }}
+        fab={{ label: '추가', icon: Plus, onClick: () => setAdding(true) }}
       />
       <Toaster />
 
-      <AddMenuSheet open={sheet === 'add'} onClose={() => setSheet(null)} />
-      <NotificationSheet
-        open={sheet === 'notif'}
-        onClose={() => setSheet(null)}
-        onOpenQuestion={(n) => {
-          setSheet(null)
-          setCurrentStoreId(n.storeId)
-          navigate(`/owner?question=${n.questionId}`)
-        }}
-      />
+      <AddMenuSheet open={adding} onClose={() => setAdding(false)} />
     </OwnerFrame>
   )
 }
