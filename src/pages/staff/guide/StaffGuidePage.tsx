@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from 'react-router'
 import type { ChatMessage, HandoverItem as HandoverItemData, RecipeSummary } from '@/lib/api/types'
 import { ChatBubble } from '@/pages/staff/chat/components/ChatBubble'
 import { markStaffGuideSeen } from '@/pages/staff/guide/staffGuideSeen'
-import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { ScheduleRow } from '@/pages/staff/schedule/components/ScheduleRow'
 import { personColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { GuideSlides, type GuideSlide } from '@/shared/guide/GuideSlides'
@@ -106,14 +106,11 @@ function MiniTabBar({ active }: { active: Tab }) {
 function MiniHeader() {
   return (
     <span className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-      <span className="flex h-10 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold">
-        달빛 카페
-        <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
+      <span className="flex h-10 max-w-full min-w-0 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold whitespace-nowrap">
+        <span className="min-w-0 truncate">달빛 카페</span>
+        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
       </span>
-      <span className="flex items-center gap-1">
-        <img src="/logo-bean.png" alt="" width={117} height={128} className="h-8 w-auto" />
-        <img src="/logo-crewbean.png" alt="" width={528} height={120} className="h-5 w-auto" />
-      </span>
+      <img src="/logo-crewbean.png" alt="" width={528} height={120} className="h-6 w-auto" />
       <span className="flex items-center gap-2 justify-self-end">
         <span className="flex size-10 items-center justify-center rounded-full bg-card">
           <Bell aria-hidden="true" className="size-5" />
@@ -406,28 +403,39 @@ function SchedulePicture() {
           ))}
         </div>
       </section>
-      {/* 고른 날 내 근무 카드: 이름 첫 글자 동그라미 · [⇄ 대타 요청 ›] (실제 근무표 날짜 목록과 같은 모양) */}
-      <div className="flex flex-col gap-3 rounded-3xl border border-brand bg-card px-4 py-3.5 ring-1 ring-brand ring-inset">
-        <span className="flex items-center gap-3">
-          <PersonInitial name="지은" color={colorOf('지은')} />
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="flex items-center gap-1.5">
-              <span className="text-base font-bold">지은</span>
+      {/* 고른 날 근무 목록 (실제 근무표 날짜 목록과 같은 줄 모양 ScheduleRow: 시간 · 사람 색 줄 · 이름 · [⇄ 대타 요청 ›]) */}
+      <div className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card">
+        <ScheduleRow
+          start="09:00"
+          end="13:30"
+          color={colorOf('서연')[1]}
+          title="서연"
+          sub="오픈"
+          right="4.5시간"
+        />
+        <ScheduleRow
+          start="18:00"
+          end="23:00"
+          color={colorOf('지은')[1]}
+          mine
+          title={
+            <>
+              지은
               <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
                 나
               </span>
+            </>
+          }
+          sub="마감"
+          right="5시간"
+          action={
+            <span className="flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand">
+              <ArrowLeftRight aria-hidden="true" className="size-3.5" strokeWidth={2.4} />
+              대타 요청
+              <ChevronRight aria-hidden="true" className="-mr-1 size-3.5" strokeWidth={2.4} />
             </span>
-            <span className="text-[13px] text-muted-foreground">마감</span>
-          </span>
-          <span className="text-[15px] font-bold tabular-nums">18:00 – 23:00</span>
-        </span>
-        <span className="flex justify-end border-t border-line/70 pt-2.5">
-          <span className="flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand">
-            <ArrowLeftRight aria-hidden="true" className="size-3.5" strokeWidth={2.4} />
-            대타 요청
-            <ChevronRight aria-hidden="true" className="-mr-1 size-3.5" strokeWidth={2.4} />
-          </span>
-        </span>
+          }
+        />
       </div>
       <div className="flex items-center justify-between rounded-3xl border border-line/60 bg-card px-4 py-3.5">
         <span className="text-[13px] font-bold text-muted-foreground">11월 예상 급여</span>

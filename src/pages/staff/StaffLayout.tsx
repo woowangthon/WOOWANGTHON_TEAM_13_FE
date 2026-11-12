@@ -14,7 +14,7 @@ import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
 // 알바 화면 공통 틀 (상단: 왼쪽 매장 전환 · 가운데 crewBean 로고 · 오른쪽 알림 · 프로필 / 하단 탭: 홈 · 레시피 · + 인수인계 · AI 사수 · 근무)
-// 로고(원두 캐릭터 + crewBean 글자)는 누르면 알바 홈, 이미 홈이면 맨 위로 (앱 로고를 누르면 처음으로 가는 흔한 동작)
+// 로고(crewBean 글자)는 누르면 알바 홈, 이미 홈이면 맨 위로 (앱 로고를 누르면 처음으로 가는 흔한 동작)
 
 const NAV_ITEMS: BottomNavItem[] = [
   { to: '/staff', label: '홈', icon: House, end: true, alsoActive: ['/staff/handover'] },
@@ -76,17 +76,14 @@ export default function StaffLayout() {
           }}
           className="flex h-10 items-center justify-self-center"
         >
-          {/* 원두 캐릭터 + 글자 로고 (사장님 사이드바와 같은 두 그림, public/ 나현). 360px 에서도 오른쪽 종 · 프로필과 안 겹치는 크기: 원두 32px · 글자 20px */}
-          <span className="flex items-center gap-1">
-            <img src="/logo-bean.png" alt="" width={117} height={128} className="h-8 w-auto" />
-            <img
-              src="/logo-crewbean.png"
-              alt="crewBean"
-              width={528}
-              height={120}
-              className="h-5 w-auto"
-            />
-          </span>
+          {/* 글자 로고만 24px (public/logo-crewbean.png, 나현). 360px 에서도 왼쪽 매장 이름 칸이 101px 남는 크기 */}
+          <img
+            src="/logo-crewbean.png"
+            alt="crewBean"
+            width={528}
+            height={120}
+            className="h-6 w-auto"
+          />
         </Link>
         <span className="flex items-center gap-2 justify-self-end">
           <Link

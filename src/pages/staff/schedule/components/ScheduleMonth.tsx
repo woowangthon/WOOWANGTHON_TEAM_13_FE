@@ -15,7 +15,7 @@ import { formatDate } from '@/lib/format'
 import { MonthSwitcher } from '@/pages/staff/schedule/components/MonthSwitcher'
 import { SentSubstitutesOfDay } from '@/pages/staff/schedule/components/SubstituteRequests'
 import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
-import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { ScheduleRow } from '@/pages/staff/schedule/components/ScheduleRow'
 import { usePersonColor } from '@/pages/staff/schedule/personColor'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
@@ -29,7 +29,7 @@ import { cn } from '@/ui/utils'
 // 근무표: 알바생 모두가 같이 보는 전체 스케줄 (구글 캘린더 월간처럼) — 11/10 회의 · BE #31
 // 날짜 칸 안에 그날 근무를 작은 블록(시작 시간 · 이름, 이름이 길면 두 줄)으로: 사람마다 파스텔 바탕 + 글자색만(personColor), 내 근무는 굵게, 대타는 1px 점선 테두리.
 // 보고 있는 달의 날짜만 보여 주고 다른 달 칸은 빈칸 (‹ › 로 넘겼을 때만 그 달).
-// 날짜를 누르면 아래에 그날 근무 목록 (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중") + 그날 보낸 대타 요청 카드. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
+// 날짜를 누르면 아래에 그날 근무 목록 — 앱 일정 목록처럼 카드 한 장 안 줄(시간 · 사람 색 세로 줄 · 이름, ScheduleRow) (내 근무 · 오늘 이후면 [대타 요청], 진행 중이면 "요청 중") + 같은 카드 아래 그날 보낸 대타 요청. ‹ › 로 달 이동. 한 번에 6주(최대 42일 ≤ BE 63일)를 불러온다
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 /** 칸 안에 보여 줄 블록 수 (넘으면 +N) */
@@ -283,92 +283,71 @@ export function ScheduleMonth() {
       {calendar.shifts.length > 0 && (
         <section className="flex flex-col gap-3">
           <SectionHeader title={`${formatDate(selected)} 근무`} />
-          {selectedShifts.length === 0 ? (
-            <EmptyGuide message="이날은 근무가 없어요" />
-          ) : (
-            <div ref={dayListRef} className="flex flex-col gap-2">
+          {selectedShifts.length === 0 && <EmptyGuide message="이날은 근무가 없어요" />}
+          {/* 앱 일정 목록처럼: 카드 한 장 안에 근무 줄 + 얇은 구분선 (docs/08 6-2), 그 아래 같은 카드 안 "보낸 대타 요청" */}
+          {(selectedShifts.length > 0 || sentOfDay.length > 0) && (
+            <div
+              ref={dayListRef}
+              className="flex flex-col overflow-hidden rounded-3xl border border-line/60 bg-card"
+            >
               {selectedShifts.map((shift) => {
                 const mine = isMine(shift)
                 // 대타 요청은 내 근무 · 오늘 이후만. 하루 조정한 근무(assignmentId null)는 BE 가 막는다
                 const canRequest = mine && shift.date >= todayKey && shift.assignmentId !== null
                 const pendingSent = canRequest ? pendingSentOf(shift) : undefined
                 return (
-                  <div
+                  <ScheduleRow
                     key={shiftKey(shift)}
-                    className={cn(
-                      // 흰 바탕 위 연한 카드 + 옅은 테두리 (docs/08 4). 내 근무는 매장 색 테두리 2px(안쪽 1px 더해 크기 그대로)
-                      'flex flex-col gap-3 rounded-3xl border border-line/60 bg-card px-4 py-3.5',
-                      mine && 'border-brand ring-1 ring-brand ring-inset',
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <PersonInitial
-                        name={shift.assignee.name}
-                        color={colorOf(shift.assignee.userId)}
-                      />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="flex items-center gap-1.5">
-                          <span className="text-base leading-[1.4] font-bold">
-                            {shift.assignee.name}
+                    start={shift.start}
+                    end={shift.end}
+                    // 근무표 달력 블록과 같은 사람 색 (진한 글자색 쪽)
+                    color={colorOf(shift.assignee.userId)[1]}
+                    mine={mine}
+                    title={
+                      <>
+                        <span className="truncate">{shift.assignee.name}</span>
+                        {mine && (
+                          <span className="shrink-0 rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
+                            나
                           </span>
-                          {mine && (
-                            <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
-                              나
-                            </span>
-                          )}
-                          {shift.substituted && (
-                            <span className="rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
-                              대타
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-[13px] text-muted-foreground">
-                          {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
-                        </span>
-                      </span>
-                      <span className="flex shrink-0 flex-col items-end gap-0.5">
-                        <span className="text-[15px] font-bold tabular-nums">
-                          {shift.start} – {shift.end}
-                        </span>
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          {shiftHours(shift)}시간
-                        </span>
-                      </span>
-                    </div>
-                    {/* 대타를 요청할 수 있는 내 근무만: 얇은 구분선 아래 오른쪽에 작은 [대타 요청] (대기 중이면 그 자리에 "○○님에게 대타 요청 중") */}
-                    {canRequest && (
-                      <div className="-mt-0.5 flex justify-end border-t border-line/70 pt-2.5">
-                        {pendingSent ? (
-                          <span className="flex h-8 items-center gap-1.5 rounded-full bg-brand-soft py-0 pr-3 pl-1.5 text-[13px] font-bold text-brand">
-                            <PersonInitial
-                              name={pendingSent.target.name}
-                              color={colorOf(pendingSent.target.userId)}
-                              size={20}
-                            />
-                            {pendingSent.target.name}님에게 대타 요청 중
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setSheetShift(shift)}
-                            className={cn(
-                              'flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand',
-                              PRESSABLE,
-                            )}
-                          >
-                            <ArrowLeftRight className="size-3.5" strokeWidth={2.4} />
-                            대타 요청
-                            <ChevronRight className="-mr-1 size-3.5" strokeWidth={2.4} />
-                          </button>
                         )}
-                      </div>
-                    )}
-                  </div>
+                        {shift.substituted && (
+                          <span className="shrink-0 rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
+                            대타
+                          </span>
+                        )}
+                      </>
+                    }
+                    sub={[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
+                    right={`${shiftHours(shift)}시간`}
+                    // 대타를 요청할 수 있는 내 근무만: 줄 오른쪽 아래 작은 [대타 요청] (대기 중이면 그 자리에 "○○님에게 대타 요청 중")
+                    action={
+                      canRequest &&
+                      (pendingSent ? (
+                        <span className="flex h-8 items-center rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand">
+                          {pendingSent.target.name}님에게 대타 요청 중
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSheetShift(shift)}
+                          className={cn(
+                            'flex h-8 items-center gap-1 rounded-full bg-brand-soft px-3 text-[13px] font-bold text-brand',
+                            PRESSABLE,
+                          )}
+                        >
+                          <ArrowLeftRight className="size-3.5" strokeWidth={2.4} />
+                          대타 요청
+                          <ChevronRight className="-mr-1 size-3.5" strokeWidth={2.4} />
+                        </button>
+                      ))
+                    }
+                  />
                 )
               })}
+              <SentSubstitutesOfDay requests={sentOfDay} colorOf={colorOf} />
             </div>
           )}
-          <SentSubstitutesOfDay requests={sentOfDay} colorOf={colorOf} />
         </section>
       )}
       {sheetShift && (
