@@ -28,6 +28,7 @@ import { questionSentence } from '@/pages/owner/components/questionText'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
 import type {
+  AssistantStats,
   AvailabilityStatus,
   BizVerification,
   BizVerifyInput,
@@ -781,4 +782,50 @@ export async function getStorePayroll(
 /** 시연 기준 오늘 (서버 시간) */
 export function ownerToday() {
   return fromDateKey(OWNER_TODAY)
+}
+
+/** AI 사수 답변율 (가짜 서버 · 예시 숫자). 진짜는 GET /stores/{storeId}/assistant-stats (docs/07 제안) */
+export async function getAssistantStats(storeId: string): Promise<AssistantStats> {
+  await wait(150)
+  const dalbit = storeId === 'dalbit'
+  return {
+    weekStart: '2026-11-16',
+    total: dalbit ? 32 : 12,
+    answered: dalbit ? 28 : 9,
+    lastWeekRate: dalbit ? 79 : 83,
+    unanswered: dalbit
+      ? [
+          {
+            category: '음료',
+            questions: [
+              { questionId: 'st_1', question: '우유 스팀 온도 몇 도예요?', staffName: '지은' },
+              {
+                questionId: 'st_2',
+                question: '디카페인 원두로 바꾸면 추가금 있어요?',
+                staffName: '민수',
+              },
+            ],
+          },
+          {
+            category: '마감',
+            questions: [
+              { questionId: 'st_3', question: '마감 때 그라인더도 청소해요?', staffName: '서연' },
+            ],
+          },
+          {
+            category: '재고',
+            questions: [
+              { questionId: 'st_4', question: '컵홀더는 어디서 더 꺼내요?', staffName: '민수' },
+            ],
+          },
+        ]
+      : [
+          {
+            category: '음료',
+            questions: [
+              { questionId: 'st_5', question: '콜드브루 몇 시간 내려요?', staffName: '하준' },
+            ],
+          },
+        ],
+  }
 }
