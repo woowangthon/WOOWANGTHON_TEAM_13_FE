@@ -42,6 +42,10 @@ export default function OwnerPayrollPage() {
   const members = results.flatMap((r) => r.data?.members ?? [])
   const total = members.reduce((sum, m) => sum + m.total, 0)
   const deduction = members.reduce((sum, m) => sum + m.deduction, 0)
+  // 금액 카드 아래 내역 3칸 (알바 예상 급여 카드와 같은 모양): 근무 시간 · 기본급 / 주휴수당 / 공제
+  const hours = members.reduce((sum, m) => sum + m.hours, 0)
+  const basePay = members.reduce((sum, m) => sum + m.basePay, 0)
+  const weeklyAllowance = members.reduce((sum, m) => sum + m.weeklyAllowance, 0)
   const open = members.find((m) => m.memberId === openId)
   const single = scope === 'all' ? null : effective[0]
 
@@ -56,7 +60,11 @@ export default function OwnerPayrollPage() {
               key={s.storeId}
               active={scope === s.storeId}
               onClick={() => setScope(s.storeId)}
-              className="px-4 text-[15px] font-bold"
+              // 알바 예상 급여 매장 칩과 같게: 흰 바탕 위 옅은 테두리 (고른 칩은 매장 색 그대로, 11/14)
+              className={cn(
+                'h-10 border px-4 py-0 text-[15px] font-bold',
+                scope === s.storeId ? 'border-transparent' : 'border-line/60',
+              )}
             >
               {s.name}
             </Chip>
@@ -91,10 +99,14 @@ export default function OwnerPayrollPage() {
           <span className="text-[40px] font-extrabold tracking-[-0.03em]">
             {pending ? '—' : formatWon(total)}
           </span>
-          <span className="text-[13px] opacity-75 lg:hidden">
-            {!pending && deduction > 0 && `세전 · 공제 합계 ${formatWon(deduction)} · `}
-            {payNote(single)}
-          </span>
+          <span className="text-[13px] opacity-75 lg:hidden">세전 · {payNote(single)}</span>
+          {!pending && (
+            <div className="mt-3 grid grid-cols-[auto_1fr_1fr] border-t border-white/15 pt-3 lg:hidden">
+              <PayTile label={`${hours}시간 근무`} value={formatWon(basePay)} />
+              <PayTile label="주휴수당" value={`+ ${formatWon(weeklyAllowance)}`} />
+              <PayTile label="공제" value={deduction ? `− ${formatWon(deduction)}` : '0원'} />
+            </div>
+          )}
           <span className="hidden text-[13px] opacity-75 lg:block">세전 · 주휴수당 포함</span>
         </Card>
         {/* 데스크톱 요약 카드 2 · 3 */}
@@ -287,5 +299,17 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
         </div>
       </div>
     </BottomSheet>
+  )
+}
+
+/** 금액 카드 아래 내역 한 칸: 상자 없이 칸 사이 옅은 세로선 (알바 예상 급여 PayTile 과 같은 모양) */
+function PayTile({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="flex min-w-0 flex-col gap-1 px-2 first:pl-0 last:pr-0 [&+&]:border-l [&+&]:border-white/15">
+      <span className="text-xs font-medium whitespace-nowrap text-white/75 tabular-nums">
+        {label}
+      </span>
+      <span className="text-[15px] font-bold whitespace-nowrap tabular-nums">{value}</span>
+    </span>
   )
 }
