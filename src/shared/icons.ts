@@ -74,14 +74,14 @@ export const HANDOVER_TAG_LABEL: Record<HandoverTag, string> = {
 
 /** 인수인계 태그 점 색 */
 export const HANDOVER_TAG_COLOR: Record<HandoverTag, string> = {
-  credit: '#A86A26',
-  stock: '#2A4536',
+  credit: '#9A7550',
+  stock: '#606C45',
   etc: '#C0463F',
 }
 
 /** 인수인계 태그 알약 [바탕, 글자] */
 export const HANDOVER_TAG_PILL: Record<HandoverTag, readonly [string, string]> = {
-  credit: ['#F5E6D6', '#8A5630'],
-  stock: ['#E3E8DC', '#2A4536'],
+  credit: ['#EDE3D6', '#7A5C3E'],
+  stock: ['#E8EADD', '#4B5535'],
   etc: ['#F1EFE9', '#5F6862'],
 }

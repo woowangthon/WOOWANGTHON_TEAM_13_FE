@@ -121,7 +121,7 @@ function MemberSheet({
     <BottomSheet open onClose={onClose} label={member.name} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3.5">
-          <span className="flex size-14 items-center justify-center rounded-full bg-accent text-xl font-extrabold text-[#2A4536]">
+          <span className="flex size-14 items-center justify-center rounded-full bg-accent text-xl font-extrabold text-[#4B5535]">
             {member.name.slice(0, 1)}
           </span>
           <div className="flex flex-col gap-[3px]">

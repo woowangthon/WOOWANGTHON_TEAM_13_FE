@@ -52,7 +52,7 @@ export default function LoginPage() {
         <img src={loginPhoto} alt="" className="absolute inset-0 -z-10 size-full object-cover" />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(24,36,29,0.25)_0%,rgba(24,36,29,0.1)_35%,rgba(24,36,29,0.88)_88%)]"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(40,44,28,0.25)_0%,rgba(40,44,28,0.1)_35%,rgba(40,44,28,0.88)_88%)]"
         />
         <div className="flex flex-col gap-2">
           {/* 슬로건은 글자 그대로. 줄바꿈은 보기용(가장 긴 줄 276px, 360px 카드 안 280px 에 들어감),

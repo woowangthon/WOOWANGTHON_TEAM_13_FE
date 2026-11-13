@@ -16,18 +16,18 @@ export interface StoreThemeColors {
 
 export const STORE_THEME: Record<StoreTheme, StoreThemeColors> = {
   moon: {
-    color: '#2A4536',
-    soft: '#E3E8DC',
-    scrim: 'linear-gradient(180deg, rgba(24,36,29,0.15) 0%, rgba(24,36,29,0.85) 78%)',
+    color: '#606C45',
+    soft: '#E8EADD',
+    scrim: 'linear-gradient(180deg, rgba(40,44,28,0.15) 0%, rgba(40,44,28,0.85) 78%)',
     photoShade:
-      'linear-gradient(180deg, rgba(24,36,29,0) 40%, rgba(24,36,29,0.55) 68%, rgba(24,36,29,0.8) 100%)',
+      'linear-gradient(180deg, rgba(40,44,28,0) 40%, rgba(40,44,28,0.55) 68%, rgba(40,44,28,0.8) 100%)',
   },
   sunset: {
-    color: '#6E3B26',
-    soft: '#F3E3D6',
-    scrim: 'linear-gradient(180deg, rgba(60,32,20,0.15) 0%, rgba(60,32,20,0.85) 78%)',
+    color: '#826245',
+    soft: '#EDE3D6',
+    scrim: 'linear-gradient(180deg, rgba(62,47,32,0.15) 0%, rgba(62,47,32,0.85) 78%)',
     photoShade:
-      'linear-gradient(180deg, rgba(60,32,20,0) 40%, rgba(60,32,20,0.55) 68%, rgba(60,32,20,0.8) 100%)',
+      'linear-gradient(180deg, rgba(62,47,32,0) 40%, rgba(62,47,32,0.55) 68%, rgba(62,47,32,0.8) 100%)',
   },
 }
 
