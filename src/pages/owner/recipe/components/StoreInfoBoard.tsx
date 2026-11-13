@@ -35,8 +35,9 @@ export function StoreInfoBoard({ segment }: { segment: StoreInfoSegment }) {
       <div className="flex items-end justify-between gap-2.5 px-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>
+          {/* 제목은 지금 칸 이름 (알바 화면과 같게, 11/14) */}
           <h1 className="m-0 flex items-center gap-1.5 text-[26px] font-extrabold tracking-[-0.03em]">
-            매장 정보
+            {segment === 'recipe' ? '레시피' : '매뉴얼'}
             {segment === 'recipe' && (
               <button
                 type="button"
@@ -111,7 +112,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex h-14 items-center gap-2.5 rounded-[20px] bg-card pr-2 pl-[18px] shadow-soft">
+      <div className="flex h-14 items-center gap-2.5 rounded-[20px] bg-card pr-2 pl-[18px] border border-line/60">
         <Search className="size-5 shrink-0 text-subtle" />
         <input
           value={search}
@@ -205,7 +206,8 @@ function ManualSection({ storeId }: { storeId: string }) {
 
   return (
     // [직접 추가]는 첫 칸(왼쪽 위) 고정 → 그 옆부터 매뉴얼 최신 순(API 순서 그대로, docs/07 4-1) → 추천 템플릿
-    <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
+    // 카드 크기는 알바 매뉴얼 카드(ManualCard clean)와 같게: 줄 높이를 같게 · 사이 8px (11/14)
+    <div className="grid auto-rows-fr grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-3">
       <DashedCard
         to="/owner/manuals/new"
         icon={<Plus className="size-5" />}
@@ -213,7 +215,12 @@ function ManualSection({ storeId }: { storeId: string }) {
         caption="새 매뉴얼"
       />
       {manuals.map((m) => (
-        <ManualCard key={m.manualId} manual={m} href={`/owner/manuals/${m.manualId}`} />
+        <ManualCard
+          key={m.manualId}
+          manual={m}
+          href={`/owner/manuals/${m.manualId}`}
+          variant="clean"
+        />
       ))}
       {templates.map((t) => {
         const Icon = MANUAL_ICON[t.icon]
@@ -246,13 +253,14 @@ function DashedCard({
   return (
     <Link
       to={to}
-      className="flex min-h-[170px] flex-col gap-[9px] rounded-[26px] border-[1.5px] border-dashed border-line p-4 text-muted-foreground"
+      // 매뉴얼 카드(clean)와 같은 크기 · 모서리 · 안쪽 여백: 아이콘은 제목 옆에 작게
+      className="flex h-full flex-col gap-1 rounded-3xl border-[1.5px] border-dashed border-line p-4 text-muted-foreground"
     >
-      <span className="flex size-10 items-center justify-center rounded-full border-[1.5px] border-dashed border-line">
-        {icon}
+      <span className="flex items-center gap-1.5 text-base leading-[1.4] font-bold">
+        <span className="flex shrink-0 [&_svg]:size-4">{icon}</span>
+        {title}
       </span>
-      <span className="text-[16px] font-extrabold">{title}</span>
-      <span className="mt-auto text-xs text-faint">{caption}</span>
+      <span className="text-[13px] leading-[1.45] font-medium text-subtle">{caption}</span>
     </Link>
   )
 }

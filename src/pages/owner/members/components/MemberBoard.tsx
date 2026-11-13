@@ -83,8 +83,8 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                     to={`/owner/members/${member.memberId}`}
                     aria-current={selected ? 'page' : undefined}
                     className={cn(
-                      'flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-foreground shadow-soft transition-shadow',
-                      // 데스크톱에서 고른 직원은 흰 바탕 + 2px 매장 색 테두리(ring — 카드 그림자와 따로) (휴대폰은 시트가 떠서 표시 없음)
+                      // 테두리 카드 · 그림자 없음 (11/14). 데스크톱에서 고른 직원은 흰 바탕 + 2px 매장 색 테두리(ring) (휴대폰은 시트가 떠서 표시 없음)
+                      'flex items-center gap-3.5 rounded-[22px] border border-line/60 bg-card px-4 py-3.5 text-foreground',
                       selected && 'lg:bg-white lg:ring-2 lg:ring-brand lg:ring-inset',
                     )}
                   >
@@ -92,7 +92,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                       name={member.name}
                       index={i}
                       size={panel ? 46 : 48}
-                      dot={active ? '#ADC178' : '#AB7743'}
+                      dot={active ? '#ADC178' : 'var(--new)'}
                     />
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       <span className="text-base font-bold">{member.name}</span>
@@ -124,7 +124,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
 export function InvitePanel({ onDone }: { onDone?: (member: Member) => void }) {
   const [round, setRound] = useState(0)
   return (
-    <section className="flex flex-col gap-4 rounded-[28px] bg-card p-6 shadow-soft">
+    <section className="flex flex-col gap-4 rounded-[28px] bg-card p-6 border border-line/60">
       <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
       <InviteForm
         key={round}

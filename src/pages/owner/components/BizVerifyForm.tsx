@@ -62,7 +62,7 @@ export function BizVerifyForm({
     )
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
+    <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60 lg:px-[22px] lg:py-4">
       <span className="text-xs font-bold text-muted-foreground">사업자등록번호</span>
       <div className="flex items-center gap-2">
         <input

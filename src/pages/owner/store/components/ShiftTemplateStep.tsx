@@ -49,7 +49,7 @@ export function ShiftTemplateStep({
         {rows.map((row) => (
           <div
             key={row.key}
-            className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft"
+            className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60"
           >
             <div className="flex items-center gap-2">
               <input

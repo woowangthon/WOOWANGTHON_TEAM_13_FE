@@ -64,7 +64,7 @@ export function AddressField({
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
+    <div className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60 lg:px-[22px] lg:py-4">
       <span className="text-xs font-bold text-muted-foreground">매장 주소</span>
       <button
         type="button"

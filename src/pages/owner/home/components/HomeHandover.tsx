@@ -1,10 +1,11 @@
-import { Check, Clock, Minus, Sparkles } from 'lucide-react'
+import { Check, Clock, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { dayHandoverSummary, useConfirmHandoverItem, useHandoverNotes } from '@/lib/api/handover'
 import { fromDateKey, isSameDay, toDateKey } from '@/lib/date'
 import { formatDate, formatTime } from '@/lib/format'
 import { useScheduleWorkers } from '@/pages/owner/api/fixedSchedule'
 import { useHandoverDaySummary } from '@/pages/owner/api/home'
+import { AiSummaryCard } from '@/shared/handover/AiSummaryCard'
 import { HandoverList } from '@/shared/handover/HandoverList'
 import { LoadError } from '@/shared/LoadError'
 import { WeekNav } from '@/shared/WeekNav'
@@ -68,11 +69,6 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
         <h2 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]">
           {live ? '오늘의 인수인계' : `${formatDate(date)} 인수인계`}
         </h2>
-        {items.length > 0 && (
-          <span className="text-[13px] font-medium whitespace-nowrap text-muted-foreground">
-            {done} / {items.length}
-          </span>
-        )}
       </div>
 
       <WeekNav
@@ -105,9 +101,12 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
         <LoadError error={notesQuery.error} onRetry={() => notesQuery.refetch()} />
       ) : items.length > 0 ? (
         <div className="flex flex-col gap-2.5">
-          <SummaryCard
+          {/* 처리 진행은 제목 옆 숫자 대신 AI 요약 카드 아래 막대로 (알바 홈과 같은 공용 카드, 11/14) */}
+          <AiSummaryCard
             from={`${authors}명이 남김`}
             summary={aiSummary ?? dayHandoverSummary(withItems)}
+            done={done}
+            total={items.length}
           />
           {/* 카드 한 장 안의 할 일 목록 (알바 홈과 같은 모양, 민지 #108) */}
           <HandoverList
@@ -185,21 +184,3 @@ function WeekDay({
 }
 
 /** 사장님 홈 하루 AI 요약: 연한 매장 색 카드 (알바 홈은 진한 카드). 줄바꿈은 줄마다 */
-function SummaryCard({ from, summary }: { from: string; summary: string }) {
-  return (
-    <div className="flex flex-col gap-2 rounded-[24px] bg-brand-soft px-5 py-[18px]">
-      <div className="flex items-center justify-between gap-2.5">
-        <span className="flex items-center gap-1.5 text-[13px] font-extrabold text-brand">
-          <Sparkles className="size-[17px]" fill="currentColor" />
-          AI 요약
-        </span>
-        <span className="shrink-0 text-xs font-medium whitespace-nowrap text-muted-foreground">
-          {from}
-        </span>
-      </div>
-      <p className="m-0 text-[15px] leading-[1.55] font-medium whitespace-pre-line break-keep text-foreground">
-        {summary}
-      </p>
-    </div>
-  )
-}

@@ -1,4 +1,4 @@
-import { Repeat } from 'lucide-react'
+import { ArrowLeftRight } from 'lucide-react'
 import { substituteErrorMessage } from '@/lib/api/substitute'
 import { fromDateKey } from '@/lib/date'
 import { formatDate } from '@/lib/format'
@@ -25,26 +25,25 @@ export function ReceivedRequests({ storeId }: { storeId: string }) {
     )
 
   return (
-    <section className="flex flex-col gap-2.5">
+    <section className="flex flex-col gap-2" aria-label="받은 대타 요청">
       {requests.map((r) => (
-        // 연한 주황: warm 토큰을 흰색과 반씩 섞음 (토큰은 알바 화면도 써서 그대로 둔다)
+        // 알바 근무 화면의 받은 대타 요청 카드와 같은 모양 (살구 바탕 · 라벨 옆 작은 아이콘 · 근무 → 설명, 11/14)
         <div
           key={r.requestId}
-          className="flex flex-col gap-3 rounded-[24px] bg-[color-mix(in_srgb,var(--warm)_50%,white)] p-4"
+          className="flex flex-col gap-3 rounded-3xl bg-warm p-4 text-warm-foreground"
         >
-          <div className="flex items-start gap-2.5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-warm-foreground">
-              <Repeat className="size-[18px]" />
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="flex items-center gap-1.5 text-[13px] font-bold">
+              <ArrowLeftRight aria-hidden="true" className="size-4" />
+              받은 대타 요청
             </span>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[15px] font-bold break-keep text-warm-foreground">
-                {r.requester.name} 님이 대타를 부탁했어요
-              </span>
-              <span className="text-[13px] text-warm-foreground/80">
-                {formatDate(fromDateKey(r.date))} · {r.shiftName} {r.start}~{r.end}
-              </span>
-            </div>
-          </div>
+            <span className="text-base leading-[1.4] font-bold text-foreground tabular-nums">
+              {formatDate(fromDateKey(r.date))} {r.shiftName} {r.start}–{r.end}
+            </span>
+            <span className="text-[13px] leading-[1.45] font-medium">
+              {r.requester.name}님이 대신 일해 줄 수 있는지 물어봤어요
+            </span>
+          </span>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="white"

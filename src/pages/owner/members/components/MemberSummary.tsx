@@ -38,7 +38,7 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
   const monthLabel = `${today.getMonth() + 1}월`
 
   return (
-    <section className="flex flex-col gap-5 rounded-[28px] bg-card p-7 shadow-soft">
+    <section className="flex flex-col gap-5 rounded-[28px] bg-card p-7 border border-line/60">
       <div className="flex items-center gap-4">
         <PersonAvatar name={member.name} index={index} size={64} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -109,7 +109,7 @@ function Stat({ label, value, strong }: { label: string; value: string; strong?:
     <div
       className={cn(
         'flex flex-col gap-1.5 rounded-[18px] px-4 py-3.5',
-        strong ? 'texture bg-brand text-white shadow-soft' : 'bg-white shadow-soft',
+        strong ? 'texture bg-brand text-white' : 'border border-line/60 bg-white',
       )}
     >
       <span className={cn('text-xs', strong ? 'opacity-80' : 'text-muted-foreground')}>

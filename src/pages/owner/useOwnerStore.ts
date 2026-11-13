@@ -33,12 +33,6 @@ export interface OwnerStoreView extends OwnerStore, StoreThemeColors {
   icon: StoreTheme
 }
 
-/** 사장님 화면 매장 색 (팔레트 11/13) — 알바 화면은 shared/storeTheme 그대로. 사진 덮개(scrim · photoShade)는 공용 값 */
-export const OWNER_THEME: Record<StoreTheme, Pick<StoreThemeColors, 'color' | 'soft'>> = {
-  moon: { color: '#373D20', soft: '#E2E3D5' }, // 다크올리브 · 세이지 35%
-  sunset: { color: '#6D3914', soft: '#F1E8E0' }, // 커피 · 바닐라 35%
-}
-
 const EMPTY_STORE: OwnerStoreView = {
   storeId: '',
   name: '',
@@ -54,7 +48,6 @@ const EMPTY_STORE: OwnerStoreView = {
   closedOnHolidays: false,
   icon: 'moon',
   ...STORE_THEME.moon,
-  ...OWNER_THEME.moon,
 }
 
 /** 지금 매장 + 내 매장 목록. 매장 색은 테마(없으면 매장 순서대로) */
@@ -68,7 +61,8 @@ export function useOwnerStore() {
     () =>
       (data?.stores ?? []).map((store, index) => {
         const icon = themeOf(store.theme, index)
-        return { ...store, icon, ...STORE_THEME[icon], ...OWNER_THEME[icon] }
+        // 매장 색은 알바 화면과 같은 shared/storeTheme (11/14)
+        return { ...store, icon, ...STORE_THEME[icon] }
       }),
     [data],
   )

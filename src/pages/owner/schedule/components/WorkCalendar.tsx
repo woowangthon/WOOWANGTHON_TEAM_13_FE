@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/format'
 import { useOwnerCalendar } from '@/pages/owner/api/fixedSchedule'
 import { DailyShiftSheet } from '@/pages/owner/schedule/components/DailyShiftSheet'
 import { HOLIDAYS, isClosedDay } from '@/pages/owner/store/holidays'
-import { PersonInitial } from '@/pages/staff/schedule/components/PersonInitial'
+import { ScheduleRow } from '@/pages/staff/schedule/components/ScheduleRow'
 import { usePersonColor } from '@/pages/staff/schedule/personColor'
 
 import { LoadError } from '@/shared/LoadError'
@@ -179,7 +179,7 @@ export function WorkCalendar({
           <LoadError what="근무 달력을" error={query.error} onRetry={() => query.refetch()} />
         ) : (
           <>
-            <div className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2 shadow-soft">
+            <div className="flex flex-col gap-2 rounded-3xl border border-line/60 bg-card px-2 pt-3 pb-2">
               <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-muted-foreground">
                 {WEEKDAYS.map((w, i) => (
                   <span key={w} className={cn(i === 0 && 'text-[#C0574A]')}>
@@ -339,55 +339,44 @@ export function WorkCalendar({
                 {selectedClosed ? '매장이 쉬는 날이에요' : '이날은 근무가 없어요'}
               </p>
             ) : (
-              selectedShifts.map((shift) => {
-                const mine = isMine(shift)
-                return (
-                  <div
-                    key={shiftKey(shift)}
-                    className={cn(
-                      // 사장님 근무도 연한 카드 + 매장 색 테두리 (알바 근무표와 같게)
-                      'flex items-center gap-3 rounded-[20px] bg-card px-4 py-3.5 shadow-soft',
-                      mine && 'ring-[1.5px] ring-brand ring-inset',
-                    )}
-                  >
-                    <PersonInitial
-                      name={shift.assignee.name}
-                      color={colorOf(shift.assignee.userId)}
+              // 알바 근무표처럼 카드 없이 흰 화면 위에 근무 줄 (시간 · 사람 색 세로줄 · 이름 / 근무), 줄 사이 20px (docs/08, 11/14)
+              <div className="flex flex-col gap-5 px-1 pt-1">
+                {selectedShifts.map((shift) => {
+                  const mine = isMine(shift)
+                  return (
+                    <ScheduleRow
+                      key={shiftKey(shift)}
+                      start={shift.start}
+                      end={shift.end}
+                      // 달력 블록과 같은 사람 색 (진한 글자색 쪽)
+                      color={colorOf(shift.assignee.userId)[1]}
+                      mine={mine}
+                      title={
+                        <>
+                          <span className="truncate">{shift.assignee.name}</span>
+                          {mine && (
+                            <span className="shrink-0 rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
+                              나
+                            </span>
+                          )}
+                          {shift.substituted && (
+                            <span className="shrink-0 rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
+                              대타
+                            </span>
+                          )}
+                          {shift.manuallyAdjusted && (
+                            <span className="shrink-0 rounded-full bg-accent px-2 py-px text-[11px] font-bold text-accent-foreground">
+                              조정
+                            </span>
+                          )}
+                        </>
+                      }
+                      sub={[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
+                      right={`${shiftHours(shift)}시간`}
                     />
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-base font-extrabold">{shift.assignee.name}</span>
-                        {mine && (
-                          <span className="rounded-full bg-brand px-2 py-px text-[11px] font-bold text-white">
-                            나
-                          </span>
-                        )}
-                        {shift.substituted && (
-                          <span className="rounded-full bg-warm px-2 py-px text-[11px] font-bold text-warm-foreground">
-                            대타
-                          </span>
-                        )}
-                        {shift.manuallyAdjusted && (
-                          <span className="rounded-full bg-accent px-2 py-px text-[11px] font-bold text-accent-foreground">
-                            조정
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-[13px] text-muted-foreground">
-                        {[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
-                      </span>
-                    </span>
-                    <span className="flex shrink-0 flex-col items-end gap-0.5">
-                      <span className="text-[15px] font-bold tabular-nums">
-                        {shift.start} – {shift.end}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {shiftHours(shift)}시간
-                      </span>
-                    </span>
-                  </div>
-                )
-              })
+                  )
+                })}
+              </div>
             )}
           </>
         )}

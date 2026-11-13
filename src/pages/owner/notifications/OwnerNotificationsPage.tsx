@@ -45,7 +45,7 @@ const isNewNow = (n: OwnerNotification) => n.kind !== 'handover' || !n.isRead
 export default function OwnerNotificationsPage() {
   const navigate = useNavigate()
   const close = useCloseTo('/owner')
-  const { store, stores, setCurrentStoreId } = useOwnerStore()
+  const { store, setCurrentStoreId } = useOwnerStore()
   const query = useNotifications()
   const readHandovers = useReadHandoverNotifications()
   const dismiss = useDismissNotification()
@@ -82,9 +82,6 @@ export default function OwnerNotificationsPage() {
     navigate(n.kind === 'substitute' ? '/owner/schedule' : '/owner/handover')
   }
 
-  // 매장이 하나면 매장 이름은 안 보인다
-  const manyStores = stores.length > 1
-
   return (
     <OwnerFrame colors={store} narrow className="gap-4 pb-10">
       <Header title="알림" onBack={close} />
@@ -103,7 +100,8 @@ export default function OwnerNotificationsPage() {
           {notifications.map((n) => {
             const Icon = ICON[n.kind] ?? Bell
             const isNew = newIds?.has(n.notificationId) ?? isNewNow(n)
-            const meta = [manyStores && n.storeName, n.createdAt && formatRelative(n.createdAt)]
+            // 시간 줄: 매장 이름 · 알림 시간 (11/14, 매장이 하나여도 매장 이름을 보여 준다)
+            const meta = [n.storeName, n.createdAt && formatRelative(n.createdAt)]
               .filter(Boolean)
               .join(' · ')
             return (
@@ -112,18 +110,15 @@ export default function OwnerNotificationsPage() {
                   type="button"
                   onClick={() => open(n)}
                   className={cn(
-                    'flex w-full items-start gap-3 rounded-[20px] bg-card px-4 py-3.5 text-left shadow-soft',
+                    'flex w-full items-start gap-3 rounded-[20px] border border-line/60 bg-card px-4 py-3.5 text-left',
                     PRESSABLE_CARD,
                   )}
                 >
-                  <span
-                    className={cn(
-                      'flex size-10 shrink-0 items-center justify-center rounded-full',
-                      isNew ? 'bg-brand text-white' : 'bg-brand-soft text-brand',
-                    )}
-                  >
-                    <Icon className="size-5" />
-                  </span>
+                  {/* 아이콘은 알바 알림처럼 동그라미 없이 선 아이콘만 */}
+                  <Icon
+                    aria-hidden="true"
+                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                  />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="flex items-center gap-2">
                       <span className="text-[15px] font-extrabold">{n.title}</span>

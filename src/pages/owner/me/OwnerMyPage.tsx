@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, LogOut, Pencil, Plus, X } from 'lucide-react'
+import { BookOpen, ChevronRight, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
@@ -13,6 +13,7 @@ import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
 import { PushNotificationSetting } from '@/shared/PushNotificationSetting'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { STORE_ICON } from '@/shared/icons'
+import { SectionHeader } from '@/shared/SectionHeader'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
@@ -36,7 +37,7 @@ export default function OwnerMyPage() {
   }
 
   return (
-    <OwnerFrame colors={store} narrow className="gap-[22px] pb-10">
+    <OwnerFrame colors={store} narrow className="gap-8 pb-10">
       <Header title="마이페이지" onBack={close} />
 
       {profile.data ? (
@@ -49,8 +50,8 @@ export default function OwnerMyPage() {
 
       <PushNotificationSetting />
 
-      <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">내 매장</h2>
+      <section className="flex flex-col gap-3">
+        <SectionHeader title="내 매장" />
         {isPending ? (
           <Spinner />
         ) : (
@@ -78,13 +79,13 @@ export default function OwnerMyPage() {
         </Link>
       </section>
 
-      <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">도움말</h2>
+      <section className="flex flex-col gap-3">
+        <SectionHeader title="도움말" />
         <button
           type="button"
           // 다 보면(또는 건너뛰면) 마이페이지로 돌아온다
           onClick={() => navigate('/owner/guide', { state: { returnTo: '/owner/me' } })}
-          className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 text-left shadow-soft"
+          className="flex items-center gap-3.5 rounded-[22px] border border-line/60 bg-card px-4 py-3.5 text-left"
         >
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
             <BookOpen className="size-5" />
@@ -99,35 +100,42 @@ export default function OwnerMyPage() {
         </button>
       </section>
 
-      <div className="mt-1.5 flex flex-col gap-2.5">
-        {/* 박스 없이 글자만 */}
-        <Button variant="ghost" className="h-12 text-base text-foreground" onClick={logout}>
-          <LogOut className="size-5" />
-          로그아웃
-        </Button>
-        {askWithdraw ? (
-          <div className="flex flex-col gap-3 rounded-[22px] bg-destructive-soft p-4">
-            <span className="text-[15px] leading-normal font-bold break-keep text-destructive-foreground">
+      {/* 로그아웃 · 탈퇴: 알바 마이페이지처럼 맨 아래 작은 글자 버튼 한 줄, 탈퇴는 위에 한 번 더 묻기 (11/14) */}
+      <div className="flex flex-col gap-3">
+        {askWithdraw && (
+          <div className="flex flex-col gap-3 rounded-3xl bg-destructive-soft p-4">
+            <span className="text-[15px] leading-[1.55] font-bold break-keep text-destructive-foreground">
               탈퇴하면 매장, 레시피, 매뉴얼, 직원 기록이 모두 삭제돼요.
             </span>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="white" className="h-12" onClick={() => setAskWithdraw(false)}>
+              <Button variant="white" size="md" onClick={() => setAskWithdraw(false)}>
                 취소
               </Button>
-              <Button variant="danger" className="h-12" onClick={logout}>
+              <Button variant="danger" size="md" onClick={logout}>
                 탈퇴하기
               </Button>
             </div>
           </div>
-        ) : (
+        )}
+        <div className="flex items-center justify-center gap-1 text-[13px] font-medium">
+          <button
+            type="button"
+            onClick={logout}
+            className="rounded-full px-3 py-2 text-muted-foreground active:bg-secondary"
+          >
+            로그아웃
+          </button>
+          <span aria-hidden="true" className="text-faint">
+            ·
+          </span>
           <button
             type="button"
             onClick={() => setAskWithdraw(true)}
-            className="p-2 text-[15px] font-medium text-destructive-foreground"
+            className="rounded-full px-3 py-2 text-destructive-foreground active:bg-secondary"
           >
             회원탈퇴
           </button>
-        )}
+        </div>
       </div>
 
       <Toaster bottom={32} />
@@ -135,7 +143,7 @@ export default function OwnerMyPage() {
   )
 }
 
-/** 이름: 칸을 벗어나면 저장 */
+/** 머리: 알바 마이페이지와 같은 모양 — 56px 이니셜 원 + 이름(눌러서 고치기, 칸을 벗어나면 저장), 왼쪽 정렬 · 매장 이름은 없음 (11/14) */
 function ProfileName({ name }: { name: string }) {
   const [value, setValue] = useState(name)
   const update = useUpdateOwnerProfile()
@@ -150,34 +158,36 @@ function ProfileName({ name }: { name: string }) {
     })
   }
   return (
-    <section className="flex flex-col items-center gap-3.5 pt-1.5 pb-0.5">
-      <span className="flex size-24 items-center justify-center rounded-full bg-brand text-[40px] font-extrabold text-background">
+    <section className="-mt-4 flex items-center gap-4 px-1">
+      <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand text-[26px] font-extrabold text-background">
         {(value || name).slice(0, 1)}
       </span>
-      {/* 이름 옆 연필 · 점선 밑줄로 고칠 수 있다는 힌트 (알바 마이페이지와 같은 모양) */}
-      <label className="group flex w-full items-center justify-center gap-1.5">
-        <span className="inline-grid max-w-[calc(100%-2rem)]">
-          <span
-            aria-hidden="true"
-            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[26px] font-extrabold tracking-[-0.03em] whitespace-pre"
-          >
-            {value || ' '}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* 이름 옆 연필 · 점선 밑줄로 고칠 수 있다는 힌트 */}
+        <label className="group flex min-h-8 w-full items-center gap-1.5">
+          <span className="inline-grid max-w-[calc(100%-2rem)]">
+            <span
+              aria-hidden="true"
+              className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[19px] font-bold tracking-[-0.02em] whitespace-pre"
+            >
+              {value || ' '}
+            </span>
+            <input
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              onBlur={save}
+              // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
+              size={1}
+              aria-label="이름"
+              className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-[19px] font-bold tracking-[-0.02em] underline decoration-line decoration-dotted decoration-2 underline-offset-4 focus:decoration-brand"
+            />
           </span>
-          <input
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            onBlur={save}
-            // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
-            size={1}
-            aria-label="이름"
-            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-center text-[26px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+          <Pencil
+            aria-hidden="true"
+            className="size-4 shrink-0 text-subtle group-focus-within:text-brand"
           />
-        </span>
-        <Pencil
-          aria-hidden="true"
-          className="size-[18px] shrink-0 text-subtle group-focus-within:text-brand"
-        />
-      </label>
+        </label>
+      </div>
     </section>
   )
 }
@@ -186,9 +196,9 @@ function LinkedAccount() {
   const me = useAuthStore((state) => state.me)
   const provider: OAuthProvider = me?.provider === 'google' ? 'google' : 'kakao'
   return (
-    <section className="flex flex-col gap-2.5">
-      <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">연결된 계정</h2>
-      <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
+    <section className="flex flex-col gap-3">
+      <SectionHeader title="연결된 계정" />
+      <div className="flex items-center gap-3.5 rounded-[22px] border border-line/60 bg-card px-4 py-3.5">
         <span
           className={cn(
             'flex size-11 shrink-0 items-center justify-center rounded-full',
@@ -239,7 +249,7 @@ function StoreRow({
     })
 
   return (
-    <div className="flex items-center gap-3 rounded-[22px] bg-card py-3 pr-3 pl-3.5 shadow-soft">
+    <div className="flex items-center gap-3 rounded-[22px] border border-line/60 bg-card py-3 pr-3 pl-3.5">
       <Link
         to={`/owner/stores/${store.storeId}`}
         className="flex min-w-0 flex-1 items-center gap-3 text-foreground"

@@ -32,7 +32,7 @@ export function PaydayField({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[22px] bg-card shadow-soft">
+    <div className="relative overflow-hidden rounded-[22px] bg-card border border-line/60">
       <div className="pointer-events-none absolute inset-x-3 top-11 h-11 rounded-[14px] bg-brand-soft" />
       <div
         ref={wheel}

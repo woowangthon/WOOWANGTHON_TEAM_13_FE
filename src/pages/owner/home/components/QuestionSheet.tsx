@@ -63,7 +63,14 @@ export function QuestionSheet({
     )
 
   return (
-    <BottomSheet open onClose={onClose} label="확인 필요" closeButton>
+    <BottomSheet
+      open
+      onClose={onClose}
+      label="확인 필요"
+      closeButton
+      // 휴대폰 브라우저 아래 막대 · 홈 바에 맨 아래 [보내기]가 가리지 않게: 보이는 높이(dvh) 기준 + 아래 여백에 홈 바 (11/14)
+      className="max-h-[88dvh] pb-[max(32px,calc(env(safe-area-inset-bottom)+16px))]"
+    >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -120,15 +127,15 @@ export function QuestionSheet({
             <div className="flex flex-col gap-2 animate-in duration-150 fade-in-0 motion-reduce:animate-none">
               <Button
                 variant="soft"
-                size="md"
+                size="sm"
                 className="self-start"
                 disabled={!answer.trim() || draft.isPending}
                 onClick={organize}
               >
                 {draft.isPending ? (
-                  <LoaderCircle className="animate-spin motion-reduce:animate-none" />
+                  <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
                 ) : (
-                  <Sparkles />
+                  <Sparkles className="size-4" />
                 )}
                 {draft.isPending ? 'AI가 정리하는 중…' : 'AI로 정리하기'}
               </Button>
