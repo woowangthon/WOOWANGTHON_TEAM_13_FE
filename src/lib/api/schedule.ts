@@ -18,7 +18,7 @@ import type {
 import { http, isRealApi } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
 import { useAuthStore } from '@/lib/authStore'
-import { addDays, fromDateKey, todayInKst, toDateKey } from '@/lib/date'
+import { addDays, fromDateKey, todayInKst, toDateKey, useTodayKey } from '@/lib/date'
 
 /*
  * 근무 훅 (P1) — 담당: 민지
@@ -38,7 +38,9 @@ export const CALENDAR_MAX_DAYS = 63
 export const scheduleKeys = {
   calendar: (storeId: string, startDate: string, endDate: string) =>
     ['stores', storeId, 'schedule-calendar', startDate, endDate] as const,
-  mine: (storeId: string) => ['stores', storeId, 'schedules', 'me'] as const,
+  /** 내 근무 — 오늘(KST)이 바뀌면 키가 바뀌어 다시 불러온다. 앞부분 ['stores', id, 'schedules', 'me'] 로 invalidate 하면 모든 날짜 */
+  mine: (storeId: string, todayKey: string) =>
+    ['stores', storeId, 'schedules', 'me', todayKey] as const,
   availability: (storeId: string) => ['stores', storeId, 'availabilities', 'me'] as const,
 }
 
@@ -91,6 +93,8 @@ export function useScheduleCalendar(
     queryKey: scheduleKeys.calendar(storeId, startDate, endDate),
     queryFn: () => fetchCalendar(storeId, startDate, endDate),
     enabled: !!storeId && enabled,
+    // 다른 기기(사장님)에서 바꾼 근무가 화면으로 돌아오면 반영되게
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -198,7 +202,13 @@ const patchAvailability = (storeId: string, availabilityId: string, body: Availa
 
 /** 내 근무: 오늘 · 이번 주 · 확정된 근무 */
 export function useMySchedule(storeId: string) {
-  return useQuery({ queryKey: scheduleKeys.mine(storeId), queryFn: () => fetchSchedule(storeId) })
+  // 오늘을 키에 넣어 자정이 지나면 새로 부르고, 화면으로 돌아오면 다시 부른다 (다른 기기에서 바꾼 근무)
+  const todayKey = useTodayKey()
+  return useQuery({
+    queryKey: scheduleKeys.mine(storeId, todayKey),
+    queryFn: () => fetchSchedule(storeId),
+    refetchOnWindowFocus: true,
+  })
 }
 
 /**
@@ -222,9 +232,10 @@ export function workSummaryOf(schedule: MySchedule): string | null {
 
 /** 여러 매장의 이번 주 근무 한 줄 (매장 목록 "주 3회 마감 · 박 사장님") — storeId → 한 줄 */
 export function useWorkSummaries(storeIds: string[]) {
+  const todayKey = useTodayKey()
   return useQueries({
     queries: storeIds.map((storeId) => ({
-      queryKey: scheduleKeys.mine(storeId),
+      queryKey: scheduleKeys.mine(storeId, todayKey),
       queryFn: () => fetchSchedule(storeId),
     })),
     // 결과가 같으면 같은 객체를 돌려줘서 매장 목록이 렌더마다 새로 만들어지지 않는다
