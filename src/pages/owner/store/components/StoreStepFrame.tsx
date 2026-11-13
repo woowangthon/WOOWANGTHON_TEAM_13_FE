@@ -11,8 +11,14 @@ import { cn } from '@/ui/utils'
 // 데스크톱(lg 1024px 이상)은 두 칸: 왼쪽 420px 패널(로고 · 제목 · 세로 타임라인) + 오른쪽(뒤로 · 계정 · 가운데 폼 · 아래 액션 바).
 // 같은 children 한 벌을 CSS 로만 나눠서(.lg:) 창 크기를 바꿔도 입력한 값이 그대로다. 진행 표시는 데스크톱에서 왼쪽 타임라인 하나로.
 // 민지 부품은 OnboardingHeader · ProviderLogo 를 import 만 한다 (AuthFrame 은 쓰지 않고 같은 모양을 여기서 만든다)
+// 알바생 초대코드 입장(staff/join)도 데스크톱에서 이 틀을 쓴다 (11/14, heading · steps · who 로 문구만 바꿈)
 
-const STEPS = [
+export interface OnboardingStep {
+  name: string
+  desc: string
+}
+
+const STORE_STEPS: OnboardingStep[] = [
   { name: '매장 정보', desc: '이름 · 사업자번호 · 주소' },
   { name: '근무 타임 · 휴무 · 급여일', desc: '영업 시간과 급여 지급일' },
   { name: '사장님 근무', desc: '사장님도 근무하나요?' },
@@ -29,6 +35,10 @@ export function StoreStepFrame({
   status,
   actions,
   actionsWide = false,
+  heading = '매장 등록',
+  subheading = '4단계, 약 3분이면 끝나요',
+  steps = STORE_STEPS,
+  who = '사장님',
   children,
 }: {
   /** 지금 단계 1~4 */
@@ -47,6 +57,13 @@ export function StoreStepFrame({
   actions?: ReactNode
   /** 버튼이 둘이면 액션 바 오른쪽 칸을 넓게 */
   actionsWide?: boolean
+  /** 데스크톱 왼쪽 패널 제목 · 설명 (기본: 매장 등록) */
+  heading?: string
+  subheading?: string
+  /** 타임라인 단계 (기본: 매장 등록 4단계) */
+  steps?: OnboardingStep[]
+  /** 제목 위 캡션 "사장님 · 1 / 4" 의 앞 글자 */
+  who?: string
   children: ReactNode
 }) {
   const provider = useAuthStore((state) => state.me?.provider)
@@ -62,12 +79,12 @@ export function StoreStepFrame({
           <div className="my-auto flex flex-col gap-9">
             <div className="flex flex-col gap-1.5">
               <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
-                매장 등록
+                {heading}
               </h2>
-              <p className="m-0 text-[13px] text-muted-foreground">4단계, 약 3분이면 끝나요</p>
+              <p className="m-0 text-[13px] text-muted-foreground">{subheading}</p>
             </div>
             <ol className="m-0 flex list-none flex-col p-0">
-              {STEPS.map((s, i) => {
+              {steps.map((s, i) => {
                 const n = i + 1
                 const on = n === step
                 const done = n < step
@@ -94,7 +111,7 @@ export function StoreStepFrame({
                     // 세로 연결선: 원 아래에서 다음 원까지 (마지막 단계는 없음)
                     className={cn(
                       'relative flex gap-4 pb-7 last:pb-0',
-                      n < STEPS.length &&
+                      n < steps.length &&
                         'after:absolute after:top-10 after:bottom-0 after:left-[19px] after:w-0.5 after:bg-faint/40',
                     )}
                   >
@@ -145,7 +162,7 @@ export function StoreStepFrame({
           <div className="flex flex-col gap-[22px] lg:my-auto lg:w-full lg:max-w-[680px] lg:self-center lg:py-8">
             <div className="flex flex-col gap-2 px-1 pt-1.5">
               <span className="text-[13px] font-medium text-muted-foreground">
-                사장님 · {step} / {STEPS.length}
+                {who} · {step} / {steps.length}
               </span>
               <h1 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
                 {title}
