@@ -1,4 +1,11 @@
-import { ArrowRight, Check, LoaderCircle } from 'lucide-react'
+import {
+  ArrowRight,
+  Check,
+  ClipboardList,
+  Coffee,
+  LoaderCircle,
+  MessagesSquare,
+} from 'lucide-react'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
@@ -13,6 +20,12 @@ import { formatOwner } from '@/lib/format'
 import { useStoreStore } from '@/lib/storeStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
+import {
+  OnboardingDoneDesktop,
+  type NextStep,
+} from '@/pages/owner/store/components/OnboardingDoneDesktop'
+import { StoreStepFrame, type OnboardingStep } from '@/pages/owner/store/components/StoreStepFrame'
+import { useWide } from '@/pages/owner/useWide'
 import { CodeCells } from '@/pages/staff/join/components/CodeCells'
 import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
 import { STORE_ICON } from '@/shared/icons'
@@ -22,6 +35,15 @@ import { Button } from '@/ui/Button'
 
 // 초대코드 입장 (디자인: docs/design/login-onboarding.html): 6칸 입력 → 확인 · 매장 카드 → 입장 → 완료
 // 초대 링크(/staff/join?code=K7P2QX)로 오면 코드를 채우고 바로 확인한다
+// 데스크톱(lg 1024px 이상, 11/14 나현 · 민지 OK): 사장님 매장 등록과 같은 틀(owner StoreStepFrame · OnboardingDoneDesktop 을 import)
+//   — 왼쪽 세로 타임라인(초대코드 입력 → 매장 확인 → 입장 완료) + 오른쪽 가운데 폼 · 아래 액션 바. 휴대폰은 그대로
+
+/** 데스크톱 왼쪽 타임라인 */
+const JOIN_STEPS: OnboardingStep[] = [
+  { name: '초대코드 입력', desc: '사장님께 받은 6자리' },
+  { name: '매장 확인', desc: '매장 · 내 이름 확인' },
+  { name: '입장 완료', desc: '바로 시작해요' },
+]
 
 type InviteErrorReason = 'invalid' | 'joined' | 'locked' | 'revoked'
 
@@ -50,6 +72,7 @@ export default function JoinPage() {
   const setCurrentStoreId = useStoreStore((state) => state.setCurrentStoreId)
   const verify = useVerifyInvite()
   const join = useJoinStore()
+  const wide = useWide()
   // 테마가 없는 매장은 내 매장 순서대로 색을 정한다 → 새로 들어가는 매장은 다음 순서
   const myStoreCount = useMyStores().data?.stores.length ?? 0
 
@@ -126,6 +149,7 @@ export default function JoinPage() {
         theme={joined.theme}
         // 처음 들어온 알바생: 앱 사용법을 보고 알바 홈으로
         onStart={() => navigate('/staff/guide', { replace: true })}
+        wide={wide}
       />
     )
 
@@ -147,6 +171,78 @@ export default function JoinPage() {
     else runVerify(code)
   }
 
+  /** 초대코드 6칸 · 오류 · [○○로 가기] · 안내 (휴대폰 · 데스크톱 같이) */
+  const codeBlock = (
+    <div className="flex flex-col gap-2">
+      <CodeCells value={code} onChange={changeCode} error={error !== null} disabled={locked} />
+      {error && (
+        <p role="alert" className="m-0 px-1 text-[13px] font-medium text-destructive-foreground">
+          {ERROR_TEXT[error]}
+          {remaining !== null && remaining > 0 && ` · ${remaining}번 더 틀리면 10분 동안 잠겨요`}
+        </p>
+      )}
+      {error === 'joined' && memberStore && (
+        <Button
+          variant="soft"
+          size="md"
+          className="self-start"
+          onClick={() => goToStore(memberStore)}
+        >
+          {withRo(memberStore.storeName)} 가기
+          <ArrowRight />
+        </Button>
+      )}
+      <p className="m-0 px-1 text-xs font-medium text-subtle tabular-nums">
+        사장님께 받은 6자리 · 예) K7P2QX
+      </p>
+    </div>
+  )
+  /** 확인된 매장 미리보기 */
+  const preview = invite && (
+    <InvitePreview invite={invite} theme={themeOf(invite.store.theme, myStoreCount)} />
+  )
+
+  const submitButton = (className: string) => (
+    <Button
+      type="submit"
+      form="join-form"
+      className={className}
+      disabled={!full || pending || locked}
+    >
+      {pending ? <LoaderCircle className="size-5 animate-spin" /> : invite ? '입장' : '확인'}
+    </Button>
+  )
+
+  if (wide)
+    return (
+      <StoreStepFrame
+        heading="근무지 입장"
+        subheading="초대코드만 있으면 바로 끝나요"
+        steps={JOIN_STEPS}
+        who="알바생"
+        step={invite ? 2 : 1}
+        title={invite ? '매장 확인' : '초대코드 입력'}
+        onBack={() => navigate('/role')}
+        summaries={[code]}
+        canGo={() => false}
+        onGoStep={() => {}}
+        actions={submitButton('h-12 w-full text-base')}
+      >
+        <form
+          id="join-form"
+          className="flex flex-col gap-6"
+          onSubmit={(event) => {
+            event.preventDefault()
+            submit()
+          }}
+        >
+          {/* 초대코드 칸은 휴대폰과 비슷한 폭으로 (폼 680px 에 맞추면 칸이 너무 커진다) */}
+          <div className="max-w-[460px]">{codeBlock}</div>
+          {preview}
+        </form>
+      </StoreStepFrame>
+    )
+
   return (
     <AuthFrame tone="white">
       <OnboardingHeader step={1} onBack={() => navigate('/role')} />
@@ -165,38 +261,9 @@ export default function JoinPage() {
           </h1>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <CodeCells value={code} onChange={changeCode} error={error !== null} disabled={locked} />
-          {error && (
-            <p
-              role="alert"
-              className="m-0 px-1 text-[13px] font-medium text-destructive-foreground"
-            >
-              {ERROR_TEXT[error]}
-              {remaining !== null &&
-                remaining > 0 &&
-                ` · ${remaining}번 더 틀리면 10분 동안 잠겨요`}
-            </p>
-          )}
-          {error === 'joined' && memberStore && (
-            <Button
-              variant="soft"
-              size="md"
-              className="self-start"
-              onClick={() => goToStore(memberStore)}
-            >
-              {withRo(memberStore.storeName)} 가기
-              <ArrowRight />
-            </Button>
-          )}
-          <p className="m-0 px-1 text-xs font-medium text-subtle tabular-nums">
-            사장님께 받은 6자리 · 예) K7P2QX
-          </p>
-        </div>
+        {codeBlock}
 
-        {invite && (
-          <InvitePreview invite={invite} theme={themeOf(invite.store.theme, myStoreCount)} />
-        )}
+        {preview}
 
         <Button
           type="submit"
@@ -248,17 +315,61 @@ const NEXT_LINKS = [
 ]
 
 // 디자인 시안은 초록 카드 — 비어 보여서 매장 사진 + 환영 문구 + 바로가기 칩으로 바꿈
+/** 데스크톱 입장 완료 오른쪽 처음 할 일 (휴대폰 바로가기 칩과 같은 곳) */
+const NEXT_STEPS: NextStep[] = [
+  {
+    to: '/staff',
+    icon: ClipboardList,
+    label: '인수인계 확인',
+    desc: '지난 근무자가 남긴 할 일을 확인해요',
+  },
+  {
+    to: '/staff/recipes',
+    icon: Coffee,
+    label: '레시피 보기',
+    desc: '우리 매장 음료 레시피를 볼 수 있어요',
+  },
+  {
+    to: '/staff/chat',
+    icon: MessagesSquare,
+    label: 'AI 사수에게 묻기',
+    desc: '모르는 건 매장 매뉴얼 기준으로 답해요',
+  },
+]
+
 function JoinDone({
   invite,
   theme: themeKey,
   onStart,
+  wide,
 }: {
   invite: InviteVerification
   theme: StoreTheme
   onStart: () => void
+  /** 데스크톱: 사장님 등록 완료와 같은 두 칸 (owner OnboardingDoneDesktop) */
+  wide: boolean
 }) {
   const { store, staffName } = invite
   const theme = STORE_THEME[themeKey]
+  if (wide)
+    return (
+      <OnboardingDoneDesktop
+        photoUrl={store.photoUrl}
+        badge="입장 완료"
+        title={store.name}
+        meta={`${formatOwner(store.ownerName)} · ${staffName} 님`}
+        heading={
+          <>
+            {staffName} 님,
+            <br />
+            오늘부터 함께해요
+          </>
+        }
+        description="처음엔 이것부터 해 보세요."
+        steps={NEXT_STEPS}
+        onStart={onStart}
+      />
+    )
   return (
     <AuthFrame tone="white" className="gap-6">
       <section
