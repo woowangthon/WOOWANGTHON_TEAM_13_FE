@@ -441,3 +441,23 @@ export interface MemberPay {
   netPay: number
   weeks: { weekStart: string; hours: number; eligible: boolean }[]
 }
+
+/**
+ * AI 사수 답변율 (사장님 데스크톱 홈, 11/14 · BE 제안 docs/07): 이번 주(월~일) 알바생 질문 중 AI 사수가 매뉴얼로 답한 비율
+ * + 매뉴얼에 없어서 못 답한 질문을 매뉴얼 분류별로. 진짜 API 가 없을 때는 가짜 서버 값
+ */
+export interface AssistantStats {
+  /** 이번 주 월요일 (YYYY-MM-DD) */
+  weekStart: string
+  /** 이번 주 질문 수 */
+  total: number
+  /** 그중 AI 사수가 매뉴얼 근거로 답한 수 */
+  answered: number
+  /** 지난주 답변율 (0~100, 지난주 질문이 없으면 null) */
+  lastWeekRate: number | null
+  /** 매뉴얼에 없던 질문 (분류마다, 많은 순) */
+  unanswered: {
+    category: string
+    questions: { questionId: string; question: string; staffName: string }[]
+  }[]
+}

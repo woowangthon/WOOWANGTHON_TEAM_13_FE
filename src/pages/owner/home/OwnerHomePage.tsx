@@ -14,13 +14,14 @@ import { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { toDateKey } from '@/lib/date'
 import { formatDate, formatTime, formatWon } from '@/lib/format'
-import { useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
+import { useAssistantStats, useOnDuty, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
 import { useOwnerCalendar } from '@/pages/owner/api/fixedSchedule'
 import type { OwnerQuestionItem } from '@/pages/owner/api/types'
 import { useStorePayroll } from '@/pages/owner/api/work'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import { hasSeenOwnerGuide } from '@/pages/owner/guide/ownerGuideSeen'
+import { AnswerRateCard } from '@/pages/owner/home/components/AnswerRateCard'
 import { HomeHandover } from '@/pages/owner/home/components/HomeHandover'
 import { QuestionSheet } from '@/pages/owner/home/components/QuestionSheet'
 import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
@@ -132,7 +133,7 @@ function OwnerHome() {
         <div className="order-2 empty:hidden lg:order-none">
           <ShiftBanner storeId={store.storeId} today={today} />
         </div>
-        <PayrollRing storeId={store.storeId} today={today} />
+        <AnswerRateOrPayroll storeId={store.storeId} today={today} />
         <QuickTiles />
         <TodayShifts storeId={store.storeId} today={today} />
       </aside>
@@ -268,6 +269,23 @@ function PayrollCard({ storeId, today }: { storeId: string; today: Date }) {
 }
 
 // ── 데스크톱 오른쪽 칸 (lg 이상에서만 보인다) ──
+
+/**
+ * 데스크톱 오른쪽 칸 첫 카드: AI 사수 답변율 (11/14). 답변율을 못 불러오면(진짜 API 가 아직 없을 때 등) 예전처럼 인건비 링
+ * (휴대폰 인건비 카드는 확인 필요 줄에 그대로)
+ */
+function AnswerRateOrPayroll({ storeId, today }: { storeId: string; today: Date }) {
+  const stats = useAssistantStats(storeId)
+  if (stats.isError) return <PayrollRing storeId={storeId} today={today} />
+  if (!stats.data) {
+    return <div aria-hidden="true" className="hidden h-[360px] rounded-[26px] bg-muted lg:block" />
+  }
+  return (
+    <div className="hidden lg:block">
+      <AnswerRateCard stats={stats.data} />
+    </div>
+  )
+}
 
 /** 이번 달 인건비 + 달 진행 링 (며칠 지났는지) */
 function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
