@@ -120,9 +120,6 @@ export function StoreStepFrame({
               )
             })}
           </ol>
-          <span className="mt-auto text-xs text-muted-foreground">
-            개인 카페를 위한 매뉴얼 · AI 사수
-          </span>
         </aside>
 
         <main className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[22px] bg-background px-4 pt-3.5 pb-7 lg:mx-0 lg:max-w-none lg:gap-0 lg:px-14 lg:py-9">

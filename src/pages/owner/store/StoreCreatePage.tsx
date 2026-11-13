@@ -194,7 +194,7 @@ export default function StoreCreatePage() {
         step={1}
         title="매장 정보"
         onBack={() => navigate(from)}
-        status={missing > 0 ? `필수 항목 ${missing}개 남음` : '모두 입력했어요'}
+        status={missing > 0 ? `필수 항목 ${missing}개 남음` : undefined}
         actions={
           <Button
             className="h-14 w-full text-base"
@@ -267,7 +267,7 @@ export default function StoreCreatePage() {
         step={2}
         title="근무 타임 · 휴무 · 급여일"
         onBack={() => setStep('info')}
-        status={rowsError ? String(rowsError) : '모두 입력했어요'}
+        status={rowsError ? String(rowsError) : undefined}
         actions={
           <Button
             className="h-14 w-full text-base"
@@ -302,7 +302,6 @@ export default function StoreCreatePage() {
         step={3}
         title="사장님 근무"
         onBack={() => setStep(created ? 'photo' : 'shifts')}
-        status="사장님 근무는 건너뛰어도 돼요"
         actionsWide
         actions={
           <div className="grid grid-cols-2 gap-2">
