@@ -5,11 +5,11 @@ import {
   CalendarDays,
   ChevronDown,
   ChevronRight,
-  Coffee,
   House,
   MessagesSquare,
   Plus,
   Sparkles,
+  Store,
 } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -59,7 +59,7 @@ function Phone({ tab, header, children }: { tab: Tab; header?: boolean; children
 
 const TABS: { key: Tab; label: string; icon: typeof House }[] = [
   { key: 'home', label: '홈', icon: House },
-  { key: 'recipe', label: '레시피', icon: Coffee },
+  { key: 'recipe', label: '매장 정보', icon: Store },
   { key: 'write', label: '인수인계', icon: Plus },
   { key: 'chat', label: 'AI 사수', icon: MessagesSquare },
   { key: 'schedule', label: '근무', icon: CalendarDays },
@@ -453,7 +453,7 @@ const SLIDES: GuideSlide[] = [
     visual: <HomePicture />,
   },
   {
-    tab: '레시피',
+    tab: '매장 정보',
     title: '메뉴를 누르면 레시피가 바로 나와요',
     body: '포스기처럼 카테고리별로 찾아요. 매뉴얼도 여기 있어요',
     visual: <RecipePicture />,
