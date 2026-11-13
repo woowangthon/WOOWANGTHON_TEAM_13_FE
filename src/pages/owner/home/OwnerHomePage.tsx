@@ -62,7 +62,8 @@ function OwnerHome() {
       <div className="contents lg:flex lg:flex-col lg:gap-7">
         <div className="order-1 flex flex-col gap-2 px-1 break-keep lg:order-none">
           <span className="text-[13px] font-medium text-muted-foreground">{formatDate(today)}</span>
-          <h1 className="font-suite m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
+          {/* 인사말만 글자 단계 예외: 28px · 데스크톱 32px (SUITE, docs/08 2장) */}
+          <h1 className="font-suite m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em] lg:text-[32px]">
             안녕하세요,
             <br className="lg:hidden" /> {surname} 사장님
           </h1>
