@@ -19,7 +19,7 @@ export function WageInput({
       <label
         className={cn(
           'flex h-[54px] items-center gap-2 rounded-[18px] border-[1.5px] bg-white px-[18px]',
-          low ? 'border-[#E7A39D]' : 'border-[#E1DED5]',
+          low ? 'border-[#E7A39D]' : 'border-line',
         )}
       >
         <span className="text-sm text-muted-foreground">시급</span>

@@ -174,7 +174,7 @@ export function ScanSheet({
         {picking && (
           <div className="flex flex-col gap-3.5">
             {items.length > 0 && (
-              <span className="text-[13px] text-[#6B7068]">
+              <span className="text-[13px] text-muted-foreground">
                 다음 메뉴만 보이게 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)
               </span>
             )}
@@ -259,7 +259,7 @@ export function ScanSheet({
             )}
 
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#6B7068]">
+              <span className="text-[13px] text-muted-foreground">
                 AI 초안 · 노란 칸은 직접 입력해 주세요
               </span>
               <button
@@ -305,7 +305,7 @@ function PickButton({
   onPick: (file: File) => void
 }) {
   return (
-    <label className="flex h-[150px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-[#6B7068]">
+    <label className="flex h-[150px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-muted-foreground">
       {icon}
       <span className="text-sm font-semibold">{label}</span>
       <input
@@ -347,8 +347,8 @@ function DraftFields({
         onChange={(category) => onChange({ ...draft, category })}
       />
       {blanks.temp && (
-        <div className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px]">
-          <dt className="text-[#6B7068]">온도</dt>
+        <div className="flex items-center justify-between gap-2.5 border-b border-border py-2 text-[15px]">
+          <dt className="text-muted-foreground">온도</dt>
           <dd className="m-0 flex gap-1" role="radiogroup" aria-label="온도">
             {TEMPS.map((t) => (
               <button
@@ -361,7 +361,7 @@ function DraftFields({
                   'h-[38px] rounded-xl px-3 text-[13px] font-bold',
                   draft.temp === t.value
                     ? 'bg-brand text-white'
-                    : 'border-[1.5px] border-[#E8C66A] bg-[#FFF6D9]',
+                    : 'border-[1.5px] border-[#AB7743] bg-warm',
                 )}
               >
                 {t.label}
@@ -373,9 +373,9 @@ function DraftFields({
       {draft.ingredients.map((ing, i) => (
         <div
           key={`${ing.name}-${i}`}
-          className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px] last:border-b-0"
+          className="flex items-center justify-between gap-2.5 border-b border-border py-2 text-[15px] last:border-b-0"
         >
-          <dt className="text-[#6B7068]">{ing.name}</dt>
+          <dt className="text-muted-foreground">{ing.name}</dt>
           <dd className="m-0">
             {blanks.ingredients.includes(i) ? (
               <input
@@ -390,7 +390,7 @@ function DraftFields({
                 }
                 placeholder="입력"
                 aria-label={`${ing.name} 양`}
-                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#E8C66A] bg-[#FFF6D9] px-2.5 text-sm"
+                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-sm"
               />
             ) : (
               <span className="font-bold">{ing.amount}</span>
@@ -416,23 +416,23 @@ function Row({
 }) {
   if (blank) {
     return (
-      <div className="flex items-center justify-between gap-2.5 border-b border-[#F0EBE2] py-2 text-[15px]">
-        <dt className="text-[#6B7068]">{label}</dt>
+      <div className="flex items-center justify-between gap-2.5 border-b border-border py-2 text-[15px]">
+        <dt className="text-muted-foreground">{label}</dt>
         <dd className="m-0">
           <input
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder="입력"
             aria-label={label}
-            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-[#E8C66A] bg-[#FFF6D9] px-2.5 text-sm"
+            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-sm"
           />
         </dd>
       </div>
     )
   }
   return (
-    <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
-      <dt className="text-[#6B7068]">{label}</dt>
+    <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
+      <dt className="text-muted-foreground">{label}</dt>
       <dd className="m-0 font-bold">{value}</dd>
     </div>
   )

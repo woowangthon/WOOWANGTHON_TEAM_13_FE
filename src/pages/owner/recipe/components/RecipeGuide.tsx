@@ -13,8 +13,8 @@ import { cn } from '@/ui/utils'
 // 단계 데이터 · 본 기록은 recipeGuideSteps.ts
 
 // 디자인 수치
-const DIM = 'rgba(20,30,24,.66)'
-const RING = '0 0 0 5px #fff, 0 0 0 9px #e9bf5c'
+const DIM = 'rgba(35,38,20,.66)' // 다크올리브 계열
+const RING = '0 0 0 5px #fff, 0 0 0 9px #ab7743'
 const GAP = 22 // 링(9px) + 화살표(7px) + 여백
 const EDGE = 16 // 화면 가장자리 여백
 const BUBBLE_W = 290
@@ -189,15 +189,15 @@ export function RecipeGuide({
               )}
               style={{ left: arrowX - 7 }}
             />
-            <span className="text-[11px] font-bold tracking-[.08em] text-[#a47d12]">
+            <span className="text-[11px] font-bold tracking-[.08em] text-warm-foreground">
               {index + 1}/{steps.length} · {step.label}
             </span>
-            <h2 id={titleId} className="m-0 text-[17px] font-black text-[#2b4636]">
+            <h2 id={titleId} className="m-0 text-[17px] font-black text-brand">
               {step.title}
             </h2>
             <p
               id={bodyId}
-              className="m-0 text-[13.5px] leading-[1.5] text-pretty break-keep text-[#5d625d]"
+              className="m-0 text-[13.5px] leading-[1.5] text-pretty break-keep text-muted-foreground"
             >
               {step.body}
             </p>
@@ -206,7 +206,7 @@ export function RecipeGuide({
                 <button
                   type="button"
                   onClick={close}
-                  className="px-1 py-2 text-[13px] font-semibold text-[#80857f]"
+                  className="px-1 py-2 text-[13px] font-semibold text-subtle"
                 >
                   건너뛰기
                 </button>
@@ -215,7 +215,7 @@ export function RecipeGuide({
                 ref={primaryRef}
                 type="button"
                 onClick={next}
-                className="rounded-full bg-[#2b4636] px-5 py-[9px] text-sm font-bold text-white transition-transform active:scale-[0.97] motion-reduce:transition-none"
+                className="rounded-full bg-brand px-5 py-[9px] text-sm font-bold text-white transition-transform active:scale-[0.97] motion-reduce:transition-none"
               >
                 {isLast ? '시작하기' : '다음'}
               </button>

@@ -47,7 +47,7 @@ export default function OwnerMyPage() {
       <LinkedAccount />
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">내 매장</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">내 매장</h2>
         {isPending ? (
           <Spinner />
         ) : (
@@ -68,7 +68,7 @@ export default function OwnerMyPage() {
         <Link
           to="/owner/store/new"
           state={{ from: '/owner/me' }}
-          className="flex h-[54px] items-center justify-center gap-1.5 rounded-full border-[1.5px] border-dashed border-line text-sm font-bold text-[#6B7068]"
+          className="flex h-[54px] items-center justify-center gap-1.5 rounded-full border-[1.5px] border-dashed border-line text-sm font-bold text-muted-foreground"
         >
           <Plus className="size-[18px]" />
           매장 추가
@@ -76,7 +76,7 @@ export default function OwnerMyPage() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">도움말</h2>
+        <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">도움말</h2>
         <button
           type="button"
           // 다 보면(또는 건너뛰면) 마이페이지로 돌아온다
@@ -88,7 +88,9 @@ export default function OwnerMyPage() {
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
             <span className="text-base font-extrabold">앱 사용법</span>
-            <span className="text-[13px] text-[#6B7068]">탭마다 무엇을 하는지 다시 보기</span>
+            <span className="text-[13px] text-muted-foreground">
+              탭마다 무엇을 하는지 다시 보기
+            </span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-subtle" />
         </button>
@@ -102,7 +104,7 @@ export default function OwnerMyPage() {
         </Button>
         {askWithdraw ? (
           <div className="flex flex-col gap-3 rounded-[22px] bg-destructive-soft p-4">
-            <span className="text-[15px] leading-normal font-bold break-keep text-[#7E352C]">
+            <span className="text-[15px] leading-normal font-bold break-keep text-destructive-foreground">
               탈퇴하면 매장, 레시피, 매뉴얼, 직원 기록이 모두 삭제돼요.
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -182,7 +184,7 @@ function LinkedAccount() {
   const provider: OAuthProvider = me?.provider === 'google' ? 'google' : 'kakao'
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">연결된 계정</h2>
+      <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">연결된 계정</h2>
       <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
         <span
           className={cn(
@@ -260,7 +262,7 @@ function StoreRow({
             type="button"
             aria-label={`${store.name} 삭제`}
             onClick={() => setAsking(true)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-[#6B7068]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
           >
             <X className="size-5" />
           </button>
