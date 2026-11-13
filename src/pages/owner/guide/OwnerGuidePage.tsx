@@ -154,18 +154,19 @@ function HomePicture() {
         <br />박 사장님
       </span>
       {/* 확인 필요: AI 사수가 못 찾아서 알바생이 넘긴 질문 (OwnerHomePage QuestionCard 와 같은 모양) */}
-      <div className="flex flex-col gap-2.5 rounded-[30px] bg-brand texture p-5 text-white">
-        <span className="flex size-[42px] items-center justify-center rounded-full bg-white text-brand">
+      <div className="flex flex-col gap-2.5 rounded-[30px] border-[1.5px] border-brand bg-card p-5">
+        <span className="flex size-[42px] items-center justify-center rounded-full bg-brand text-white">
           <MessageCircleQuestion className="size-[22px]" />
         </span>
         <span className="mt-1 text-lg font-extrabold">지은 님의 질문</span>
-        <span className="text-sm leading-[1.55] break-keep opacity-80">
+        <span className="text-sm leading-[1.55] break-keep text-muted-foreground">
           “손님이 우산 빌려 달래요”라는 질문이 왔어요
         </span>
         <span className="flex items-center justify-between gap-2.5">
-          <span className="text-xs opacity-70">지은 · 14:20</span>
-          <span className="flex size-10 items-center justify-center rounded-full bg-white text-foreground">
-            <ChevronRight className="size-[22px]" />
+          <span className="text-xs text-muted-foreground">지은 · 14:20</span>
+          <span className="flex h-10 items-center gap-0.5 rounded-full bg-brand pr-3 pl-4 text-sm font-bold text-white">
+            답하기
+            <ChevronRight className="size-[18px]" />
           </span>
         </span>
       </div>

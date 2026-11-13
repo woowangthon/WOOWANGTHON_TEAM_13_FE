@@ -108,7 +108,7 @@ function OwnerHome() {
                 />
               ))
             ) : (
-              <div className="flex min-h-[210px] flex-[0_0_74%] flex-col gap-2.5 rounded-[30px] bg-card p-5 shadow-soft lg:min-h-[180px]">
+              <div className="flex min-h-[210px] flex-[0_0_74%] flex-col gap-2.5 rounded-[30px] border border-line/60 bg-card p-5 lg:min-h-[180px]">
                 <span className="flex size-[42px] items-center justify-center rounded-full bg-brand-soft text-brand">
                   <Check className="size-[22px]" />
                 </span>
@@ -208,27 +208,32 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
   )
 }
 
+/**
+ * 확인 필요 질문 카드 (11/14): 진한 무늬 덩어리 대신 밝은 카드 — 답해야 하는 일이라 매장 색 테두리 · 채운 [답하기]로 강조
+ * (docs/08 "진한 덩어리 줄이기", 오른쪽 인건비 카드는 연한 매장 색이라 테두리로 구분된다)
+ */
 function QuestionCard({ question, onOpen }: { question: OwnerQuestionItem; onOpen: () => void }) {
   const Icon = (question.icon && MANUAL_ICON[question.icon]) || DEFAULT_MANUAL_ICON
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="flex min-h-[210px] flex-[0_0_74%] flex-col gap-2.5 rounded-[30px] bg-brand texture p-5 text-left text-white lg:min-h-[180px]"
+      className="flex min-h-[210px] flex-[0_0_74%] flex-col gap-2.5 rounded-[30px] border-[1.5px] border-brand bg-card p-5 text-left text-foreground lg:min-h-[180px]"
     >
-      <span className="flex size-[42px] items-center justify-center rounded-full bg-white text-brand">
+      <span className="flex size-[42px] items-center justify-center rounded-full bg-brand text-white">
         <Icon className="size-[22px]" />
       </span>
       <span className="mt-1.5 text-[19px] font-extrabold">{question.staffName} 님의 질문</span>
-      <span className="text-[13px] leading-[1.55] break-keep opacity-80">
+      <span className="text-[13px] leading-[1.55] break-keep text-muted-foreground">
         {questionSentence(question.question)}
       </span>
       <span className="mt-auto flex w-full items-center justify-between gap-2.5">
-        <span className="text-xs whitespace-nowrap opacity-70">
+        <span className="text-xs whitespace-nowrap text-muted-foreground">
           {question.staffName} · {formatTime(question.askedAt)}
         </span>
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-foreground">
-          <ChevronRight className="size-[22px]" />
+        <span className="flex h-10 shrink-0 items-center gap-0.5 rounded-full bg-brand pr-3 pl-4 text-sm font-bold text-white">
+          답하기
+          <ChevronRight className="size-[18px]" />
         </span>
       </span>
     </button>
