@@ -148,7 +148,8 @@ export default function JoinPage() {
   }
 
   return (
-    <AuthFrame tone="white">
+    // 알바생 화면은 모바일만: 데스크톱도 가운데 휴대폰 폭 기둥 (11/14)
+    <AuthFrame tone="white" mobileOnly>
       <OnboardingHeader step={1} onBack={() => navigate('/role')} />
 
       <form
@@ -260,7 +261,7 @@ function JoinDone({
   const { store, staffName } = invite
   const theme = STORE_THEME[themeKey]
   return (
-    <AuthFrame tone="white" className="gap-6">
+    <AuthFrame tone="white" mobileOnly className="gap-6">
       <section
         className="relative isolate flex min-h-[420px] flex-1 flex-col justify-between overflow-hidden rounded-3xl p-6 text-white"
         style={{ background: theme.color }}
