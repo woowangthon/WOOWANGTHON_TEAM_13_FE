@@ -9,9 +9,9 @@ import { cn } from '@/ui/utils'
 export function LoginShowcase() {
   return (
     <>
-      {/* 사진이 비치도록 덮개를 옅게 (사진 50% · 다크올리브 60%) */}
+      {/* 사진이 비치되 글자가 잘 보이게 (사진 50% · 휴대폰 사진 카드와 같은 짙은 올리브 덮개 70%) */}
       <img src={loginPhoto} alt="" className="absolute inset-0 size-full object-cover opacity-50" />
-      <div aria-hidden="true" className="absolute inset-0 bg-[rgba(55,61,32,0.6)]" />
+      <div aria-hidden="true" className="absolute inset-0 bg-[rgba(40,44,28,0.7)]" />
 
       <div
         role="img"
