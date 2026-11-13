@@ -1,8 +1,10 @@
 import {
   ArrowLeftRight,
+  Bell,
   BookOpen,
   CalendarDays,
   Camera,
+  ChevronDown,
   ChevronRight,
   ClipboardList,
   Coffee,
@@ -38,17 +40,21 @@ type Tab = 'home' | 'info' | 'add' | 'members' | 'work'
 
 const noop = () => {}
 
-/** 실제 화면을 작게: 휴대폰 화면 모양 + 아래 하단 탭 줄 (그 장의 탭만 강조) — 알바 버전(StaffGuidePage)과 같은 크기 */
-function Phone({ tab, children }: { tab: Tab; children: ReactNode }) {
+/**
+ * 실제 화면을 작게: 휴대폰 화면 모양 + 아래 하단 탭 줄 (그 장의 탭만 강조) — 알바 버전(StaffGuidePage)과 같은 크기.
+ * 사장님 화면처럼 흰 바탕, header 면 위에 사장님 헤더(왼쪽 매장 · 가운데 crewBean · 오른쪽 종 · 프로필) (11/14)
+ */
+function Phone({ tab, header, children }: { tab: Tab; header?: boolean; children: ReactNode }) {
   return (
     // 화면이 낮으면(예: 360×640) 그림 칸만큼 줄어들고, 넘치는 아래는 흐리게 사라진다
-    <div className="flex max-h-full w-[248px] flex-col overflow-hidden rounded-[30px] border-[5px] border-card bg-background shadow-float">
+    <div className="flex max-h-full w-[248px] flex-col overflow-hidden rounded-[30px] border-[5px] border-card bg-white shadow-float">
       <div className="relative h-[300px] min-h-0 shrink overflow-hidden px-2.5 pt-2.5">
         {/* 실제 크기로 그린 뒤 줄인다 (zoom 은 줄인 크기대로 자리를 잡는다) */}
         <div className="flex flex-col gap-2.5" style={{ zoom: 0.7 } as CSSProperties}>
+          {header && <MiniHeader />}
           {children}
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-white to-transparent" />
       </div>
       <MiniTabBar active={tab} />
     </div>
@@ -104,6 +110,27 @@ function MiniTabBar({ active }: { active: Tab }) {
   )
 }
 
+/** 사장님 헤더(OwnerLayout)를 작게: 왼쪽 매장 · 가운데 로고 · 오른쪽 종 · 프로필 (알바 그림 MiniHeader 와 같은 크기) */
+function MiniHeader() {
+  return (
+    <span className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+      <span className="flex h-10 max-w-full min-w-0 items-center gap-0.5 justify-self-start rounded-full border border-line/60 bg-card pr-2.5 pl-3.5 text-[15px] font-bold whitespace-nowrap">
+        <span className="min-w-0 truncate">달빛 카페</span>
+        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+      </span>
+      <img src="/logo-crewbean.png" alt="" width={528} height={120} className="h-6 w-auto" />
+      <span className="flex items-center gap-2 justify-self-end">
+        <span className="flex size-10 items-center justify-center rounded-full bg-card">
+          <Bell aria-hidden="true" className="size-5" />
+        </span>
+        <span className="flex size-10 items-center justify-center rounded-full bg-brand text-base font-extrabold text-background">
+          박
+        </span>
+      </span>
+    </span>
+  )
+}
+
 /** 화면 제목줄 (매장 이름 + 큰 제목 + 오른쪽 버튼) */
 function TitleRow({ title, right }: { title: string; right?: ReactNode }) {
   return (
@@ -121,7 +148,7 @@ function TitleRow({ title, right }: { title: string; right?: ReactNode }) {
 
 function HomePicture() {
   return (
-    <Phone tab="home">
+    <Phone tab="home" header>
       <span className="px-1 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
         안녕하세요,
         <br />박 사장님
@@ -173,7 +200,7 @@ const recipe = (recipeId: string, name: string, category: string, photo: string)
 
 function InfoPicture() {
   return (
-    <Phone tab="info">
+    <Phone tab="info" header>
       <TitleRow
         title="매장 정보"
         right={
@@ -259,7 +286,7 @@ const MEMBERS = [
 
 function MembersPicture() {
   return (
-    <Phone tab="members">
+    <Phone tab="members" header>
       <TitleRow
         title="직원 3명"
         right={
@@ -359,7 +386,7 @@ const PAY = [
 
 function WorkPicture() {
   return (
-    <Phone tab="work">
+    <Phone tab="work" header>
       {/* 받은 대타 요청 (ReceivedRequests) */}
       <div className="flex items-center gap-3 rounded-[22px] bg-brand texture px-4 py-3.5 text-white">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-brand">
@@ -492,7 +519,7 @@ export default function OwnerGuidePage() {
   return (
     <div className="owner-wide min-h-dvh bg-canvas" style={brand}>
       <div className="mx-auto w-full max-w-[460px]">
-        <GuideSlides slides={SLIDES} onDone={done} />
+        <GuideSlides tone="white" slides={SLIDES} onDone={done} />
       </div>
     </div>
   )
