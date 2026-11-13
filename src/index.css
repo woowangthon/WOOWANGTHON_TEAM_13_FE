@@ -1,7 +1,7 @@
 /*
  * 전역 스타일 — 담당: 나현 (디자인 시스템)
  * 색은 아래 :root 토큰으로만 바꾼다. 화면에서는 bg-card, text-muted-foreground, bg-brand 처럼 토큰 이름으로 쓴다.
- * --brand 는 매장마다 다르다 (달빛 카페 #2A4536 · 오후의 커피 #6E3B26). 화면 틀에서 style 로 덮어쓴다.
+ * --brand 는 매장마다 다르다 (달빛 카페 #606C45 모스 · 오후의 커피 #826245 어스, 11/13 차분한 말차 · 커피 톤). 화면 틀에서 style 로 덮어쓴다.
  * 가독성(11/12): 글자색은 배경 위 대비 4.5:1 이상 (muted-foreground 5.4 · subtle 4.6). faint 는 비활성 · 꾸밈 전용, 읽을 글자에는 쓰지 않는다.
  * 모서리: 카드 rounded-card(24) · 카드 안 덩어리 rounded-inner(18) · 버튼 rounded-full
  */
@@ -17,8 +17,8 @@
   --radius: 1.5rem;
 
   /* 매장 색 — 화면 틀에서 매장에 맞게 바꾼다 */
-  --brand: #2a4536;
-  --brand-soft: #e3e8dc;
+  --brand: #606c45;
+  --brand-soft: #e8eadd;
 
   --canvas: #e6e0d5; /* 앱 바깥 배경 */
   --background: #f1ece3; /* 앱 배경 (index.html · vite.config · 채팅 입력 그라데이션에도 같은 값) */
@@ -27,7 +27,7 @@
   --card-foreground: #1f2a24;
   --popover: #fbf8f3;
   --popover-foreground: #1f2a24;
-  --primary: #2a4536;
+  --primary: #606c45;
   --primary-foreground: #ffffff;
   --secondary: #ede7dc; /* 연한 버튼 */
   --secondary-foreground: #1f2a24;
@@ -36,18 +36,18 @@
   --subtle: #666b63; /* 보조 설명 · 입력칸 안내 — 대비 4.6 (예전 #8a8e86 은 2.8) */
   --faint: #8a8e86; /* 비활성 · 꾸밈 (읽을 글자에는 쓰지 않기) */
   --line: #cfc8ba; /* 선 · 빈 체크박스 */
-  --accent: #e3e8dc;
-  --accent-foreground: #2e4438;
-  --ink: #18241d; /* 진한 버튼 · 토스트 */
-  --warm: #f5e6d6; /* 사장님 답변 · 메모 */
-  --warm-foreground: #8a5630;
+  --accent: #e8eadd;
+  --accent-foreground: #4b5535;
+  --ink: #282c1e; /* 진한 버튼 · 토스트 */
+  --warm: #ede3d6; /* 사장님 답변 · 메모 */
+  --warm-foreground: #7a5c3e;
   --new: #b4733f; /* NEW 배지 */
   --destructive: #b9574b;
   --destructive-soft: #f6e4df;
   --destructive-foreground: #9b4237;
   --border: #eceae3;
   --input: #eceae3;
-  --ring: #2a4536;
+  --ring: #606c45;
 
   /* 다크 카드의 옅은 원형 라인 텍스처 */
   --texture: repeating-radial-gradient(

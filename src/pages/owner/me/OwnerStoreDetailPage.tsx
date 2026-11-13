@@ -32,7 +32,7 @@ export default function OwnerStoreDetailPage() {
   if (!isPending && !store) return <Navigate to="/owner/me" replace />
   if (!store || !members.data) {
     return (
-      <OwnerFrame colors={{ color: '#2A4536', soft: '#E3E8DC' }} narrow>
+      <OwnerFrame colors={{ color: '#606C45', soft: '#E8EADD' }} narrow>
         <Spinner />
       </OwnerFrame>
     )
