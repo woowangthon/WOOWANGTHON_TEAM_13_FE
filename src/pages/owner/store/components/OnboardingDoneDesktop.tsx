@@ -1,6 +1,7 @@
 import { ArrowRight, Check, ChevronRight, Plus, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { NO_PHOTO_BACKGROUND } from '@/pages/owner/store/noPhotoBackground'
 import { Button } from '@/ui/Button'
 import { Toaster } from '@/ui/Toast'
 import { cn } from '@/ui/utils'
@@ -49,17 +50,7 @@ export function OnboardingDoneDesktop({
     <div className="hidden min-h-[860px] bg-white lg:grid lg:min-h-dvh lg:grid-cols-[680px_1fr]">
       <section
         className="relative overflow-hidden"
-        style={
-          hasPhoto
-            ? undefined
-            : {
-                backgroundColor: 'var(--brand-soft)',
-                // 연한 점 무늬 (지름 3px · 26px 간격)
-                backgroundImage:
-                  'radial-gradient(circle, color-mix(in srgb, var(--brand) 22%, transparent) 1.5px, transparent 1.6px)',
-                backgroundSize: '26px 26px',
-              }
-        }
+        style={hasPhoto ? undefined : NO_PHOTO_BACKGROUND}
       >
         {hasPhoto && (
           <>

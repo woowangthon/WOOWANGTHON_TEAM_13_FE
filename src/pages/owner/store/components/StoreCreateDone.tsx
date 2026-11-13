@@ -8,6 +8,7 @@ import {
   type NextStep,
 } from '@/pages/owner/store/components/OnboardingDoneDesktop'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
+import { NO_PHOTO_BACKGROUND } from '@/pages/owner/store/noPhotoBackground'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 import { cn } from '@/ui/utils'
@@ -56,33 +57,48 @@ export function StoreCreateDone({
   // 매장 색 (알바 화면과 같은 shared/storeTheme)
   const theme = STORE_THEME[themeOf(store.theme, 0)]
   const [editingPhoto, setEditingPhoto] = useState(false)
+  const hasPhoto = !!store.photoUrl
   return (
     <div className="owner-wide">
       <div className="lg:hidden">
         {/* 바탕은 사장님 홈과 같은 흰 기둥 (tone white) */}
         <AuthFrame tone="white" className="gap-[22px]">
+          {/* 사진이 있으면 사진 + 아래 어두운 판, 없으면 데스크톱과 같은 연한 매장 색 + 점 무늬 · 진한 글자 (11/14) */}
           <section
-            className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
-            style={{
-              backgroundColor: theme.color,
-              // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
-              backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
-            }}
+            className={cn(
+              'flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center p-6',
+              hasPhoto ? 'text-white' : 'text-foreground',
+            )}
+            style={
+              hasPhoto
+                ? { backgroundColor: theme.color, backgroundImage: `url(${store.photoUrl})` }
+                : NO_PHOTO_BACKGROUND
+            }
           >
             <span
-              className="flex size-14 items-center justify-center rounded-full bg-white"
-              style={{ color: theme.color }}
+              className={cn(
+                'flex size-14 items-center justify-center rounded-full',
+                hasPhoto ? 'bg-white' : 'bg-brand text-white',
+              )}
+              style={hasPhoto ? { color: theme.color } : undefined}
             >
               <Check className="size-[30px]" />
             </span>
             <div
               className={cn(
                 'flex flex-col gap-[18px]',
-                store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
+                hasPhoto && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
               )}
             >
               <div className="flex flex-col gap-2.5">
-                <p className="m-0 text-[13px] opacity-75">사장님</p>
+                <p
+                  className={cn(
+                    'm-0 text-[13px]',
+                    hasPhoto ? 'opacity-75' : 'font-medium text-muted-foreground',
+                  )}
+                >
+                  사장님
+                </p>
                 <h1 className="m-0 text-[26px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
                   {store.name}
                   <br />
@@ -95,7 +111,12 @@ export function StoreCreateDone({
                     key={label}
                     to={to}
                     replace
-                    className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-medium text-white backdrop-blur-[8px]"
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-full px-3 py-2 text-[13px] font-medium',
+                      hasPhoto
+                        ? 'bg-white/16 text-white backdrop-blur-[8px]'
+                        : 'bg-white text-foreground',
+                    )}
                   >
                     <Icon className="size-4" />
                     {label}
