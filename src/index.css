@@ -186,37 +186,6 @@
 }
 
 /*
- * 사장님 화면 색 팔레트 (11/13, 나현) — Matcha & Coffee · Earth/Sand/Moss/Sage · Caramel/Espresso/Vanilla 세 팔레트만.
- * .owner-wide(OwnerFrame · 앱 사용법 · 매장 등록) 안에서만 토큰을 덮어쓴다 → 알바 화면은 그대로.
- * 연한 색은 팔레트 색에 흰색을 섞은 것 (괄호 안 %는 팔레트 색 비율). 글자색은 바탕 대비 4.5:1 이상.
- * 매장 색(--brand)은 useOwnerStore 가 사장님용으로 정한다 (달빛 카페 #373D20 다크올리브 · 두 번째 매장 #6D3914 커피)
+ * 사장님 화면 색 (11/14, 나현): 알바 화면과 같은 기본 토큰(:root)을 쓴다. 11/13 사장님 전용 팔레트(.owner-wide 덮어쓰기)는 없앴다.
+ * .owner-wide 클래스는 그대로 남는다 — 사장님 데스크톱 시트(ui/BottomSheet) · 위 그림자(shadow-soft)용
  */
-.owner-wide {
-  --brand: #373d20; /* 다크올리브 */
-  --brand-soft: #e2e3d5; /* 세이지 35% */
-  --canvas: #eaded0; /* 아몬드 */
-  --background: #f3ede5; /* 아몬드 55% */
-  --foreground: #373d20; /* 다크올리브 — 흰 바탕 11.3 */
-  --card: #f9f5f1; /* 아몬드 30% */
-  --card-foreground: #373d20;
-  --popover: #f9f5f1;
-  --popover-foreground: #373d20;
-  --primary: #373d20;
-  --primary-foreground: #ffffff;
-  --secondary: #f3ede5;
-  --secondary-foreground: #373d20;
-  --muted: #efe6dc; /* 아몬드 75% */
-  --muted-foreground: #606c38; /* 올리브 — 카드 위 5.2 */
-  --subtle: #8b5e34; /* 라이트브라운 — 카드 위 5.2 */
-  --faint: #8c916c; /* 모스 — 비활성 · 꾸밈만 */
-  --line: #c7af94; /* 샌드 */
-  --accent: #e2e3d5; /* 세이지 35% */
-  --accent-foreground: #373d20;
-  --ink: #4c2b08; /* 에스프레소 — 진한 버튼 · 토스트 */
-  --warm: #ebded2; /* 바닐라 50% */
-  --warm-foreground: #7f4f24; /* 브라운 — 5.2 */
-  --new: #ab7743; /* 카라멜 */
-  --border: #eaded0; /* 아몬드 */
-  --input: #eaded0;
-  --ring: #373d20;
-}

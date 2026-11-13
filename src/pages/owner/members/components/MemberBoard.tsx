@@ -92,7 +92,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                       name={member.name}
                       index={i}
                       size={panel ? 46 : 48}
-                      dot={active ? '#ADC178' : '#AB7743'}
+                      dot={active ? '#ADC178' : 'var(--new)'}
                     />
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       <span className="text-base font-bold">{member.name}</span>

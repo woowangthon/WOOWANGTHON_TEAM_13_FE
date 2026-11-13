@@ -8,6 +8,7 @@ import { useMembers, useUpdateHourlyWage } from '@/pages/owner/api/members'
 import { useUpdateStore } from '@/pages/owner/api/stores'
 import type { Member, StoreSize } from '@/pages/owner/api/types'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
+import { STORE_THEME } from '@/shared/storeTheme'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { ClosedDaysField } from '@/pages/owner/store/components/ClosedDaysField'
 import { PaydayField } from '@/pages/owner/store/components/PaydayField'
@@ -32,7 +33,7 @@ export default function OwnerStoreDetailPage() {
   if (!isPending && !store) return <Navigate to="/owner/me" replace />
   if (!store || !members.data) {
     return (
-      <OwnerFrame colors={{ color: '#373D20', soft: '#E2E3D5' }} narrow>
+      <OwnerFrame colors={STORE_THEME.moon} narrow>
         <Spinner />
       </OwnerFrame>
     )

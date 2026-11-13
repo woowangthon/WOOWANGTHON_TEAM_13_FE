@@ -22,7 +22,7 @@ import { cn } from '@/ui/utils'
 
 // 디자인 수치
 const DIM = 'rgba(20,30,24,.66)' // 검정에 가까운 반투명 (디자인 2a 값)
-const RING = '0 0 0 5px #fff, 0 0 0 9px #ab7743'
+const RING = '0 0 0 5px #fff, 0 0 0 9px var(--new)'
 const GAP = 22 // 링(9px) + 화살표(7px) + 여백
 const EDGE = 16 // 화면 가장자리 여백
 const BUBBLE_W = 290

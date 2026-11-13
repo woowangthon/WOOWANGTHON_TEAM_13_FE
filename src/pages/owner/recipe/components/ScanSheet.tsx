@@ -361,7 +361,7 @@ function DraftFields({
                   'h-[38px] rounded-xl px-3 text-[13px] font-bold',
                   draft.temp === t.value
                     ? 'bg-brand text-white'
-                    : 'border-[1.5px] border-[#AB7743] bg-warm',
+                    : 'border-[1.5px] border-new bg-warm',
                 )}
               >
                 {t.label}
@@ -390,7 +390,7 @@ function DraftFields({
                 }
                 placeholder="입력"
                 aria-label={`${ing.name} 양`}
-                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-[15px]"
+                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-new bg-warm px-2.5 text-[15px]"
               />
             ) : (
               <span className="font-bold">{ing.amount}</span>
@@ -424,7 +424,7 @@ function Row({
             onChange={(event) => onChange(event.target.value)}
             placeholder="입력"
             aria-label={label}
-            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-[15px]"
+            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-new bg-warm px-2.5 text-[15px]"
           />
         </dd>
       </div>

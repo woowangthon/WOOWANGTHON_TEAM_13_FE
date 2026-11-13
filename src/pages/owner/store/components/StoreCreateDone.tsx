@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 import type { OwnerStore } from '@/pages/owner/api/types'
 import { StorePhotoSheet } from '@/pages/owner/home/components/StorePhotoSheet'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
-import { OWNER_THEME } from '@/pages/owner/useOwnerStore'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 import { Toaster } from '@/ui/Toast'
@@ -51,8 +50,8 @@ export function StoreCreateDone({
   /** 사진을 올려 매장이 바뀌었을 때 */
   onStoreChange: (store: OwnerStore) => void
 }) {
-  // 사장님 화면 매장 색 (useOwnerStore 와 같은 팔레트)
-  const theme = { ...STORE_THEME[themeOf(store.theme, 0)], ...OWNER_THEME[themeOf(store.theme, 0)] }
+  // 매장 색 (알바 화면과 같은 shared/storeTheme)
+  const theme = STORE_THEME[themeOf(store.theme, 0)]
   const [editingPhoto, setEditingPhoto] = useState(false)
   const hasPhoto = !!store.photoUrl
   return (

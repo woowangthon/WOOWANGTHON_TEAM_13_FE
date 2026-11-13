@@ -274,7 +274,12 @@ function MembersPicture() {
           key={m.name}
           className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft"
         >
-          <PersonAvatar name={m.name} index={i} size={48} dot={m.active ? '#ADC178' : '#AB7743'} />
+          <PersonAvatar
+            name={m.name}
+            index={i}
+            size={48}
+            dot={m.active ? '#ADC178' : 'var(--new)'}
+          />
           <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
             <span className="text-base font-bold">{m.name}</span>
             <span className="truncate text-[13px] text-muted-foreground">
