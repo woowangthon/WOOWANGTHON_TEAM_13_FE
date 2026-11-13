@@ -76,7 +76,7 @@ export function RecipePhotoField({
         ) : (
           <>
             <Camera className="size-7" />
-            <span className="text-sm font-semibold">아직 사진이 없어요</span>
+            <span className="text-[15px] font-medium">아직 사진이 없어요</span>
           </>
         )}
       </div>
@@ -93,7 +93,7 @@ export function RecipePhotoField({
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="self-center p-0 text-[13px] font-semibold text-destructive-foreground"
+          className="self-center p-0 text-[13px] font-medium text-destructive-foreground"
         >
           사진 빼기
         </button>
@@ -115,7 +115,7 @@ function PickButton({
   onPick: (file: File) => void
 }) {
   return (
-    <label className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-white text-sm font-bold [&_svg]:size-[18px]">
+    <label className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-white text-[15px] font-bold [&_svg]:size-[18px]">
       {icon}
       {label}
       <input

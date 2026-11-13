@@ -184,7 +184,7 @@ export default function StoreCreatePage() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="달빛 카페"
-              className="min-w-0 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+              className="min-w-0 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint"
             />
           </label>
           <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
@@ -209,7 +209,7 @@ export default function StoreCreatePage() {
                   aria-checked={sizeLabel === s.label}
                   onClick={() => setSizeLabel(s.label)}
                   className={cn(
-                    'h-[42px] rounded-[14px] text-sm font-bold whitespace-nowrap',
+                    'h-[42px] rounded-[14px] text-[15px] font-bold whitespace-nowrap',
                     sizeLabel === s.label ? 'bg-brand text-white' : 'bg-background text-foreground',
                   )}
                 >
@@ -332,7 +332,7 @@ function StepFrame({
           <span className="text-[13px] font-medium text-muted-foreground">
             사장님 · {step} / {STEP_TOTAL}
           </span>
-          <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">
+          <h1 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
             {title}
           </h1>
         </div>
@@ -418,8 +418,8 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
             )}
           >
             <div className="flex flex-col gap-2.5">
-              <p className="m-0 text-sm opacity-75">사장님</p>
-              <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
+              <p className="m-0 text-[13px] opacity-75">사장님</p>
+              <h1 className="m-0 text-[26px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
                 {store.name}
                 <br />
                 등록 완료
@@ -431,7 +431,7 @@ function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void
                   key={label}
                   to={to}
                   replace
-                  className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px]"
+                  className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-medium text-white backdrop-blur-[8px]"
                 >
                   <Icon className="size-4" />
                   {label}

@@ -64,7 +64,7 @@ function Row({
     <>
       <span className="flex min-w-0 flex-col justify-center pr-1">
         <span className="truncate text-[13px] font-bold">{row.label}</span>
-        {row.sub && <span className="truncate text-[10px] text-subtle">{row.sub}</span>}
+        {row.sub && <span className="truncate text-[11px] text-subtle">{row.sub}</span>}
       </span>
       {WEEKDAY_LABELS.map((day, weekday) => {
         const key = cellKey(row.key, weekday)

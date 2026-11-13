@@ -19,7 +19,7 @@ export default function OwnerHandoverPage() {
       <div className="flex items-end justify-between gap-2.5 px-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>
-          <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.03em]">인수인계</h1>
+          <h1 className="m-0 text-[26px] font-extrabold tracking-[-0.03em]">인수인계</h1>
         </div>
         <Button size="md" onClick={() => setWriting(true)}>
           <Plus />

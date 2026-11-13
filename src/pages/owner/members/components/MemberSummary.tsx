@@ -42,8 +42,8 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
       <div className="flex items-center gap-4">
         <PersonAvatar name={member.name} index={index} size={64} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="m-0 text-2xl font-extrabold tracking-[-0.02em]">{member.name}</h2>
-          <span className="truncate text-sm text-muted-foreground">
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">{member.name}</h2>
+          <span className="truncate text-[13px] text-muted-foreground">
             {member.shiftLabel} · {formatWon(member.hourlyWage)}
             {!active && ' · 입장 전'}
           </span>
@@ -51,7 +51,7 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
         <button
           type="button"
           onClick={onEdit}
-          className="h-10 shrink-0 rounded-full border border-line bg-white px-4 text-sm font-bold transition-colors hover:bg-background"
+          className="h-10 shrink-0 rounded-full border border-line bg-white px-4 text-[15px] font-bold transition-colors hover:bg-background"
         >
           정보 수정
         </button>
@@ -73,7 +73,7 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
                 key={label}
                 aria-label={`${label} ${on ? '근무' : '쉼'}`}
                 className={cn(
-                  'flex h-11 items-center justify-center rounded-[14px] text-sm font-bold',
+                  'flex h-11 items-center justify-center rounded-[14px] text-[15px] font-bold',
                   on ? 'bg-brand text-white' : 'bg-white text-subtle',
                 )}
               >
@@ -115,7 +115,7 @@ function Stat({ label, value, strong }: { label: string; value: string; strong?:
       <span className={cn('text-xs', strong ? 'opacity-80' : 'text-muted-foreground')}>
         {label}
       </span>
-      <span className="text-xl font-extrabold tracking-[-0.02em] tabular-nums">{value}</span>
+      <span className="text-[19px] font-extrabold tracking-[-0.02em] tabular-nums">{value}</span>
     </div>
   )
 }

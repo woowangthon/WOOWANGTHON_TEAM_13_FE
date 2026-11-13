@@ -36,7 +36,7 @@ export function ClosedDaysField({
               aria-label={`${day}요일`}
               onClick={() => toggleDay(i)}
               className={cn(
-                'h-11 rounded-[14px] text-sm font-bold',
+                'h-11 rounded-[14px] text-[15px] font-bold',
                 on ? 'bg-ink text-white' : 'bg-card text-foreground',
               )}
             >
@@ -50,7 +50,7 @@ export function ClosedDaysField({
         role="checkbox"
         aria-checked={closedOnHolidays}
         onClick={() => onClosedOnHolidaysChange(!closedOnHolidays)}
-        className="flex items-center gap-2.5 px-1 py-1 text-left text-[15px] font-semibold"
+        className="flex items-center gap-2.5 px-1 py-1 text-left text-[15px] font-medium"
       >
         <span
           className={cn(

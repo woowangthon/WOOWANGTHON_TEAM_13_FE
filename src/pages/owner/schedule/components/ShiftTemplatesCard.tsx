@@ -39,7 +39,7 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
       ) : (
         <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 shadow-soft">
           {templates.length === 0 ? (
-            <span className="py-3.5 text-sm text-muted-foreground">
+            <span className="py-3.5 text-[13px] text-muted-foreground">
               아직 근무 타임이 없어요. [수정]으로 만들어 주세요
             </span>
           ) : (
@@ -52,7 +52,7 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
                   <Clock className="size-4 text-subtle" />
                   {t.name}
                 </span>
-                <span className="text-sm text-muted-foreground tabular-nums">
+                <span className="text-[13px] text-muted-foreground tabular-nums">
                   {t.start}~{t.end} · {t.headcount ?? 1}명
                 </span>
               </div>
@@ -105,7 +105,7 @@ function EditSheet({
   return (
     <BottomSheet open onClose={onClose} label="근무 타임 수정" closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">근무 타임</h2>
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">근무 타임</h2>
         <ShiftTemplateStep rows={rows} onRowsChange={setRows} error={error} />
         {removed.length > 0 && (
           <span className="rounded-[18px] bg-destructive-soft px-4 py-3 text-[13px] text-destructive-foreground">

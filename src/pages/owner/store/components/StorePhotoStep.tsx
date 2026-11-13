@@ -72,7 +72,7 @@ export function StorePhotoStep({
         ) : (
           <>
             <Store className="size-7" />
-            <span className="text-sm font-semibold">아직 사진이 없어요</span>
+            <span className="text-[15px] font-medium">아직 사진이 없어요</span>
           </>
         )}
       </div>
@@ -91,7 +91,7 @@ export function StorePhotoStep({
             <button
               type="button"
               onClick={() => setCropping(true)}
-              className="inline-flex items-center gap-1 p-0 text-[13px] font-semibold text-brand"
+              className="inline-flex items-center gap-1 p-0 text-[13px] font-medium text-brand"
             >
               <Crop className="size-4" />
               사진 조정
@@ -103,7 +103,7 @@ export function StorePhotoStep({
               onChange(null)
               setOriginal(null)
             }}
-            className="p-0 text-[13px] font-semibold text-destructive-foreground"
+            className="p-0 text-[13px] font-medium text-destructive-foreground"
           >
             사진 빼기
           </button>
@@ -126,7 +126,7 @@ function PickButton({
   onPick: (file: File) => void
 }) {
   return (
-    <label className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-card text-sm font-bold [&_svg]:size-[18px]">
+    <label className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-card text-[15px] font-bold [&_svg]:size-[18px]">
       {icon}
       {label}
       <input

@@ -48,13 +48,13 @@ export function TimeField({
         onClick={openSheet}
         disabled={disabled}
         aria-label={`${label} ${value}`}
-        className="h-10 rounded-xl bg-background px-3 text-[15px] font-semibold tabular-nums disabled:opacity-50"
+        className="h-10 rounded-xl bg-background px-3 text-[15px] font-medium tabular-nums disabled:opacity-50"
       >
         {value}
       </button>
       <BottomSheet open={open} onClose={() => setOpen(false)} label={label} closeButton>
         <div className="flex flex-col gap-4">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">{label}</h2>
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">{label}</h2>
           <div className="grid grid-cols-2 gap-2">
             <WheelPicker options={HOURS} value={hour} onChange={setHour} label="시" />
             <WheelPicker options={MINUTES} value={minute} onChange={setMinute} label="분" />

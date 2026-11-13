@@ -121,11 +121,11 @@ function MemberSheet({
     <BottomSheet open onClose={onClose} label={member.name} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3.5">
-          <span className="flex size-14 items-center justify-center rounded-full bg-accent text-xl font-extrabold text-[#4B5535]">
+          <span className="flex size-14 items-center justify-center rounded-full bg-accent text-[19px] font-extrabold text-[#4B5535]">
             {member.name.slice(0, 1)}
           </span>
           <div className="flex flex-col gap-[3px]">
-            <h2 className="m-0 text-[22px] font-extrabold">{member.name}</h2>
+            <h2 className="m-0 text-[19px] font-extrabold">{member.name}</h2>
             <span className="text-[13px] text-muted-foreground">
               {storeName} · 시급 {formatWon(member.hourlyWage)} · {active ? '사용 중' : '입장 전'}
             </span>
@@ -159,7 +159,7 @@ function MemberSheet({
 
         {askRemove ? (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-            <span className="text-sm text-destructive-foreground">
+            <span className="text-[15px] text-destructive-foreground">
               {active
                 ? '접근이 바로 차단돼요. 기록은 남아요.'
                 : '이 코드로는 더 이상 입장할 수 없어요.'}
@@ -178,7 +178,7 @@ function MemberSheet({
           <button
             type="button"
             onClick={() => setAskRemove(true)}
-            className="p-1.5 text-sm font-semibold text-destructive-foreground"
+            className="p-1.5 text-[15px] font-medium text-destructive-foreground"
           >
             {active ? '퇴사 처리' : '초대코드 삭제'}
           </button>

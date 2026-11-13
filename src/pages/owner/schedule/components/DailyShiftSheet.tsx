@@ -145,7 +145,7 @@ export function DailyShiftSheet({
     <BottomSheet open onClose={onClose} label={`${formatDate(date)} 근무 수정`} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">
             {formatDate(date)} 근무
           </h2>
           <span className="text-[13px] text-muted-foreground">
@@ -158,7 +158,7 @@ export function DailyShiftSheet({
         ) : (
           <div className="flex flex-col gap-2">
             {rows.length === 0 && (
-              <span className="rounded-[18px] bg-white px-4 py-3.5 text-sm text-muted-foreground">
+              <span className="rounded-[18px] bg-white px-4 py-3.5 text-[13px] text-muted-foreground">
                 이날 근무가 없어요. [근무 추가]로 넣을 수 있어요
               </span>
             )}
@@ -175,7 +175,7 @@ export function DailyShiftSheet({
                     >
                       <span className="min-w-0 flex-1 truncate text-[15px] font-bold">
                         {nameOf(r)}{' '}
-                        <span className="font-semibold text-muted-foreground tabular-nums">
+                        <span className="font-medium text-muted-foreground tabular-nums">
                           {r.start}~{r.end}
                         </span>{' '}
                         · {workerName(r.assigneeUserId)}
@@ -229,7 +229,7 @@ export function DailyShiftSheet({
                         ))}
                       </div>
                       {/* 한 줄: 시작 ~ 끝 시간 · 담당자 (누르면 휠) */}
-                      <div className="flex items-center gap-1.5 text-[15px] font-semibold">
+                      <div className="flex items-center gap-1.5 text-[15px] font-medium">
                         <TimeField
                           value={r.start}
                           onChange={(start) => setRow(r.key, { start })}
@@ -318,14 +318,14 @@ function PersonField({
           setOpen(true)
         }}
         aria-label={`${label} ${current ? nameOf(current) : '고르기'}`}
-        className="flex h-10 min-w-0 flex-1 items-center justify-between gap-1 rounded-xl bg-background px-3 text-[15px] font-semibold"
+        className="flex h-10 min-w-0 flex-1 items-center justify-between gap-1 rounded-xl bg-background px-3 text-[15px] font-medium"
       >
         <span className="truncate">{current ? nameOf(current) : '사람 고르기'}</span>
         <ChevronDown className="size-4 shrink-0 text-faint" />
       </button>
       <BottomSheet open={open} onClose={() => setOpen(false)} label={label} closeButton>
         <div className="flex flex-col gap-4">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">{label}</h2>
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">{label}</h2>
           <WheelPicker
             label="담당자"
             options={workers.map((w) => ({ value: w.userId, label: nameOf(w) }))}

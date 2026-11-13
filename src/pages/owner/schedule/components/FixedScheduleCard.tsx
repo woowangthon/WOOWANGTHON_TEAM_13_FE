@@ -101,7 +101,7 @@ export function FixedScheduleCard({
       className="group flex items-center gap-3 border-b border-border py-3 last:border-b-0"
     >
       <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[15px] font-bold"
         style={{ background: color[0], color: color[1] }}
       >
         {name.slice(0, 1)}
@@ -211,7 +211,7 @@ function EditSheet({
     <BottomSheet open onClose={onClose} label={`${target.name} 고정 근무`} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">
             {target.name} 고정 근무
           </h2>
           <span className="text-[13px] text-muted-foreground">

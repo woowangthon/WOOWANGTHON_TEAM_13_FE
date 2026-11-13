@@ -62,7 +62,7 @@ function OwnerHome() {
       <div className="contents lg:flex lg:flex-col lg:gap-7">
         <div className="order-1 flex flex-col gap-2 px-1 break-keep lg:order-none">
           <span className="text-[13px] font-medium text-muted-foreground">{formatDate(today)}</span>
-          <h1 className="font-suite m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em] lg:text-[32px]">
+          <h1 className="font-suite m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
             안녕하세요,
             <br className="lg:hidden" /> {surname} 사장님
           </h1>
@@ -81,15 +81,15 @@ function OwnerHome() {
               <span className="flex size-[58px] items-center justify-center rounded-full bg-card text-brand shadow-soft">
                 <Icon className="size-6" />
               </span>
-              <span className="text-xs font-semibold whitespace-nowrap">{label}</span>
+              <span className="text-xs font-medium whitespace-nowrap">{label}</span>
             </Link>
           ))}
         </nav>
 
         <section className="order-5 flex flex-col gap-3.5 lg:order-none">
           <div className="flex items-baseline justify-between gap-2.5 px-1">
-            <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">확인 필요</h2>
-            <span className="text-[13px] font-semibold whitespace-nowrap text-muted-foreground">
+            <h2 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]">확인 필요</h2>
+            <span className="text-[13px] font-medium whitespace-nowrap text-muted-foreground">
               {list.length}건
             </span>
           </div>
@@ -108,8 +108,8 @@ function OwnerHome() {
                 <span className="flex size-[42px] items-center justify-center rounded-full bg-brand-soft text-brand">
                   <Check className="size-[22px]" />
                 </span>
-                <span className="mt-1.5 text-lg font-extrabold">모두 답했어요</span>
-                <span className="text-sm text-muted-foreground">답변은 매뉴얼에 반영돼요</span>
+                <span className="mt-1.5 text-[19px] font-extrabold">모두 답했어요</span>
+                <span className="text-[13px] text-muted-foreground">답변은 매뉴얼에 반영돼요</span>
               </div>
             )}
             <div className="flex flex-[0_0_74%] lg:hidden">
@@ -176,10 +176,10 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
           )}
           <div className="flex items-end gap-4">
             <div className="hidden min-w-0 flex-1 flex-col gap-1.5 lg:flex">
-              <span className="text-[32px] leading-tight font-extrabold tracking-[-0.03em]">
+              <span className="text-[26px] leading-tight font-extrabold tracking-[-0.03em]">
                 {store.name}
               </span>
-              <span className="truncate text-[15px] font-semibold opacity-85">
+              <span className="truncate text-[15px] font-medium opacity-85">
                 {people.length
                   ? `${people.map((p) => p.name).join(' · ')} 근무 중`
                   : '지금은 근무 중인 사람이 없어요'}
@@ -215,8 +215,8 @@ function QuestionCard({ question, onOpen }: { question: OwnerQuestionItem; onOpe
       <span className="flex size-[42px] items-center justify-center rounded-full bg-white text-brand">
         <Icon className="size-[22px]" />
       </span>
-      <span className="mt-1.5 text-lg font-extrabold">{question.staffName} 님의 질문</span>
-      <span className="text-sm leading-[1.55] break-keep opacity-80">
+      <span className="mt-1.5 text-[19px] font-extrabold">{question.staffName} 님의 질문</span>
+      <span className="text-[13px] leading-[1.55] break-keep opacity-80">
         {questionSentence(question.question)}
       </span>
       <span className="mt-auto flex w-full items-center justify-between gap-2.5">
@@ -242,12 +242,12 @@ function PayrollCard({ storeId, today }: { storeId: string; today: Date }) {
       <span className="flex size-[42px] items-center justify-center rounded-full bg-white text-brand">
         <Wallet className="size-[22px]" />
       </span>
-      <span className="mt-1.5 text-lg font-extrabold">{today.getMonth() + 1}월 인건비</span>
+      <span className="mt-1.5 text-[19px] font-extrabold">{today.getMonth() + 1}월 인건비</span>
       <span className="text-[13px] text-muted-foreground">
         주휴수당 포함 · {formatDate(today)}까지 · 참고용
       </span>
       <span className="mt-auto flex w-full items-end justify-between gap-2.5">
-        <span className="text-2xl font-extrabold tracking-[-0.03em] whitespace-nowrap">
+        <span className="text-[26px] font-extrabold tracking-[-0.03em] whitespace-nowrap">
           {payroll.data ? formatWon(total) : '—'}
         </span>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground text-white">
@@ -281,8 +281,8 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
   return (
     <section className="hidden flex-col gap-4 rounded-[26px] bg-card p-5 shadow-soft lg:flex">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="m-0 text-[17px] font-extrabold">{today.getMonth() + 1}월 인건비</h2>
-        <Link to="/owner/payroll" className="text-[13px] font-semibold text-muted-foreground">
+        <h2 className="m-0 text-[16px] font-extrabold">{today.getMonth() + 1}월 인건비</h2>
+        <Link to="/owner/payroll" className="text-[13px] font-medium text-muted-foreground">
           자세히
         </Link>
       </div>
@@ -310,14 +310,14 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
             />
           </svg>
           <span className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xl font-extrabold tabular-nums">{percent}%</span>
+            <span className="text-[19px] font-extrabold tabular-nums">{percent}%</span>
             <span className="text-[11px] text-muted-foreground">
               {today.getDate()}/{days}일
             </span>
           </span>
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-xl font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums xl:text-[22px]">
+          <span className="text-[19px] font-extrabold tracking-[-0.03em] whitespace-nowrap tabular-nums">
             {payroll.data ? formatWon(total) : '—'}
           </span>
           <span className="text-[13px] leading-snug break-keep text-muted-foreground">
@@ -354,13 +354,13 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
 function QuickTiles() {
   return (
     <section className="hidden flex-col gap-3 lg:flex">
-      <h2 className="m-0 px-1 text-[17px] font-extrabold">바로가기</h2>
+      <h2 className="m-0 px-1 text-[16px] font-extrabold">바로가기</h2>
       <nav aria-label="바로가기" className="grid grid-cols-2 gap-2.5">
         {QUICK.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
-            className="flex items-center gap-2.5 rounded-[18px] bg-brand-soft px-3.5 py-3.5 text-sm font-bold text-brand transition-transform active:scale-[0.98]"
+            className="flex items-center gap-2.5 rounded-[18px] bg-brand-soft px-3.5 py-3.5 text-[15px] font-bold text-brand transition-transform active:scale-[0.98]"
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/70">
               <Icon className="size-[18px]" />
@@ -385,15 +385,15 @@ function TodayShifts({ storeId, today }: { storeId: string; today: Date }) {
   return (
     <section className="hidden flex-col gap-3 rounded-[26px] bg-card p-5 shadow-soft lg:flex">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="m-0 text-[17px] font-extrabold">오늘 근무</h2>
-        <Link to="/owner/schedule" className="text-[13px] font-semibold text-muted-foreground">
+        <h2 className="m-0 text-[16px] font-extrabold">오늘 근무</h2>
+        <Link to="/owner/schedule" className="text-[13px] font-medium text-muted-foreground">
           근무표
         </Link>
       </div>
       {query.isPending ? (
-        <span className="py-2 text-sm text-muted-foreground">불러오는 중…</span>
+        <span className="py-2 text-[13px] text-muted-foreground">불러오는 중…</span>
       ) : shifts.length === 0 ? (
-        <span className="py-2 text-sm text-muted-foreground">오늘은 근무가 없어요</span>
+        <span className="py-2 text-[13px] text-muted-foreground">오늘은 근무가 없어요</span>
       ) : (
         <ol className="m-0 flex list-none flex-col p-0">
           {shifts.map((s, i) => {
@@ -415,7 +415,7 @@ function TodayShifts({ storeId, today }: { storeId: string; today: Date }) {
                     {s.start}
                   </span>
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-sm font-bold">
+                    <span className="truncate text-[15px] font-bold">
                       {s.assignee.name} · {s.name}
                     </span>
                     <span className="text-xs text-muted-foreground tabular-nums">

@@ -47,7 +47,7 @@ export function RecipeDetailSheet({
           <div className="flex flex-col gap-2.5">
             {askDelete && (
               <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-                <span className="text-sm text-destructive-foreground">
+                <span className="text-[15px] text-destructive-foreground">
                   알바생 화면과 AI 사수 답변에서도 사라져요.
                 </span>
                 <Button
@@ -64,12 +64,12 @@ export function RecipeDetailSheet({
             <div className="grid grid-cols-[1fr_1.4fr] gap-2">
               <Button
                 variant="soft"
-                className="h-[50px] text-sm text-destructive-foreground"
+                className="h-[50px] text-[15px] text-destructive-foreground"
                 onClick={() => setAskDelete(true)}
               >
                 삭제
               </Button>
-              <Button className="h-[50px] text-sm" onClick={onEdit}>
+              <Button className="h-[50px] text-[15px]" onClick={onEdit}>
                 수정
               </Button>
             </div>

@@ -50,7 +50,7 @@ export function PaydayField({
               aria-selected={on}
               className={cn(
                 'flex h-11 snap-center items-center justify-center',
-                on ? 'text-xl font-extrabold text-brand' : 'text-base font-medium text-faint',
+                on ? 'text-[19px] font-extrabold text-brand' : 'text-base font-medium text-faint',
               )}
             >
               매월 {day === 31 ? '말일' : `${day}일`}

@@ -56,7 +56,7 @@ export default function OwnerPayrollPage() {
               key={s.storeId}
               active={scope === s.storeId}
               onClick={() => setScope(s.storeId)}
-              className="px-4 text-sm font-bold"
+              className="px-4 text-[15px] font-bold"
             >
               {s.name}
             </Chip>
@@ -88,7 +88,7 @@ export default function OwnerPayrollPage() {
               </button>
             </span>
           </div>
-          <span className="text-[38px] font-extrabold tracking-[-0.03em] lg:text-[32px]">
+          <span className="text-[40px] font-extrabold tracking-[-0.03em]">
             {pending ? '—' : formatWon(total)}
           </span>
           <span className="text-[13px] opacity-75 lg:hidden">
@@ -151,10 +151,10 @@ export default function OwnerPayrollPage() {
                     </span>
                   </span>
                 </span>
-                <span className="text-sm text-muted-foreground tabular-nums">
+                <span className="text-[13px] text-muted-foreground tabular-nums">
                   {m.hours}시간 · 주휴 {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'}
                 </span>
-                <span className="text-right text-sm text-muted-foreground tabular-nums">
+                <span className="text-right text-[13px] text-muted-foreground tabular-nums">
                   {formatWon(m.total)}
                 </span>
                 <span className="text-right text-base font-extrabold tabular-nums">
@@ -214,7 +214,7 @@ function SummaryCard({ label, value, sub }: { label: string; value: string; sub:
   return (
     <div className="hidden flex-col gap-2 rounded-[24px] bg-card p-5 shadow-soft lg:flex">
       <span className="text-[13px] text-muted-foreground">{label}</span>
-      <span className="text-[28px] font-extrabold tracking-[-0.03em] tabular-nums">{value}</span>
+      <span className="text-[26px] font-extrabold tracking-[-0.03em] tabular-nums">{value}</span>
       <span className="mt-auto text-[13px] text-muted-foreground">{sub}</span>
     </div>
   )
@@ -235,7 +235,7 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
           <span className="text-[13px] text-muted-foreground">
             {pay.name} · {month}월 실수령 · 참고용
           </span>
-          <span className="text-[32px] font-extrabold tracking-[-0.03em]">
+          <span className="text-[26px] font-extrabold tracking-[-0.03em]">
             {formatWon(pay.netPay)}
           </span>
         </div>
@@ -272,7 +272,7 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
             <div
               key={w.weekStart}
               className={cn(
-                'flex items-center justify-between rounded-2xl px-4 py-3 text-sm',
+                'flex items-center justify-between rounded-2xl px-4 py-3 text-[15px]',
                 w.eligible ? 'bg-accent' : 'bg-background',
               )}
             >

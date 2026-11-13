@@ -124,7 +124,7 @@ export function RecipeFormSheet({
   return (
     <BottomSheet open onClose={onClose} label={editing ? '레시피 수정' : '레시피 추가'} closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">
           {editing ? '레시피 수정' : '레시피 추가'}
         </h2>
 
@@ -241,14 +241,14 @@ export function RecipeFormSheet({
                     onChange={(event) => setRow(i, { name: event.target.value })}
                     placeholder="재료"
                     aria-label={`재료 ${i + 1}`}
-                    className="min-w-0 flex-1 border-none bg-transparent text-sm text-muted-foreground placeholder:text-faint"
+                    className="min-w-0 flex-1 border-none bg-transparent text-[13px] text-muted-foreground placeholder:text-faint"
                   />
                   <input
                     value={row.amount}
                     onChange={(event) => setRow(i, { amount: event.target.value })}
                     placeholder="양"
                     aria-label={`재료 ${i + 1} 양`}
-                    className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-sm placeholder:text-faint"
+                    className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-[13px] placeholder:text-faint"
                   />
                   <button
                     type="button"
@@ -316,7 +316,7 @@ function StepToggle({ step, onChange }: { step: Step; onChange: (step: Step) => 
           aria-selected={step === s.value}
           onClick={() => onChange(s.value)}
           className={cn(
-            'relative h-10 flex-1 rounded-full text-sm font-bold transition-colors',
+            'relative h-10 flex-1 rounded-full text-[15px] font-bold transition-colors',
             step === s.value ? 'text-white' : 'text-muted-foreground',
           )}
         >
