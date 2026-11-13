@@ -92,9 +92,17 @@ export default function StoreCreatePage() {
     undefined,
   ]
   const missing = [!name.trim(), verificationId === null, !address.trim()].filter(Boolean).length
+  // 타임라인 이동: 지난 단계는 언제나 · 다음 단계는 그 앞 단계를 다 채웠을 때만 (④ 사진은 매장을 만든 뒤에만 와서 못 간다).
+  // 매장을 이미 만들었으면 앞 단계는 고쳐도 저장되지 않아서 막는다
+  const current = STEP_ORDER.indexOf(step) + 1
+  const stepsFilled = [!!name.trim() && verificationId !== null && !!address.trim(), !rowsError]
   const frame = {
     summaries,
-    stepLocked: !!created,
+    canGo: (n: number) =>
+      !created &&
+      n !== current &&
+      n <= 3 &&
+      (n < current || stepsFilled.slice(current - 1, n - 1).every(Boolean)),
     onGoStep: (n: number) => setStep(STEP_ORDER[n - 1]),
   }
 

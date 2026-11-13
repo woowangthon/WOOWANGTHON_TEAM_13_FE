@@ -24,7 +24,7 @@ export function StoreStepFrame({
   title,
   onBack,
   summaries,
-  stepLocked,
+  canGo,
   onGoStep,
   status,
   actions,
@@ -37,9 +37,9 @@ export function StoreStepFrame({
   onBack: () => void
   /** 끝낸 단계 아래에 보여 줄 입력값 요약 (단계 순서, 없으면 안내 문구) */
   summaries: (string | undefined)[]
-  /** true 면 지난 단계로 돌아갈 수 없다 (매장을 이미 만든 뒤) */
-  stepLocked: boolean
-  /** 타임라인에서 끝낸 단계를 눌렀을 때 */
+  /** 타임라인에서 그 단계로 갈 수 있나 (지난 단계 · 앞 단계를 다 채운 다음 단계. 매장을 만든 뒤에는 없음) */
+  canGo: (step: number) => boolean
+  /** 타임라인에서 단계를 눌렀을 때 */
   onGoStep: (step: number) => void
   /** 데스크톱 액션 바 왼쪽 글자 ("필수 항목 2개 남음") */
   status?: string
@@ -59,67 +59,69 @@ export function StoreStepFrame({
             <img src="/logo-bean.png" alt="" className="h-11 w-auto" />
             <img src="/logo-crewbean.png" alt="crewBean" className="h-8 w-auto" />
           </span>
-          <div className="flex flex-col gap-1.5">
-            <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
-              매장 등록
-            </h2>
-            <p className="m-0 text-[13px] text-muted-foreground">4단계, 약 3분이면 끝나요</p>
-          </div>
-          <ol className="m-0 flex list-none flex-col p-0">
-            {STEPS.map((s, i) => {
-              const n = i + 1
-              const on = n === step
-              const done = n < step
-              const clickable = done && !stepLocked
-              const text = (
-                <>
-                  <span
-                    className={cn(
-                      'block text-base',
-                      on ? 'font-extrabold text-foreground' : 'font-medium text-muted-foreground',
-                    )}
-                  >
-                    {s.name}
-                  </span>
-                  <span className="block truncate text-[13px] text-muted-foreground">
-                    {done ? (summaries[i] ?? s.desc) : s.desc}
-                  </span>
-                </>
-              )
-              return (
-                <li
-                  key={s.name}
-                  aria-current={on ? 'step' : undefined}
-                  // 세로 연결선: 원 아래에서 다음 원까지 (마지막 단계는 없음)
-                  className={cn(
-                    'relative flex gap-4 pb-7 last:pb-0',
-                    n < STEPS.length &&
-                      'after:absolute after:top-10 after:bottom-0 after:left-[19px] after:w-0.5 after:bg-faint/40',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold tabular-nums ring-[5px] ring-brand-soft',
-                      on || done ? 'bg-brand text-white' : 'bg-card text-muted-foreground',
-                    )}
-                  >
-                    {done ? <Check aria-hidden="true" className="size-5" /> : n}
-                  </span>
-                  {clickable ? (
-                    <button
-                      type="button"
-                      onClick={() => onGoStep(n)}
-                      className="min-w-0 flex-1 p-0 pt-px text-left"
+          <div className="my-auto flex flex-col gap-9">
+            <div className="flex flex-col gap-1.5">
+              <h2 className="m-0 text-[26px] leading-[1.25] font-extrabold tracking-[-0.03em]">
+                매장 등록
+              </h2>
+              <p className="m-0 text-[13px] text-muted-foreground">4단계, 약 3분이면 끝나요</p>
+            </div>
+            <ol className="m-0 flex list-none flex-col p-0">
+              {STEPS.map((s, i) => {
+                const n = i + 1
+                const on = n === step
+                const done = n < step
+                const clickable = canGo(n)
+                const text = (
+                  <>
+                    <span
+                      className={cn(
+                        'block text-base',
+                        on ? 'font-extrabold text-foreground' : 'font-medium text-muted-foreground',
+                      )}
                     >
-                      {text}
-                    </button>
-                  ) : (
-                    <div className="min-w-0 flex-1 pt-px">{text}</div>
-                  )}
-                </li>
-              )
-            })}
-          </ol>
+                      {s.name}
+                    </span>
+                    <span className="block truncate text-[13px] text-muted-foreground">
+                      {done ? (summaries[i] ?? s.desc) : s.desc}
+                    </span>
+                  </>
+                )
+                return (
+                  <li
+                    key={s.name}
+                    aria-current={on ? 'step' : undefined}
+                    // 세로 연결선: 원 아래에서 다음 원까지 (마지막 단계는 없음)
+                    className={cn(
+                      'relative flex gap-4 pb-7 last:pb-0',
+                      n < STEPS.length &&
+                        'after:absolute after:top-10 after:bottom-0 after:left-[19px] after:w-0.5 after:bg-faint/40',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold tabular-nums ring-[5px] ring-brand-soft',
+                        on || done ? 'bg-brand text-white' : 'bg-card text-muted-foreground',
+                      )}
+                    >
+                      {done ? <Check aria-hidden="true" className="size-5" /> : n}
+                    </span>
+                    {clickable ? (
+                      <button
+                        type="button"
+                        onClick={() => onGoStep(n)}
+                        className="min-w-0 flex-1 cursor-pointer p-0 pt-px text-left"
+                      >
+                        {text}
+                      </button>
+                    ) : (
+                      <div className="min-w-0 flex-1 pt-px">{text}</div>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
         </aside>
 
         <main className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[22px] bg-background px-4 pt-3.5 pb-7 lg:mx-0 lg:max-w-none lg:gap-0 lg:px-14 lg:py-9">
