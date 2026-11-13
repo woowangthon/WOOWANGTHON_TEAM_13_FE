@@ -10,6 +10,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         // 서비스 이름은 crewBean (11/10 회의). AI 채팅 기능 이름은 그대로 "AI 사수"
@@ -17,7 +20,9 @@ export default defineConfig({
         short_name: 'crewBean',
         description: '카페 알바생의 AI 사수, crewBean',
         lang: 'ko',
+        id: '/',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
         // 앱 배경색(canvas)과 맞춰서 시작 화면 · 상태 바가 흰 띠로 보이지 않게
         background_color: '#F1ECE3',

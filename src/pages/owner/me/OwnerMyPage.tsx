@@ -10,6 +10,7 @@ import { useDeleteStore, useOwnerProfile, useUpdateOwnerProfile } from '@/pages/
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
 import { useOwnerStore, type OwnerStoreView } from '@/pages/owner/useOwnerStore'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
+import { PushNotificationSetting } from '@/shared/PushNotificationSetting'
 import { useCloseTo } from '@/pages/staff/useCloseTo'
 import { STORE_ICON } from '@/shared/icons'
 import { StoreAvatar } from '@/shared/store/StoreAvatar'
@@ -45,6 +46,8 @@ export default function OwnerMyPage() {
       )}
 
       <LinkedAccount />
+
+      <PushNotificationSetting />
 
       <section className="flex flex-col gap-2.5">
         <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">내 매장</h2>

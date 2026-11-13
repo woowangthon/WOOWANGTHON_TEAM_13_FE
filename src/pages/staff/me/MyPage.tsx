@@ -16,6 +16,7 @@ import { CODE_LENGTH, normalizeCode } from '@/pages/staff/join/inviteCode'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
 import { SectionHeader } from '@/shared/SectionHeader'
+import { PushNotificationSetting } from '@/shared/PushNotificationSetting'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { Header } from '@/ui/Header'
@@ -196,6 +197,8 @@ export default function MyPage() {
           </div>
         </div>
       </section>
+
+      <PushNotificationSetting />
 
       <section className="flex flex-col gap-3">
         <SectionHeader title="소속 매장" />

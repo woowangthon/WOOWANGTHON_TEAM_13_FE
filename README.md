@@ -128,13 +128,24 @@ npm run dev            # http://localhost:5173 (로그인 때문에 5173 포트�
 
 BE를 `localhost:8000`에서 켜고 `.env`를 아래처럼 맞춥니다.
 
-| 변수                                                  | 뜻                                                 |
-| ----------------------------------------------------- | -------------------------------------------------- |
-| `VITE_API_URL`                                        | BE 주소 (`http://localhost:8000/api/v1`)           |
-| `VITE_SUPABASE_URL` · `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase 로그인 (공개용 키만)                      |
-| `VITE_KAKAO_JS_KEY`                                   | 카카오톡 공유                                      |
-| `VITE_SKIP_AUTH`                                      | `true`면 로그인 없이 화면 보기 (개발용)            |
-| `VITE_REAL_API`                                       | 진짜 API로 부를 기능 (`all` · 기능 이름 쉼표 구분) |
+| 변수                                                  | 뜻                                                  |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| `VITE_API_URL`                                        | BE 주소 (`http://localhost:8000/api/v1`)            |
+| `VITE_SUPABASE_URL` · `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase 로그인 (공개용 키만)                       |
+| `VITE_KAKAO_JS_KEY`                                   | 카카오톡 공유                                       |
+| `VITE_VAPID_PUBLIC_KEY`                               | Web Push 공개키 (BE의 `VAPID_PUBLIC_KEY`와 같은 값) |
+| `VITE_SKIP_AUTH`                                      | `true`면 로그인 없이 화면 보기 (개발용)             |
+| `VITE_REAL_API`                                       | 진짜 API로 부를 기능 (`all` · 기능 이름 쉼표 구분)  |
+
+### PWA 앱 알림
+
+사용자가 마이페이지의 **앱 알림 받기**를 누르면 브라우저 구독을 BE에
+저장합니다. 알바생이 사장님께 질문하거나 사장님이 답변하면 앱을 닫은
+상태에서도 알림이 오고, 누르면 해당 매장의 질문·채팅 화면으로 이동합니다.
+
+아이폰은 iOS 16.4 이상에서 Safari로 사이트를 **홈 화면에 추가**한 뒤, 추가된
+PWA에서 알림을 켜야 합니다. Vercel 프로덕션 환경에는
+`VITE_VAPID_PUBLIC_KEY`를 등록한 뒤 새로 빌드해야 합니다.
 
 | 명령어           | 설명                                                   |
 | ---------------- | ------------------------------------------------------ |
