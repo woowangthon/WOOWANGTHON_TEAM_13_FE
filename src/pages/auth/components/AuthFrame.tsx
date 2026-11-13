@@ -7,34 +7,62 @@ import { cn } from '@/ui/utils'
 // tone: 기본 cream = 지금(--background, 사장님 매장 등록이 씀) · white = 흰색 + 보이는 동안 상태 바도 흰색
 //       (로그인 · 역할 · 로그인 확인 · 초대코드 입장 — docs/08 4)
 // 데스크톱(lg 1024px 이상, 11/13 나현 · 민지 OK): 두 칸 — 왼쪽 소개 패널(aside, 없으면 기본 소개) · 오른쪽 가운데에 지금 화면.
+//   showcase 를 주면(로그인, 11/14 나현 · 민지 OK): 왼쪽 640px 패널에 aside(헤드라인 · 버튼)를 세로 가운데로 ·
+//   오른쪽 전체에 showcase(대화 미리보기) · children 은 휴대폰 · 태블릿에서만 보인다. 높이는 화면 높이(최소 860px)
 //   휴대폰 · 태블릿은 그대로
 export function AuthFrame({
   children,
   className,
   tone = 'cream',
   aside,
+  showcase,
 }: {
   children: ReactNode
   className?: string
   tone?: 'cream' | 'white'
-  /** 데스크톱 왼쪽 패널 내용 (매장 등록은 단계 목록). 없으면 crewBean 소개 */
+  /** 데스크톱 왼쪽 패널 내용 (매장 등록은 단계 목록 · 로그인은 헤드라인 + 버튼). 없으면 crewBean 소개 */
   aside?: ReactNode
+  /** 데스크톱 오른쪽 전체 (로그인 대화 미리보기). 주면 children 은 데스크톱에서 숨긴다 */
+  showcase?: ReactNode
 }) {
   useThemeColor(tone === 'white' ? WHITE_THEME_COLOR : null)
+  const logo = (
+    <span className="flex items-center gap-2.5">
+      <img src="/logo-bean.png" alt="" className="h-11 w-auto" />
+      <img src="/logo-crewbean.png" alt="crewBean" className="h-8 w-auto" />
+    </span>
+  )
   return (
-    <div className="min-h-dvh bg-canvas lg:grid lg:grid-cols-[minmax(360px,5fr)_7fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col justify-between gap-10 bg-brand-soft p-12 lg:flex">
-        <span className="flex items-center gap-2.5">
-          <img src="/logo-bean.png" alt="" className="h-11 w-auto" />
-          <img src="/logo-crewbean.png" alt="crewBean" className="h-8 w-auto" />
-        </span>
-        {aside ?? <DefaultAside />}
-        <span className="text-xs text-muted-foreground">개인 카페를 위한 매뉴얼 · AI 사수</span>
-      </aside>
+    <div
+      className={cn(
+        'min-h-dvh bg-canvas lg:grid',
+        showcase
+          ? 'lg:grid-cols-[560px_1fr] xl:grid-cols-[640px_1fr]'
+          : 'lg:grid-cols-[minmax(360px,5fr)_7fr]',
+      )}
+    >
+      {showcase ? (
+        <aside className="hidden h-dvh min-h-[860px] flex-col bg-[#e8e9dc] px-14 py-12 lg:flex xl:px-[72px]">
+          {logo}
+          <div className="my-auto">{aside}</div>
+        </aside>
+      ) : (
+        <aside className="sticky top-0 hidden h-dvh flex-col justify-between gap-10 bg-brand-soft p-12 lg:flex">
+          {logo}
+          {aside ?? <DefaultAside />}
+          <span className="text-xs text-muted-foreground">개인 카페를 위한 매뉴얼 · AI 사수</span>
+        </aside>
+      )}
+      {showcase && (
+        <section className="relative hidden h-dvh min-h-[860px] overflow-hidden bg-[#373d20] lg:block">
+          {showcase}
+        </section>
+      )}
       <div
         className={cn(
           'lg:flex lg:min-h-dvh lg:items-center lg:justify-center',
           tone === 'white' ? 'lg:bg-white' : 'lg:bg-background',
+          showcase && 'lg:hidden',
         )}
       >
         <main
