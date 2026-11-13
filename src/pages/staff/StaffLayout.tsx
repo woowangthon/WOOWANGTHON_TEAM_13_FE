@@ -36,18 +36,23 @@ export default function StaffLayout() {
   const [profileName] = useProfileName()
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
+  // 푸시 알림 링크(?store=)로 들어오면 그 매장으로 한 번 바꾸고 주소에서 store 를 지운다
+  // (남겨 두면 매장 버튼으로 다른 매장을 골라도 이 값으로 다시 돌아감)
   const linkedStoreId = params.get('store')
   useEffect(() => {
-    if (
-      linkedStoreId &&
-      linkedStoreId !== store.id &&
-      stores.some((item) => item.id === linkedStoreId)
-    ) {
-      setCurrentStoreId(linkedStoreId)
-    }
-  }, [linkedStoreId, setCurrentStoreId, store.id, stores])
+    if (!linkedStoreId || isPending) return
+    if (stores.some((item) => item.id === linkedStoreId)) setCurrentStoreId(linkedStoreId)
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('store')
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  }, [linkedStoreId, isPending, setCurrentStoreId, setParams, stores])
   // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
   const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)

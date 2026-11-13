@@ -23,17 +23,22 @@ export default function OwnerLayout() {
   const notifications = useNotifications()
   const [adding, setAdding] = useState(false)
   const { pathname } = useLocation()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  // 푸시 알림 링크(?store=)로 들어오면 그 매장으로 한 번 바꾸고 주소에서 store 를 지운다
+  // (남겨 두면 매장 메뉴로 다른 매장을 골라도 이 값으로 다시 돌아감)
   const linkedStoreId = params.get('store')
   useEffect(() => {
-    if (
-      linkedStoreId &&
-      linkedStoreId !== store.storeId &&
-      stores.some((item) => item.storeId === linkedStoreId)
-    ) {
-      setCurrentStoreId(linkedStoreId)
-    }
-  }, [linkedStoreId, setCurrentStoreId, store.storeId, stores])
+    if (!linkedStoreId || isPending) return
+    if (stores.some((item) => item.storeId === linkedStoreId)) setCurrentStoreId(linkedStoreId)
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('store')
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  }, [linkedStoreId, isPending, setCurrentStoreId, setParams, stores])
 
   const hasQuestion = (questions.data?.questions.length ?? 0) > 0
   // 종 점: 처리할 질문 · 대타가 있거나 안 읽은 인수인계가 있을 때 (읽은 인수인계는 14일 동안 목록에만)
