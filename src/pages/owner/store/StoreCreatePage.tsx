@@ -1,6 +1,6 @@
-import { ArrowRight, BookOpen, Check, Coffee, UserPlus } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
 import { ApiError } from '@/lib/apiClient'
@@ -17,11 +17,10 @@ import { AddressField } from '@/pages/owner/store/components/AddressField'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
 import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
+import { StoreCreateDone } from '@/pages/owner/store/components/StoreCreateDone'
 import { StoreStepFrame } from '@/pages/owner/store/components/StoreStepFrame'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
-import { OWNER_THEME, useOwnerStore } from '@/pages/owner/useOwnerStore'
-import { AuthFrame } from '@/pages/auth/components/AuthFrame'
-import { STORE_THEME, themeOf } from '@/shared/storeTheme'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
@@ -191,7 +190,13 @@ export default function StoreCreatePage() {
   }
 
   if (done && created)
-    return <CreateDone store={created} onStart={() => navigate('/owner', { replace: true })} />
+    return (
+      <StoreCreateDone
+        store={created}
+        onStart={() => navigate('/owner', { replace: true })}
+        onStoreChange={setCreated}
+      />
+    )
 
   const pending = create.isPending || saveShifts.isPending
 
@@ -367,70 +372,5 @@ export default function StoreCreatePage() {
     >
       <StorePhotoStep value={photo} onChange={setPhoto} onCroppingChange={setCropping} />
     </StoreStepFrame>
-  )
-}
-
-/** 처음 할 일 (docs/03 S1: 매뉴얼 → 레시피 → 알바생 초대) */
-const NEXT = [
-  { to: '/owner/manuals', icon: BookOpen, label: '매뉴얼 등록' },
-  { to: '/owner/recipes', icon: Coffee, label: '레시피 등록' },
-  { to: '/owner/members/new', icon: UserPlus, label: '알바생 초대' },
-]
-
-function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void }) {
-  // 사장님 화면 매장 색 (useOwnerStore 와 같은 팔레트)
-  const theme = { ...STORE_THEME[themeOf(store.theme, 0)], ...OWNER_THEME[themeOf(store.theme, 0)] }
-  return (
-    <div className="owner-wide">
-      <AuthFrame className="gap-[22px]">
-        <section
-          className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
-          style={{
-            backgroundColor: theme.color,
-            // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
-            backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
-          }}
-        >
-          <span
-            className="flex size-14 items-center justify-center rounded-full bg-white"
-            style={{ color: theme.color }}
-          >
-            <Check className="size-[30px]" />
-          </span>
-          <div
-            className={cn(
-              'flex flex-col gap-[18px]',
-              store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
-            )}
-          >
-            <div className="flex flex-col gap-2.5">
-              <p className="m-0 text-[13px] opacity-75">사장님</p>
-              <h1 className="m-0 text-[26px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
-                {store.name}
-                <br />
-                등록 완료
-              </h1>
-            </div>
-            <nav aria-label="처음 할 일" className="flex flex-wrap gap-2">
-              {NEXT.map(({ to, icon: Icon, label }) => (
-                <Link
-                  key={label}
-                  to={to}
-                  replace
-                  className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-medium text-white backdrop-blur-[8px]"
-                >
-                  <Icon className="size-4" />
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </section>
-        <Button variant="ink" className="h-14 text-base" onClick={onStart}>
-          시작하기
-          <ArrowRight className="size-5" />
-        </Button>
-      </AuthFrame>
-    </div>
   )
 }

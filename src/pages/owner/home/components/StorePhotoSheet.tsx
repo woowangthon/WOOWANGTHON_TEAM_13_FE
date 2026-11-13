@@ -2,13 +2,23 @@ import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { ApiError } from '@/lib/apiClient'
 import { useSaveStorePhoto } from '@/pages/owner/api/stores'
+import type { OwnerStore } from '@/pages/owner/api/types'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 
 // 사장님 홈 매장 카드 오른쪽 아래 버튼 → 매장 사진 변경 (찍기 · 갤러리, POST /stores/{storeId}/photo)
-export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose: () => void }) {
+export function StorePhotoSheet({
+  storeId,
+  onClose,
+  onSaved,
+}: {
+  storeId: string
+  onClose: () => void
+  /** 저장된 매장 (매장 등록 완료 화면이 사진을 바로 보여 주려고 받는다) */
+  onSaved?: (store: OwnerStore) => void
+}) {
   const [photo, setPhoto] = useState<File | null>(null)
   const [cropping, setCropping] = useState(false)
   const save = useSaveStorePhoto()
@@ -18,7 +28,8 @@ export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose
     save.mutate(
       { storeId, file: photo },
       {
-        onSuccess: () => {
+        onSuccess: (store) => {
+          onSaved?.(store)
           toast('매장 사진을 변경했어요')
           onClose()
         },
