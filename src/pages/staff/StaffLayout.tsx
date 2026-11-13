@@ -1,6 +1,6 @@
 import { Bell, CalendarDays, ChevronDown, House, MessagesSquare, Plus, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useNotifications } from '@/lib/api/notifications'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
@@ -36,7 +36,18 @@ export default function StaffLayout() {
   const [profileName] = useProfileName()
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
+  const [params] = useSearchParams()
   const navigate = useNavigate()
+  const linkedStoreId = params.get('store')
+  useEffect(() => {
+    if (
+      linkedStoreId &&
+      linkedStoreId !== store.id &&
+      stores.some((item) => item.id === linkedStoreId)
+    ) {
+      setCurrentStoreId(linkedStoreId)
+    }
+  }, [linkedStoreId, setCurrentStoreId, store.id, stores])
   // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
   const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)

@@ -40,8 +40,11 @@ const QUICK: { to: string; label: string; icon: LucideIcon }[] = [
 ]
 
 export default function OwnerHomePage() {
+  const [params] = useSearchParams()
   // 사장님 홈에 처음 들어왔고(매장 등록 직후 포함) 앱 사용법을 아직 안 봤으면 한 번 보여 준다 (다 보면 다시 홈으로)
-  if (!hasSeenOwnerGuide()) return <Navigate to="/owner/guide" replace />
+  if (!hasSeenOwnerGuide() && !params.get('question')) {
+    return <Navigate to="/owner/guide" replace />
+  }
   return <OwnerHome />
 }
 

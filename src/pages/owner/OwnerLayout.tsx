@@ -1,6 +1,6 @@
 import { Bell, CalendarDays, House, Plus, Store, Users } from 'lucide-react'
-import { useState } from 'react'
-import { Link, Navigate, Outlet, useLocation } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, Navigate, Outlet, useLocation, useSearchParams } from 'react-router'
 import { useNotifications, useOwnerQuestions } from '@/pages/owner/api/home'
 import { useOwnerProfile } from '@/pages/owner/api/stores'
 import { AddMenuSheet } from '@/pages/owner/components/AddMenuSheet'
@@ -23,6 +23,17 @@ export default function OwnerLayout() {
   const notifications = useNotifications()
   const [adding, setAdding] = useState(false)
   const { pathname } = useLocation()
+  const [params] = useSearchParams()
+  const linkedStoreId = params.get('store')
+  useEffect(() => {
+    if (
+      linkedStoreId &&
+      linkedStoreId !== store.storeId &&
+      stores.some((item) => item.storeId === linkedStoreId)
+    ) {
+      setCurrentStoreId(linkedStoreId)
+    }
+  }, [linkedStoreId, setCurrentStoreId, store.storeId, stores])
 
   const hasQuestion = (questions.data?.questions.length ?? 0) > 0
   // 종 점: 처리할 질문 · 대타가 있거나 안 읽은 인수인계가 있을 때 (읽은 인수인계는 14일 동안 목록에만)

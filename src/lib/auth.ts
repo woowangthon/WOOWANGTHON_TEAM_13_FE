@@ -32,6 +32,8 @@ export async function signIn(provider: OAuthProvider) {
 }
 
 export async function signOut() {
+  const { disablePushNotifications } = await import('@/lib/pushNotifications')
+  await disablePushNotifications().catch(() => {})
   await supabase?.auth.signOut()
   useAuthStore.getState().reset()
   rememberRedirect(null)
