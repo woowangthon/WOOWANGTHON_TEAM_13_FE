@@ -214,7 +214,7 @@ export function RecipeFormSheet({
                     onClick={() => setTemp(t.value)}
                     className={cn(
                       'h-10 flex-1 rounded-full text-[13px] font-bold',
-                      temp === t.value ? 'bg-brand text-white' : 'text-[#6B7068]',
+                      temp === t.value ? 'bg-brand text-white' : 'text-muted-foreground',
                     )}
                   >
                     {t.label}
@@ -241,7 +241,7 @@ export function RecipeFormSheet({
                     onChange={(event) => setRow(i, { name: event.target.value })}
                     placeholder="재료"
                     aria-label={`재료 ${i + 1}`}
-                    className="min-w-0 flex-1 border-none bg-transparent text-sm text-[#4F554D] placeholder:text-faint"
+                    className="min-w-0 flex-1 border-none bg-transparent text-sm text-muted-foreground placeholder:text-faint"
                   />
                   <input
                     value={row.amount}
@@ -263,7 +263,7 @@ export function RecipeFormSheet({
               <button
                 type="button"
                 onClick={() => setRows((list) => [...list, { name: '', amount: '' }])}
-                className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068]"
+                className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-muted-foreground"
               >
                 <Plus className="size-4" />
                 재료 추가
@@ -317,7 +317,7 @@ function StepToggle({ step, onChange }: { step: Step; onChange: (step: Step) => 
           onClick={() => onChange(s.value)}
           className={cn(
             'relative h-10 flex-1 rounded-full text-sm font-bold transition-colors',
-            step === s.value ? 'text-white' : 'text-[#6B7068]',
+            step === s.value ? 'text-white' : 'text-muted-foreground',
           )}
         >
           {s.label}
@@ -330,7 +330,7 @@ function StepToggle({ step, onChange }: { step: Step; onChange: (step: Step) => 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[13px] font-bold text-[#6B7068]">{label}</span>
+      <span className="text-[13px] font-bold text-muted-foreground">{label}</span>
       {children}
     </div>
   )

@@ -274,7 +274,7 @@ function MembersPicture() {
           key={m.name}
           className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft"
         >
-          <PersonAvatar name={m.name} index={i} size={48} dot={m.active ? '#6FA97B' : '#D9B26A'} />
+          <PersonAvatar name={m.name} index={i} size={48} dot={m.active ? '#ADC178' : '#AB7743'} />
           <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
             <span className="text-base font-bold">{m.name}</span>
             <span className="truncate text-[13px] text-muted-foreground">
@@ -284,7 +284,7 @@ function MembersPicture() {
           <Badge
             size="md"
             variant={m.active ? 'soft' : 'warm'}
-            className={m.active ? '' : 'bg-[#FBF1E4] text-[#A86A26]'}
+            className={m.active ? '' : 'bg-warm text-warm-foreground'}
           >
             {m.active ? '사용 중' : '초대됨'}
           </Badge>
@@ -479,13 +479,13 @@ export default function OwnerGuidePage() {
   // 데스크톱은 두 칸 카드(GuideDesktop), 휴대폰 · 태블릿은 공용 카드 넘기기(GuideSlides) — 그림 · 문구는 같다
   if (wide) {
     return (
-      <div style={brand}>
+      <div className="owner-wide" style={brand}>
         <GuideDesktop slides={SLIDES} onDone={done} />
       </div>
     )
   }
   return (
-    <div className="min-h-dvh bg-canvas" style={brand}>
+    <div className="owner-wide min-h-dvh bg-canvas" style={brand}>
       <div className="mx-auto w-full max-w-[460px]">
         <GuideSlides slides={SLIDES} onDone={done} />
       </div>

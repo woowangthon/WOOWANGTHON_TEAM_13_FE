@@ -58,12 +58,12 @@ export function RecipePhotoField({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-[13px] text-[#6B7068]">
+      <span className="text-[13px] text-muted-foreground">
         {isDefault
           ? '기본 사진이에요. 찍거나 골라서 우리 매장 사진으로 바꿔요'
           : '메뉴 사진은 알바생 레시피 화면에 보여요. 없으면 건너뛰어도 돼요'}
       </span>
-      <div className="relative flex aspect-[1.6] w-full flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-[#6B7068]">
+      <div className="relative flex aspect-[1.6] w-full flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-muted-foreground">
         {shown ? (
           <>
             <img src={shown} alt="메뉴 사진" className="absolute inset-0 size-full object-cover" />

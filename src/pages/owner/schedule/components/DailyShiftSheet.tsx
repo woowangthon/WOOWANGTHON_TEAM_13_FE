@@ -198,7 +198,7 @@ export function DailyShiftSheet({
                   </div>
 
                   {expanded && (
-                    <div className="flex flex-col gap-3 border-t border-[#F0EBE2] px-4 pt-3 pb-4">
+                    <div className="flex flex-col gap-3 border-t border-border px-4 pt-3 pb-4">
                       <div
                         className="flex flex-wrap gap-1.5"
                         role="radiogroup"
@@ -264,7 +264,7 @@ export function DailyShiftSheet({
               type="button"
               onClick={addRow}
               disabled={templates.length === 0}
-              className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068] disabled:opacity-40"
+              className="flex h-11 items-center justify-center gap-1 rounded-[18px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-muted-foreground disabled:opacity-40"
             >
               <Plus className="size-4" />
               근무 추가

@@ -18,7 +18,7 @@ import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components
 import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
-import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { OWNER_THEME, useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
 import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
@@ -323,17 +323,22 @@ function StepFrame({
   children: ReactNode
 }) {
   return (
-    <AuthFrame className="gap-[22px]" aside={<StepList current={step} />}>
-      {/* 위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라(민지 부품) 단계는 제목 위에서 보여 준다 */}
-      <OnboardingHeader step={1} onBack={onBack} />
-      <div className="flex flex-col gap-2 px-1 pt-1.5">
-        <span className="text-[13px] font-medium text-muted-foreground">
-          사장님 · {step} / {STEP_TOTAL}
-        </span>
-        <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">{title}</h1>
-      </div>
-      {children}
-    </AuthFrame>
+    // .owner-wide: 사장님 화면 색 팔레트 (index.css) — 민지 AuthFrame 은 그대로 감싸기만
+    <div className="owner-wide">
+      <AuthFrame className="gap-[22px]" aside={<StepList current={step} />}>
+        {/* 위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라(민지 부품) 단계는 제목 위에서 보여 준다 */}
+        <OnboardingHeader step={1} onBack={onBack} />
+        <div className="flex flex-col gap-2 px-1 pt-1.5">
+          <span className="text-[13px] font-medium text-muted-foreground">
+            사장님 · {step} / {STEP_TOTAL}
+          </span>
+          <h1 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em]">
+            {title}
+          </h1>
+        </div>
+        {children}
+      </AuthFrame>
+    </div>
   )
 }
 
@@ -387,56 +392,59 @@ const NEXT = [
 ]
 
 function CreateDone({ store, onStart }: { store: OwnerStore; onStart: () => void }) {
-  const theme = STORE_THEME[themeOf(store.theme, 0)]
+  // 사장님 화면 매장 색 (useOwnerStore 와 같은 팔레트)
+  const theme = { ...STORE_THEME[themeOf(store.theme, 0)], ...OWNER_THEME[themeOf(store.theme, 0)] }
   return (
-    <AuthFrame className="gap-[22px]">
-      <section
-        className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
-        style={{
-          backgroundColor: theme.color,
-          // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
-          backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
-        }}
-      >
-        <span
-          className="flex size-14 items-center justify-center rounded-full bg-white"
-          style={{ color: theme.color }}
+    <div className="owner-wide">
+      <AuthFrame className="gap-[22px]">
+        <section
+          className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
+          style={{
+            backgroundColor: theme.color,
+            // 매장 사진을 넣었으면 그라데이션 없이 사진 그대로 (글씨는 아래 어두운 판 위에)
+            backgroundImage: store.photoUrl ? `url(${store.photoUrl})` : undefined,
+          }}
         >
-          <Check className="size-[30px]" />
-        </span>
-        <div
-          className={cn(
-            'flex flex-col gap-[18px]',
-            store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
-          )}
-        >
-          <div className="flex flex-col gap-2.5">
-            <p className="m-0 text-sm opacity-75">사장님</p>
-            <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
-              {store.name}
-              <br />
-              등록 완료
-            </h1>
+          <span
+            className="flex size-14 items-center justify-center rounded-full bg-white"
+            style={{ color: theme.color }}
+          >
+            <Check className="size-[30px]" />
+          </span>
+          <div
+            className={cn(
+              'flex flex-col gap-[18px]',
+              store.photoUrl && 'rounded-[24px] bg-black/35 p-4 backdrop-blur-md',
+            )}
+          >
+            <div className="flex flex-col gap-2.5">
+              <p className="m-0 text-sm opacity-75">사장님</p>
+              <h1 className="m-0 text-[32px] leading-[1.22] font-extrabold tracking-[-0.035em] break-keep">
+                {store.name}
+                <br />
+                등록 완료
+              </h1>
+            </div>
+            <nav aria-label="처음 할 일" className="flex flex-wrap gap-2">
+              {NEXT.map(({ to, icon: Icon, label }) => (
+                <Link
+                  key={label}
+                  to={to}
+                  replace
+                  className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px]"
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              ))}
+            </nav>
           </div>
-          <nav aria-label="처음 할 일" className="flex flex-wrap gap-2">
-            {NEXT.map(({ to, icon: Icon, label }) => (
-              <Link
-                key={label}
-                to={to}
-                replace
-                className="flex items-center gap-1.5 rounded-full bg-white/16 px-3 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px]"
-              >
-                <Icon className="size-4" />
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </section>
-      <Button variant="ink" className="h-14 text-base" onClick={onStart}>
-        시작하기
-        <ArrowRight className="size-5" />
-      </Button>
-    </AuthFrame>
+        </section>
+        <Button variant="ink" className="h-14 text-base" onClick={onStart}>
+          시작하기
+          <ArrowRight className="size-5" />
+        </Button>
+      </AuthFrame>
+    </div>
   )
 }

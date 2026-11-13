@@ -32,7 +32,7 @@ export default function OwnerStoreDetailPage() {
   if (!isPending && !store) return <Navigate to="/owner/me" replace />
   if (!store || !members.data) {
     return (
-      <OwnerFrame colors={{ color: '#606C45', soft: '#E8EADD' }} narrow>
+      <OwnerFrame colors={{ color: '#373D20', soft: '#E2E3D5' }} narrow>
         <Spinner />
       </OwnerFrame>
     )
@@ -175,7 +175,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
                 <label
                   className={cn(
                     'flex h-11 w-[150px] items-center gap-1.5 rounded-[14px] border-[1.5px] bg-white px-3',
-                    isLow ? 'border-[#E7A39D]' : 'border-[#E1DED5]',
+                    isLow ? 'border-[#E7A39D]' : 'border-line',
                   )}
                 >
                   <input
@@ -219,7 +219,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="m-0 px-1 text-[13px] font-bold text-[#6B7068]">{label}</h2>
+      <h2 className="m-0 px-1 text-[13px] font-bold text-muted-foreground">{label}</h2>
       {children}
     </section>
   )

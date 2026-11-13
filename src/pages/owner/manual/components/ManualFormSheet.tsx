@@ -108,7 +108,7 @@ export function ManualFormSheet({
         )}
         {askDelete && (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-            <span className="text-sm text-[#7E352C]">
+            <span className="text-sm text-destructive-foreground">
               알바생 화면과 AI 사수 답변에서도 사라져요.
             </span>
             <Button

@@ -202,7 +202,7 @@ export function WorkCalendar({
                       <div
                         key={key}
                         aria-hidden="true"
-                        className="min-h-[78px] border-t border-[#F0EBE2]"
+                        className="min-h-[78px] border-t border-border"
                       />
                     )
                   }
@@ -214,7 +214,7 @@ export function WorkCalendar({
                       aria-pressed={isSelected}
                       aria-label={`${formatDate(day)}${holiday ? ` ${holiday}` : ''}${dayClosed ? ' 휴무' : ''} 근무 ${shifts.length}개`}
                       className={cn(
-                        'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-[#F0EBE2] px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
+                        'flex min-h-[78px] min-w-0 flex-col gap-[3px] border-t border-border px-[2px] pt-1 pb-1.5 text-left transition-colors duration-150',
 
                         isSelected && 'rounded-[10px] bg-background',
                       )}
