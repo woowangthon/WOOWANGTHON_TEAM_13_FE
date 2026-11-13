@@ -40,6 +40,8 @@ const SIZES: { label: string; size: StoreSize }[] = [
 
 type Step = 'info' | 'shifts' | 'owner' | 'photo'
 const STEP_TOTAL = 4
+/** 데스크톱 왼쪽 패널 단계 목록 (StepFrame step 순서) */
+const STEP_NAMES = ['매장 정보', '근무 타임 · 휴무 · 급여일', '사장님 근무', '매장 사진']
 
 const initialRows = (): ShiftRow[] =>
   DEFAULT_SHIFT_TEMPLATES.map((t, i) => ({ ...t, key: `row_${i}` }))
@@ -323,7 +325,7 @@ function StepFrame({
   return (
     // .owner-wide: 사장님 화면 색 팔레트 (index.css) — 민지 AuthFrame 은 그대로 감싸기만
     <div className="owner-wide">
-      <AuthFrame className="gap-[22px]">
+      <AuthFrame className="gap-[22px]" aside={<StepList current={step} />}>
         {/* 위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라(민지 부품) 단계는 제목 위에서 보여 준다 */}
         <OnboardingHeader step={1} onBack={onBack} />
         <div className="flex flex-col gap-2 px-1 pt-1.5">
@@ -336,6 +338,48 @@ function StepFrame({
         </div>
         {children}
       </AuthFrame>
+    </div>
+  )
+}
+
+/** 데스크톱 왼쪽 패널: 매장 등록 단계 (지금 단계는 매장 색 번호 + 링 · 지난 단계는 체크) */
+function StepList({ current }: { current: number }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <h2 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em] text-foreground">
+        매장 등록
+      </h2>
+      <ol className="m-0 flex list-none flex-col gap-3 p-0">
+        {STEP_NAMES.map((name, i) => {
+          const n = i + 1
+          const on = n === current
+          const done = n < current
+          return (
+            <li
+              key={name}
+              aria-current={on ? 'step' : undefined}
+              className={cn(
+                'flex items-center gap-3 text-base',
+                on ? 'font-extrabold text-foreground' : 'font-medium text-muted-foreground',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold tabular-nums',
+                  on
+                    ? 'bg-brand text-white ring-4 ring-white'
+                    : done
+                      ? 'bg-brand/80 text-white'
+                      : 'bg-white text-muted-foreground',
+                )}
+              >
+                {done ? <Check className="size-4" /> : n}
+              </span>
+              {name}
+            </li>
+          )
+        })}
+      </ol>
     </div>
   )
 }
