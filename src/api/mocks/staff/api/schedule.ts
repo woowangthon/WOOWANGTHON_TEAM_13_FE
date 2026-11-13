@@ -1,17 +1,9 @@
-import {
-  availabilityMonth,
-  initialAvailability,
-  initialAvailabilityMemo,
-  storeSchedules,
-} from '@/api/mocks/staff/schedule'
+import { storeSchedules } from '@/api/mocks/staff/schedule'
 import { findStaffStore } from '@/api/mocks/staff/stores'
 import { fromDateKey, toDateKey } from '@/lib/date'
 import { ApiError } from '@/lib/apiClient'
 import type {
-  AvailabilityInput,
   CalendarShift,
-  MyAvailability,
-  NewAvailability,
   NewSubstituteRequest,
   ScheduleCalendar,
   ScheduleWorker,
@@ -19,7 +11,7 @@ import type {
   SubstituteStatus,
 } from '@/lib/api/types'
 
-// 가짜 서버: 근무 API (docs/07 7) — 공유 근무 달력 + (BE 에서 없어진) 근무 가능 시간. 시연 날짜는 매장마다 다르다 (달빛 카페 11/20 · 오후의 커피 11/21)
+// 가짜 서버: 근무 API (docs/07 7) — 공유 근무 달력 · 대타 요청. 시연 날짜는 매장마다 다르다 (달빛 카페 11/20 · 오후의 커피 11/21)
 
 /** 실제 BE 와 같게: 사장님은 구성원(member)이 아니라서 memberId null */
 const mockMemberId = (worker: { userId: string; role: ScheduleWorker['role'] }) =>
@@ -280,86 +272,4 @@ export async function respondSubstituteRequest(
   item.read = true
   if (accept) storeSchedules[storeId].substitutes[`${item.assignmentId}|${item.date}`] = 'me'
   return toSubstituteResponse(item, myUserId)
-}
-
-const monthKey = `${availabilityMonth.year}-${String(availabilityMonth.month).padStart(2, '0')}`
-const submitted = new Map<string, MyAvailability>() // storeId → 낸 근무 가능 시간
-let seq = 0
-
-/** 아직 안 냈을 때: 시연용으로 미리 채운 달력 (availabilityId · submittedAt 은 null) */
-function notSubmitted(): MyAvailability {
-  return {
-    availabilityId: null,
-    month: monthKey,
-    deadline: toDateKey(availabilityMonth.deadline),
-    days: Object.entries(initialAvailability)
-      .filter(([, mark]) => mark !== 0)
-      .map(([day, mark]) => ({
-        date: `${monthKey}-${day.padStart(2, '0')}`,
-        status: mark === 1 ? 'available' : 'unavailable',
-      })),
-    memo: initialAvailabilityMemo,
-    submittedAt: null,
-  }
-}
-
-function notFound(): never {
-  throw new ApiError(404, {
-    code: 'NOT_FOUND',
-    message: '근무 가능 시간을 찾지 못했어요',
-    detail: null,
-  })
-}
-
-/** GET /stores/{storeId}/availabilities/me */
-export async function getMyAvailability(storeId: string): Promise<MyAvailability> {
-  return submitted.get(storeId) ?? notSubmitted()
-}
-
-/** POST /stores/{storeId}/availabilities — 처음 낼 때 */
-export async function createAvailability(
-  storeId: string,
-  body: NewAvailability,
-): Promise<MyAvailability> {
-  if (submitted.has(storeId)) {
-    throw new ApiError(409, {
-      code: 'AVAILABILITY_EXISTS',
-      message: '이미 낸 근무 가능 시간이 있어요',
-      detail: null,
-    })
-  }
-  const saved: MyAvailability = {
-    ...notSubmitted(),
-    availabilityId: `avl_${++seq}`,
-    month: body.month,
-    days: body.days,
-    memo: body.memo,
-    submittedAt: new Date().toISOString(),
-  }
-  submitted.set(storeId, saved)
-  return saved
-}
-
-/** PATCH /stores/{storeId}/availabilities/{availabilityId} — 다시 낼 때 */
-export async function updateAvailability(
-  storeId: string,
-  availabilityId: string,
-  body: AvailabilityInput,
-): Promise<MyAvailability> {
-  const current = submitted.get(storeId)
-  if (!current || current.availabilityId !== availabilityId) notFound()
-  const saved = {
-    ...current,
-    days: body.days,
-    memo: body.memo,
-    submittedAt: new Date().toISOString(),
-  }
-  submitted.set(storeId, saved)
-  return saved
-}
-
-/** DELETE /stores/{storeId}/availabilities/{availabilityId} — 화면에서는 아직 안 쓴다 */
-export async function deleteAvailability(storeId: string, availabilityId: string): Promise<void> {
-  if (submitted.get(storeId)?.availabilityId !== availabilityId) notFound()
-  submitted.delete(storeId)
 }

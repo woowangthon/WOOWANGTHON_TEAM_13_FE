@@ -5,7 +5,7 @@ import { cn } from '@/ui/utils'
 
 // 알바생 화면 바탕: 가운데 460px 기둥(흰색 — docs/08 4) + 매장 색(--brand) 적용. 보이는 동안 상태 바도 흰색
 // 스크롤 위치: 새 화면(탭 이동 등)은 맨 위, 뒤로 가기는 원래 자리 (ScrollRestoration).
-// 목록 위에 뜨는 시트 주소(레시피 · 매뉴얼 상세, 인수인계, 가능 시간)는 링크에 preventScrollReset 을 붙여 목록 자리를 그대로 둔다
+// 목록 위에 뜨는 시트 주소(레시피 · 매뉴얼 상세, 인수인계)는 링크에 preventScrollReset 을 붙여 목록 자리를 그대로 둔다
 export function StaffFrame({
   store,
   children,

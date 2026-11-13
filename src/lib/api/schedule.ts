@@ -1,20 +1,7 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  createAvailability,
-  getMyAvailability,
-  getScheduleCalendar,
-  updateAvailability,
-} from '@/api/mocks/staff/api/schedule'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import { getScheduleCalendar } from '@/api/mocks/staff/api/schedule'
 import { findStaffStore } from '@/api/mocks/staff/stores'
-import type {
-  AvailabilityInput,
-  CalendarShift,
-  MyAvailability,
-  MySchedule,
-  NewAvailability,
-  ScheduleCalendar,
-  Shift,
-} from '@/lib/api/types'
+import type { CalendarShift, MySchedule, ScheduleCalendar, Shift } from '@/lib/api/types'
 import { http, isRealApi } from '@/lib/api/source'
 import { ApiError } from '@/lib/apiClient'
 import { useAuthStore } from '@/lib/authStore'
@@ -26,11 +13,8 @@ import { addDays, fromDateKey, todayInKst, toDateKey, useTodayKey } from '@/lib/
  *   GET /stores/{storeId}/schedule-calendar?startDate=&endDate= (최대 63일, 구성원 누구나) → useScheduleCalendar
  *   내 근무(홈 오늘 근무 · 이번 주 · 매장 목록 한 줄 · 급여)는 그 달력에서 assignee.userId === 내 userId 만 골라 만든다 → useMySchedule
  * .env VITE_REAL_API 에 'schedule'를 넣으면 진짜 API, 아니면 가짜 서버(api/mocks/staff/api) — lib/api/source. 경로 · 응답: docs/07 7
- * 근무 가능 시간(/availabilities)은 BE 에서 없어졌다 → 진짜 모드에서는 들어가는 곳을 숨긴다 (availabilityEnabled)
+ * 근무 가능 시간 제출은 BE 에서 없어져서 FE 에서도 지웠다 (11/14)
  */
-
-/** 근무 가능 시간 메모 최대 글자 수 (BE 검증) */
-export const AVAILABILITY_MEMO_MAX = 500
 
 /** 한 번에 불러올 수 있는 최대 기간 (BE: 시작일부터 63일) */
 export const CALENDAR_MAX_DAYS = 63
@@ -41,15 +25,9 @@ export const scheduleKeys = {
   /** 내 근무 — 오늘(KST)이 바뀌면 키가 바뀌어 다시 불러온다. 앞부분 ['stores', id, 'schedules', 'me'] 로 invalidate 하면 모든 날짜 */
   mine: (storeId: string, todayKey: string) =>
     ['stores', storeId, 'schedules', 'me', todayKey] as const,
-  availability: (storeId: string) => ['stores', storeId, 'availabilities', 'me'] as const,
 }
 
 const real = () => isRealApi('schedule')
-const realAvailability = () => isRealApi('availability')
-const availabilitiesPath = (storeId: string) => `/stores/${storeId}/availabilities`
-
-/** 근무 가능 시간 화면을 보여 줄지 — BE 에서 없어져서 진짜 모드(schedule · availability 중 하나라도 켜짐)면 숨긴다 */
-export const availabilityEnabled = () => !real() && !realAvailability()
 
 /** 로그인 없이 볼 때(VITE_SKIP_AUTH) 가짜 근무표의 '나' */
 const MOCK_MY_USER_ID = 'usr_jieun'
@@ -187,19 +165,6 @@ async function fetchSchedule(storeId: string): Promise<MySchedule> {
 export function shiftLabel(shift: Pick<Shift, 'role'>) {
   return shift.role.trim() || '근무'
 }
-const fetchAvailability = (storeId: string) =>
-  realAvailability()
-    ? http.get<MyAvailability>(`${availabilitiesPath(storeId)}/me`)
-    : getMyAvailability(storeId)
-const postAvailability = (storeId: string, body: NewAvailability) =>
-  realAvailability()
-    ? http.post<MyAvailability>(availabilitiesPath(storeId), body)
-    : createAvailability(storeId, body)
-const patchAvailability = (storeId: string, availabilityId: string, body: AvailabilityInput) =>
-  realAvailability()
-    ? http.patch<MyAvailability>(`${availabilitiesPath(storeId)}/${availabilityId}`, body)
-    : updateAvailability(storeId, availabilityId, body)
-
 /** 내 근무: 오늘 · 이번 주 · 확정된 근무 */
 export function useMySchedule(storeId: string) {
   // 오늘을 키에 넣어 자정이 지나면 새로 부르고, 화면으로 돌아오면 다시 부른다 (다른 기기에서 바꾼 근무)
@@ -246,35 +211,5 @@ export function useWorkSummaries(storeIds: string[]) {
           return [storeId, data ? workSummaryOf(data) : null]
         }),
       ) as Record<string, string | null>,
-  })
-}
-
-/** 근무 가능 시간 (받는 달 · 마감일 · 낸 내용). enabled=false 면 부르지 않는다 (진짜 모드: BE 에서 없어짐) */
-export function useMyAvailability(storeId: string, enabled = true) {
-  return useQuery({
-    queryKey: scheduleKeys.availability(storeId),
-    queryFn: () => fetchAvailability(storeId),
-    enabled,
-  })
-}
-
-/**
- * 근무 가능 시간 제출: 처음이면 등록(POST), 이미 냈으면 수정(PATCH).
- * 409(다른 기기에서 이미 냄 AVAILABILITY_EXISTS · 마감 AVAILABILITY_CLOSED)면 서버 내용을 다시 불러온다
- */
-export function useSubmitAvailability(storeId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ saved, ...body }: AvailabilityInput & { saved: MyAvailability }) =>
-      saved.availabilityId
-        ? patchAvailability(storeId, saved.availabilityId, body)
-        : postAvailability(storeId, { ...body, month: saved.month }),
-    onSuccess: (result) =>
-      queryClient.setQueryData<MyAvailability>(scheduleKeys.availability(storeId), result),
-    onError: (error) => {
-      if (error instanceof ApiError && error.status === 409) {
-        void queryClient.invalidateQueries({ queryKey: scheduleKeys.availability(storeId) })
-      }
-    },
   })
 }

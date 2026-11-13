@@ -306,15 +306,6 @@ export interface MonthShifts {
   memos: Record<string, string>
 }
 
-/** 다음 달 근무 가능 시간 제출 현황 */
-export interface AvailabilityStatus {
-  month: string
-  deadline: string
-  submitted: number
-  total: number
-  missing: string[]
-}
-
 /** 추천 스케줄 한 줄 (하루) */
 export interface DraftRow {
   date: string
@@ -382,15 +373,6 @@ export interface ScheduleResponse {
     role: string
     assignments: ScheduleAssignment[]
   }[]
-}
-
-/** BE 근무 가능 시간 제출 현황 (GET /stores/{storeId}/availability-submissions?month=) */
-export interface AvailabilitySubmissions {
-  month: string
-  deadline: string
-  totalMembers: number
-  submittedCount: number
-  members: { memberId: string; staffName: string; submitted: boolean; submittedAt: string | null }[]
 }
 
 /** BE 직원별 예상 급여 한 줄 (GET /stores/{storeId}/payroll/estimates?month=) — 화면 모양은 MemberPay */
