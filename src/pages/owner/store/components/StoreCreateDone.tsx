@@ -57,7 +57,8 @@ export function StoreCreateDone({
   return (
     <div className="owner-wide">
       <div className="lg:hidden">
-        <AuthFrame className="gap-[22px]">
+        {/* 바탕은 사장님 홈과 같은 흰 기둥 (tone white) */}
+        <AuthFrame tone="white" className="gap-[22px]">
           <section
             className="flex min-h-[360px] flex-1 flex-col justify-between rounded-[32px] bg-cover bg-center texture p-6 text-white"
             style={{
@@ -109,7 +110,7 @@ export function StoreCreateDone({
       </div>
 
       {/* 데스크톱 */}
-      <div className="hidden min-h-[860px] bg-background lg:grid lg:min-h-dvh lg:grid-cols-[680px_1fr]">
+      <div className="hidden min-h-[860px] bg-white lg:grid lg:min-h-dvh lg:grid-cols-[680px_1fr]">
         <section
           className="relative overflow-hidden"
           style={
