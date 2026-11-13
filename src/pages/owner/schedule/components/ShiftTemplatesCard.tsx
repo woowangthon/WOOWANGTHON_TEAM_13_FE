@@ -37,7 +37,7 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
       ) : query.error ? (
         <LoadError error={query.error} onRetry={() => query.refetch()} />
       ) : (
-        <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 shadow-soft">
+        <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 border border-line/60">
           {templates.length === 0 ? (
             <span className="py-3.5 text-[13px] text-muted-foreground">
               아직 근무 타임이 없어요. [수정]으로 만들어 주세요

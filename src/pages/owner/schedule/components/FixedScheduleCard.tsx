@@ -136,7 +136,7 @@ export function FixedScheduleCard({
       ) : query?.error ? (
         <LoadError error={query.error} onRetry={() => query.refetch()} />
       ) : (
-        <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 shadow-soft">
+        <div className="flex flex-col rounded-[22px] bg-card px-[18px] py-1 border border-line/60">
           {workers.map((w, i) => {
             const shifts = shiftsOf(w.userId)
             return row(

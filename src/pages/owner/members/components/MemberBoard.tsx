@@ -124,7 +124,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
 export function InvitePanel({ onDone }: { onDone?: (member: Member) => void }) {
   const [round, setRound] = useState(0)
   return (
-    <section className="flex flex-col gap-4 rounded-[28px] bg-card p-6 shadow-soft">
+    <section className="flex flex-col gap-4 rounded-[28px] bg-card p-6 border border-line/60">
       <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
       <InviteForm
         key={round}

@@ -150,7 +150,7 @@ export default function OwnerPayrollPage() {
                 key={m.memberId}
                 type="button"
                 onClick={() => setOpenId(m.memberId)}
-                className="grid grid-cols-[2fr_1.6fr_1.2fr_1.2fr] items-center gap-3 rounded-[18px] bg-white px-4 py-3 text-left shadow-soft transition-shadow hover:shadow-float"
+                className="grid grid-cols-[2fr_1.6fr_1.2fr_1.2fr] items-center gap-3 rounded-[18px] bg-white px-4 py-3 text-left border border-line/60 transition-colors hover:border-line"
               >
                 <span className="flex min-w-0 items-center gap-3">
                   <PersonAvatar name={m.name} index={i} size={38} />
@@ -181,7 +181,7 @@ export default function OwnerPayrollPage() {
                 <button
                   type="button"
                   onClick={() => setOpenId(m.memberId)}
-                  className="flex w-full items-center gap-3 rounded-[22px] bg-card px-4 py-3.5 text-left shadow-soft"
+                  className="flex w-full items-center gap-3 rounded-[22px] bg-card px-4 py-3.5 text-left border border-line/60"
                 >
                   <PersonAvatar name={m.name} index={i} />
                   <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
@@ -224,7 +224,7 @@ export default function OwnerPayrollPage() {
 /** 데스크톱 요약 카드 (공제 합계 · 지급일) */
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="hidden flex-col gap-2 rounded-[24px] bg-card p-5 shadow-soft lg:flex">
+    <div className="hidden flex-col gap-2 rounded-[24px] bg-card p-5 border border-line/60 lg:flex">
       <span className="text-[13px] text-muted-foreground">{label}</span>
       <span className="text-[26px] font-extrabold tracking-[-0.03em] tabular-nums">{value}</span>
       <span className="mt-auto text-[13px] text-muted-foreground">{sub}</span>

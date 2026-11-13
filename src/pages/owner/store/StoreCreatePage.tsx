@@ -222,7 +222,7 @@ export default function StoreCreatePage() {
         <div className="flex flex-col gap-2.5 lg:gap-3.5">
           {/* 데스크톱: 매장 이름 · 사업자등록번호 한 줄 두 칸 */}
           <div className="grid gap-2.5 lg:grid-cols-2 lg:gap-3.5">
-            <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
+            <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60 lg:px-[22px] lg:py-4">
               <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
               <input
                 value={name}
@@ -242,7 +242,7 @@ export default function StoreCreatePage() {
             detail={addressDetail}
             onDetailChange={setAddressDetail}
           />
-          <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
+          <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60 lg:px-[22px] lg:py-4">
             <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
             <div
               className="mt-0.5 grid grid-cols-2 gap-1.5"

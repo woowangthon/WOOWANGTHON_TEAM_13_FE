@@ -112,7 +112,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex h-14 items-center gap-2.5 rounded-[20px] bg-card pr-2 pl-[18px] shadow-soft">
+      <div className="flex h-14 items-center gap-2.5 rounded-[20px] bg-card pr-2 pl-[18px] border border-line/60">
         <Search className="size-5 shrink-0 text-subtle" />
         <input
           value={search}

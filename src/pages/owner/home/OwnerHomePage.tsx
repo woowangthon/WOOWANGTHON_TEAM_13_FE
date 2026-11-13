@@ -288,7 +288,7 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
   const length = 2 * Math.PI * r
 
   return (
-    <section className="hidden flex-col gap-4 rounded-[26px] bg-card p-5 shadow-soft lg:flex">
+    <section className="hidden flex-col gap-4 rounded-[26px] bg-card p-5 border border-line/60 lg:flex">
       <div className="flex items-center justify-between gap-2">
         <h2 className="m-0 text-[16px] font-extrabold">{today.getMonth() + 1}월 인건비</h2>
         <Link to="/owner/payroll" className="text-[13px] font-medium text-muted-foreground">
@@ -392,7 +392,7 @@ function TodayShifts({ storeId, today }: { storeId: string; today: Date }) {
   const onDuty = new Set((useOnDuty(storeId).data?.people ?? []).map((p) => p.userId))
 
   return (
-    <section className="hidden flex-col gap-3 rounded-[26px] bg-card p-5 shadow-soft lg:flex">
+    <section className="hidden flex-col gap-3 rounded-[26px] bg-card p-5 border border-line/60 lg:flex">
       <div className="flex items-center justify-between gap-2">
         <h2 className="m-0 text-[16px] font-extrabold">오늘 근무</h2>
         <Link to="/owner/schedule" className="text-[13px] font-medium text-muted-foreground">

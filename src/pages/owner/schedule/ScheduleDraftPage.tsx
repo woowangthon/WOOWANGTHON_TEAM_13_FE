@@ -35,7 +35,7 @@ export default function ScheduleDraftPage() {
         type="button"
         onClick={() => setSettingsOpen((open) => !open)}
         aria-expanded={settingsOpen}
-        className="flex items-center gap-3 rounded-[22px] bg-card px-[18px] py-4 text-left shadow-soft transition-transform active:scale-[0.99]"
+        className="flex items-center gap-3 rounded-[22px] bg-card px-[18px] py-4 text-left border border-line/60 transition-transform active:scale-[0.99]"
       >
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[15px] font-extrabold">근무 설정</span>

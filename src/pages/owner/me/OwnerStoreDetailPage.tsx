@@ -164,7 +164,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
             return (
               <div
                 key={m.memberId}
-                className="flex items-center gap-3 rounded-[22px] bg-card px-3 py-2.5 shadow-soft"
+                className="flex items-center gap-3 rounded-[22px] bg-card px-3 py-2.5 border border-line/60"
               >
                 <span
                   className="flex size-[42px] shrink-0 items-center justify-center rounded-full text-base font-extrabold"

@@ -300,7 +300,7 @@ function MembersPicture() {
       {MEMBERS.map((m, i) => (
         <div
           key={m.name}
-          className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft"
+          className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 border border-line/60"
         >
           <PersonAvatar
             name={m.name}
@@ -401,7 +401,7 @@ function WorkPicture() {
           수락
         </Button>
       </div>
-      <section className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2.5 shadow-soft">
+      <section className="flex flex-col gap-2 rounded-[24px] bg-card px-2 pt-3 pb-2.5 border border-line/60">
         <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-muted-foreground">
           {['일', '월', '화', '수', '목', '금', '토'].map((w) => (
             <span key={w}>{w}</span>
@@ -441,7 +441,7 @@ function WorkPicture() {
         </div>
       </section>
       {/* 직원별 급여 (OwnerPayrollPage 줄: 공제 종류 · 실수령) */}
-      <div className="flex flex-col rounded-[20px] bg-card px-4 py-1.5 shadow-soft">
+      <div className="flex flex-col rounded-[20px] bg-card px-4 py-1.5 border border-line/60">
         {PAY.map((p, i) => (
           <div
             key={p.name}
