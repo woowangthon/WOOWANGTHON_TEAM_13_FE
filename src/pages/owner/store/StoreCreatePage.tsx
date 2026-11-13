@@ -349,7 +349,6 @@ export default function StoreCreatePage() {
       step={4}
       title="매장 사진"
       onBack={() => setDone(true)}
-      status="사진은 나중에 올려도 돼요"
       actions={
         cropping ? null : photo ? (
           <Button
