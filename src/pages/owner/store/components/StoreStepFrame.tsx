@@ -39,6 +39,7 @@ export function StoreStepFrame({
   subheading = '4단계, 약 3분이면 끝나요',
   steps = STORE_STEPS,
   who = '사장님',
+  narrow = false,
   children,
 }: {
   /** 지금 단계 1~4 */
@@ -64,9 +65,22 @@ export function StoreStepFrame({
   steps?: OnboardingStep[]
   /** 제목 위 캡션 "사장님 · 1 / 4" 의 앞 글자 */
   who?: string
+  /**
+   * 데스크톱에서 입력이 하나뿐인 화면(알바생 초대코드): 오른쪽을 460px 한 기둥으로 가운데에 모으고
+   * 버튼은 아래 바 대신 폼 바로 아래 기둥 폭 가득 (휴대폰은 같다)
+   */
+  narrow?: boolean
   children: ReactNode
 }) {
   const provider = useAuthStore((state) => state.me?.provider)
+  const titleBlock = (
+    <div className="flex flex-col gap-2 px-1 pt-1.5">
+      <span className="text-[13px] font-medium text-muted-foreground">
+        {who} · {step} / {steps.length}
+      </span>
+      <h1 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">{title}</h1>
+    </div>
+  )
   return (
     // .owner-wide: 사장님 화면 색 팔레트 (index.css)
     <div className="owner-wide">
@@ -159,27 +173,33 @@ export function StoreStepFrame({
             )}
           </div>
 
-          <div className="flex flex-col gap-[22px] lg:my-auto lg:w-full lg:max-w-[680px] lg:self-center lg:py-8">
-            <div className="flex flex-col gap-2 px-1 pt-1.5">
-              <span className="text-[13px] font-medium text-muted-foreground">
-                {who} · {step} / {steps.length}
-              </span>
-              <h1 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
-                {title}
-              </h1>
+          {narrow ? (
+            // 한 기둥: 제목 → 폼 → 버튼을 가운데 460px 에 이어서
+            <div className="flex flex-1 flex-col gap-[22px] lg:my-auto lg:w-full lg:max-w-[460px] lg:flex-none lg:self-center lg:py-8">
+              {titleBlock}
+              {children}
+              {actions && <div className="mt-auto lg:mt-2">{actions}</div>}
             </div>
-            {children}
-          </div>
-
-          {actions && (
-            <div className="mt-auto lg:mt-0 lg:flex lg:w-full lg:max-w-[680px] lg:items-center lg:justify-between lg:gap-6 lg:self-center lg:pt-2">
-              {status && (
-                <span className="hidden text-[13px] text-muted-foreground lg:block">{status}</span>
-              )}
-              <div className={cn('lg:ml-auto', actionsWide ? 'lg:w-[400px]' : 'lg:w-[260px]')}>
-                {actions}
+          ) : (
+            <>
+              <div className="flex flex-col gap-[22px] lg:my-auto lg:w-full lg:max-w-[680px] lg:self-center lg:py-8">
+                {titleBlock}
+                {children}
               </div>
-            </div>
+
+              {actions && (
+                <div className="mt-auto lg:mt-0 lg:flex lg:w-full lg:max-w-[680px] lg:items-center lg:justify-between lg:gap-6 lg:self-center lg:pt-2">
+                  {status && (
+                    <span className="hidden text-[13px] text-muted-foreground lg:block">
+                      {status}
+                    </span>
+                  )}
+                  <div className={cn('lg:ml-auto', actionsWide ? 'lg:w-[400px]' : 'lg:w-[260px]')}>
+                    {actions}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

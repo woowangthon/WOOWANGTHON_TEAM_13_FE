@@ -219,6 +219,7 @@ export default function JoinPage() {
         heading="근무지 입장"
         subheading="초대코드만 있으면 바로 끝나요"
         steps={JOIN_STEPS}
+        narrow
         who="알바생"
         step={invite ? 2 : 1}
         title={invite ? '매장 확인' : '초대코드 입력'}
@@ -236,8 +237,7 @@ export default function JoinPage() {
             submit()
           }}
         >
-          {/* 초대코드 칸은 휴대폰과 비슷한 폭으로 (폼 680px 에 맞추면 칸이 너무 커진다) */}
-          <div className="max-w-[460px]">{codeBlock}</div>
+          {codeBlock}
           {preview}
         </form>
       </StoreStepFrame>
