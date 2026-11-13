@@ -62,7 +62,7 @@ export function BizVerifyForm({
     )
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+    <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
       <span className="text-xs font-bold text-muted-foreground">사업자등록번호</span>
       <div className="flex items-center gap-2">
         <input
@@ -71,7 +71,7 @@ export function BizVerifyForm({
           onChange={(event) => change(event.target.value)}
           placeholder="000-00-00000"
           aria-label="사업자등록번호"
-          className="min-w-0 flex-1 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint"
+          className="min-w-0 flex-1 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint lg:text-[19px]"
         />
         {verified ? (
           <span className="flex shrink-0 items-center gap-1 text-[15px] font-bold text-brand">
@@ -96,12 +96,17 @@ export function BizVerifyForm({
         <span role="alert" className="text-[13px] text-destructive-foreground">
           {error}
         </span>
+      ) : verified ? (
+        // 데스크톱: 확인이 끝났다는 걸 글자로도 (휴대폰은 오른쪽 ✓ 확인만)
+        <span className="hidden items-center gap-1 text-[13px] font-bold text-brand lg:flex">
+          <Check className="size-4" aria-hidden="true" />
+          영업 중인 사업자예요
+        </span>
       ) : (
-        !verified && (
-          <span className="text-xs text-muted-foreground">
-            국세청에서 영업 중인 사업자인지 확인해요
-          </span>
-        )
+        // 데스크톱은 두 칸 아래 한 줄로 따로 보여 줘서(StoreCreatePage) 카드 안에선 숨긴다
+        <span className="text-xs text-muted-foreground lg:hidden">
+          국세청에서 영업 중인 사업자인지 확인해요
+        </span>
       )}
     </div>
   )

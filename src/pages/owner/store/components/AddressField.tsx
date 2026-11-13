@@ -64,7 +64,7 @@ export function AddressField({
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+    <div className="flex flex-col gap-2.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
       <span className="text-xs font-bold text-muted-foreground">매장 주소</span>
       <button
         type="button"
@@ -74,13 +74,15 @@ export function AddressField({
         {address ? (
           <>
             <MapPin className="size-[18px] shrink-0 text-brand" />
-            <span className="min-w-0 flex-1 text-[16px] font-bold break-keep">{address}</span>
+            <span className="min-w-0 flex-1 text-[16px] font-bold break-keep lg:text-[19px]">
+              {address}
+            </span>
             <span className="shrink-0 text-xs font-medium text-muted-foreground">바꾸기</span>
           </>
         ) : (
           <>
             <Search className="size-[18px] shrink-0 text-faint" />
-            <span className="text-[16px] font-bold text-faint">주소 검색</span>
+            <span className="text-[16px] font-bold text-faint lg:text-[19px]">주소 검색</span>
           </>
         )}
       </button>
