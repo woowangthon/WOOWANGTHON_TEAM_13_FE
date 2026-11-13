@@ -64,15 +64,14 @@ export default function LoginPage() {
           className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(40,44,28,0.25)_0%,rgba(40,44,28,0.1)_35%,rgba(40,44,28,0.88)_88%)]"
         />
         <div className="flex flex-col gap-2">
-          {/* 슬로건은 글자 그대로. 줄바꿈은 보기용(가장 긴 줄 276px, 360px 카드 안 280px 에 들어감),
+          {/* 슬로건은 글자 그대로 두 줄 (11/14 나현 · 민지 OK, 26px 화면 제목 단계). 줄바꿈은 보기용,
               화면 읽기는 aria-label 로 한 문장 */}
           <h1
             aria-label="혼자 막막했던 근무를 함께하는 크루로, crewBean"
-            className="m-0 text-[34px] leading-[1.22] font-extrabold tracking-[-0.035em]"
+            className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em] break-keep"
           >
             혼자 막막했던 근무를 <br />
-            함께하는 크루로, <br />
-            crewBean
+            함께하는 크루로, crewBean
           </h1>
           <p className="m-0 text-[15px] font-medium text-white/85">
             레시피 · 매뉴얼 · 인수인계 · 근무
