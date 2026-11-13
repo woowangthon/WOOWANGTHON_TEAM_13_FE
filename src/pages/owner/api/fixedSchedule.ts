@@ -65,6 +65,7 @@ function useRefreshSchedule(storeId: string) {
       queryClient.invalidateQueries({ queryKey: fixedKeys.fixed(storeId) }),
       queryClient.invalidateQueries({ queryKey: fixedKeys.received(storeId) }),
       queryClient.invalidateQueries({ queryKey: ['stores', storeId, 'schedule-calendar'] }),
+      queryClient.invalidateQueries({ queryKey: ['stores', storeId, 'schedules', 'me'] }),
       queryClient.invalidateQueries({ queryKey: ['owner', 'stores', storeId, 'payroll'] }),
       // 상단 종 알림의 대타 요청도 빠지게
       queryClient.invalidateQueries({ queryKey: ['owner', 'notifications'] }),
