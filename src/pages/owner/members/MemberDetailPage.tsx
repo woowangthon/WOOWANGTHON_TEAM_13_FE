@@ -159,7 +159,7 @@ function MemberSheet({
 
         {askRemove ? (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-            <span className="text-sm text-[#7E352C]">
+            <span className="text-sm text-destructive-foreground">
               {active
                 ? '접근이 바로 차단돼요. 기록은 남아요.'
                 : '이 코드로는 더 이상 입장할 수 없어요.'}

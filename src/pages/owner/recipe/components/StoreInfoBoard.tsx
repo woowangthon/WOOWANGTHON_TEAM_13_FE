@@ -246,7 +246,7 @@ function DashedCard({
   return (
     <Link
       to={to}
-      className="flex min-h-[170px] flex-col gap-[9px] rounded-[26px] border-[1.5px] border-dashed border-line p-4 text-[#6B7068]"
+      className="flex min-h-[170px] flex-col gap-[9px] rounded-[26px] border-[1.5px] border-dashed border-line p-4 text-muted-foreground"
     >
       <span className="flex size-10 items-center justify-center rounded-full border-[1.5px] border-dashed border-line">
         {icon}

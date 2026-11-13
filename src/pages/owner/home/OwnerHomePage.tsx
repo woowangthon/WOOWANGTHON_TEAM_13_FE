@@ -89,7 +89,7 @@ function OwnerHome() {
         <section className="order-5 flex flex-col gap-3.5 lg:order-none">
           <div className="flex items-baseline justify-between gap-2.5 px-1">
             <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">확인 필요</h2>
-            <span className="text-[13px] font-semibold whitespace-nowrap text-[#4F554D]">
+            <span className="text-[13px] font-semibold whitespace-nowrap text-muted-foreground">
               {list.length}건
             </span>
           </div>
@@ -109,7 +109,7 @@ function OwnerHome() {
                   <Check className="size-[22px]" />
                 </span>
                 <span className="mt-1.5 text-lg font-extrabold">모두 답했어요</span>
-                <span className="text-sm text-[#6B7068]">답변은 매뉴얼에 반영돼요</span>
+                <span className="text-sm text-muted-foreground">답변은 매뉴얼에 반영돼요</span>
               </div>
             )}
             <div className="flex flex-[0_0_74%] lg:hidden">
@@ -165,7 +165,7 @@ function OnDutyCard({ store }: { store: OwnerStoreView }) {
           >
             <span className="flex size-7 items-center justify-center rounded-full bg-white">
               <span
-                className={cn('size-2.5 rounded-full', people.length ? 'bg-[#6FA97B]' : 'bg-faint')}
+                className={cn('size-2.5 rounded-full', people.length ? 'bg-[#ADC178]' : 'bg-faint')}
               />
             </span>
             {people.length ? `지금 근무 중 ${people.length}명` : '근무 중인 직원 없음'}
@@ -243,7 +243,7 @@ function PayrollCard({ storeId, today }: { storeId: string; today: Date }) {
         <Wallet className="size-[22px]" />
       </span>
       <span className="mt-1.5 text-lg font-extrabold">{today.getMonth() + 1}월 인건비</span>
-      <span className="text-[13px] text-[#4F6A5A]">
+      <span className="text-[13px] text-muted-foreground">
         주휴수당 포함 · {formatDate(today)}까지 · 참고용
       </span>
       <span className="mt-auto flex w-full items-end justify-between gap-2.5">

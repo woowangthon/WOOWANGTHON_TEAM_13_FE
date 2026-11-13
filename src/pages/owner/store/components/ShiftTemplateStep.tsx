@@ -113,7 +113,7 @@ export function ShiftTemplateStep({
         <button
           type="button"
           onClick={addRow}
-          className="flex h-12 items-center justify-center gap-1 rounded-[20px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-[#6B7068]"
+          className="flex h-12 items-center justify-center gap-1 rounded-[20px] border-[1.5px] border-dashed border-line text-[13px] font-bold text-muted-foreground"
         >
           <Plus className="size-4" />
           타임 추가

@@ -46,7 +46,7 @@ export function ShiftTemplatesCard({ storeId }: { storeId: string }) {
             templates.map((t) => (
               <div
                 key={t.templateId}
-                className="flex items-center justify-between gap-2 border-b border-[#F0EBE2] py-3 last:border-b-0"
+                className="flex items-center justify-between gap-2 border-b border-border py-3 last:border-b-0"
               >
                 <span className="flex items-center gap-2 text-[15px] font-bold">
                   <Clock className="size-4 text-subtle" />
@@ -108,7 +108,7 @@ function EditSheet({
         <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">근무 타임</h2>
         <ShiftTemplateStep rows={rows} onRowsChange={setRows} error={error} />
         {removed.length > 0 && (
-          <span className="rounded-[18px] bg-destructive-soft px-4 py-3 text-[13px] text-[#7E352C]">
+          <span className="rounded-[18px] bg-destructive-soft px-4 py-3 text-[13px] text-destructive-foreground">
             {removed.map((t) => t.name).join(' · ')} 타임을 빼면 그 타임 고정 근무도 같이 빠져요
           </span>
         )}

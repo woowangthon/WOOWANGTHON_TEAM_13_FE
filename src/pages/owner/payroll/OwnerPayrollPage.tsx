@@ -240,20 +240,20 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
           </span>
         </div>
         <dl className="m-0 flex flex-col rounded-[22px] bg-white px-[18px] py-1">
-          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
-            <dt className="text-[#6B7068]">기본급 · {pay.hours}시간</dt>
+          <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
+            <dt className="text-muted-foreground">기본급 · {pay.hours}시간</dt>
             <dd className="m-0 font-bold">{formatWon(pay.basePay)}</dd>
           </div>
-          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
-            <dt className="text-[#6B7068]">주휴수당</dt>
+          <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
+            <dt className="text-muted-foreground">주휴수당</dt>
             <dd className="m-0 font-bold">+ {formatWon(pay.weeklyAllowance)}</dd>
           </div>
-          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
-            <dt className="text-[#6B7068]">세전 합계</dt>
+          <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
+            <dt className="text-muted-foreground">세전 합계</dt>
             <dd className="m-0 font-bold">{formatWon(pay.total)}</dd>
           </div>
-          <div className="flex justify-between border-b border-[#F0EBE2] py-[13px] text-[15px]">
-            <dt className="text-[#6B7068]">공제 · {TAX_LABEL[pay.taxType]}</dt>
+          <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
+            <dt className="text-muted-foreground">공제 · {TAX_LABEL[pay.taxType]}</dt>
             <dd className="m-0 font-bold">- {formatWon(pay.deduction)}</dd>
           </div>
           <div className="flex justify-between py-[13px] text-[15px]">
@@ -279,7 +279,7 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
               <span>
                 {formatDate(fromDateKey(w.weekStart))} 주 · {w.hours}시간
               </span>
-              <span className={cn('font-bold', w.eligible ? 'text-brand' : 'text-[#9AA19C]')}>
+              <span className={cn('font-bold', w.eligible ? 'text-brand' : 'text-faint')}>
                 {w.eligible ? '주휴 포함' : '15시간 미만'}
               </span>
             </div>

@@ -66,7 +66,7 @@ export function StorePhotoStep({
       <span className="px-1 text-[13px] text-muted-foreground">
         매장 사진은 홈 매장 카드에 보여요. 나중에 넣어도 돼요
       </span>
-      <div className="relative flex aspect-video w-full flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[26px] border-[1.5px] border-dashed border-line bg-card text-[#6B7068]">
+      <div className="relative flex aspect-video w-full flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[26px] border-[1.5px] border-dashed border-line bg-card text-muted-foreground">
         {url ? (
           <img src={url} alt="매장 사진" className="absolute inset-0 size-full object-cover" />
         ) : (

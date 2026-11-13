@@ -69,7 +69,7 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
           {live ? '오늘의 인수인계' : `${formatDate(date)} 인수인계`}
         </h2>
         {items.length > 0 && (
-          <span className="text-[13px] font-semibold whitespace-nowrap text-[#4F554D]">
+          <span className="text-[13px] font-semibold whitespace-nowrap text-muted-foreground">
             {done} / {items.length}
           </span>
         )}
@@ -193,11 +193,11 @@ function SummaryCard({ from, summary }: { from: string; summary: string }) {
           <Sparkles className="size-[17px]" fill="currentColor" />
           AI 요약
         </span>
-        <span className="shrink-0 text-xs font-semibold whitespace-nowrap text-[#4F6A5A]">
+        <span className="shrink-0 text-xs font-semibold whitespace-nowrap text-muted-foreground">
           {from}
         </span>
       </div>
-      <p className="m-0 text-[15px] leading-[1.55] font-semibold whitespace-pre-line break-keep text-[#22362B]">
+      <p className="m-0 text-[15px] leading-[1.55] font-semibold whitespace-pre-line break-keep text-foreground">
         {summary}
       </p>
     </div>

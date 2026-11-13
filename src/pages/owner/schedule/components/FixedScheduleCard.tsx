@@ -98,7 +98,7 @@ export function FixedScheduleCard({
     <div
       key={key}
       // group: 마우스를 올린 줄에서만 연필이 보인다 (아래 버튼)
-      className="group flex items-center gap-3 border-b border-[#F0EBE2] py-3 last:border-b-0"
+      className="group flex items-center gap-3 border-b border-border py-3 last:border-b-0"
     >
       <span
         className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
@@ -155,7 +155,7 @@ export function FixedScheduleCard({
               m.memberId,
               m.name,
               `${m.name} (입장 전)`,
-              ['#EFEBE4', '#8A8F86'],
+              ['var(--muted)', 'var(--faint)'],
               shifts,
               () => setEditing({ kind: 'invited', name: m.name, member: m, shifts }),
             )

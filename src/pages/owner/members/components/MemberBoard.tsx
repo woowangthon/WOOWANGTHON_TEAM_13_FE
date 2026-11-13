@@ -92,7 +92,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                       name={member.name}
                       index={i}
                       size={panel ? 46 : 48}
-                      dot={active ? '#6FA97B' : '#D9B26A'}
+                      dot={active ? '#ADC178' : '#AB7743'}
                     />
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       <span className="text-base font-bold">{member.name}</span>
@@ -103,7 +103,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
                     <Badge
                       size="md"
                       variant={active ? 'soft' : 'warm'}
-                      className={active ? '' : 'bg-[#FBF1E4] text-[#A86A26]'}
+                      className={active ? '' : 'bg-warm text-warm-foreground'}
                     >
                       {active ? '사용 중' : '초대됨'}
                     </Badge>
