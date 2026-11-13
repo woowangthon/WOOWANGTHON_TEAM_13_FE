@@ -39,13 +39,13 @@ export default function LoginPage() {
 
   return (
     <AuthFrame tone="white" className="gap-6">
-      {/* 글자 로고 (public/logo-crewbean.png, 사장님 화면과 같은 그림) · 첫 화면이라 높이 36px */}
+      {/* 글자 로고 (public/logo-crewbean.png, 사장님 화면과 같은 그림) · 첫 화면이라 높이 36px. 데스크톱은 왼쪽 패널에 로고가 있어서 숨김 */}
       <img
         src="/logo-crewbean.png"
         alt="crewBean"
         width={528}
         height={120}
-        className="mt-1 h-9 w-auto self-start"
+        className="mt-1 h-9 w-auto self-start lg:hidden"
       />
 
       <section className="relative isolate flex min-h-[380px] flex-1 flex-col justify-end overflow-hidden rounded-3xl p-6 text-white">
