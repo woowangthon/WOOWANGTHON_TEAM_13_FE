@@ -3,6 +3,7 @@ import {
   answerOwnerQuestion,
   dismissNotification,
   draftManualFromAnswer,
+  getAssistantStats,
   getNotifications,
   getOnDuty,
   getHandoverNotices,
@@ -19,6 +20,7 @@ import { fetchOwnerReceived } from '@/pages/owner/api/fixedSchedule'
 import { fetchStores, ownerKeys } from '@/pages/owner/api/stores'
 import { questionSentence } from '@/pages/owner/components/questionText'
 import type {
+  AssistantStats,
   ManualDraft,
   OnDuty,
   OwnerAnswer,
@@ -278,5 +280,29 @@ export function useHandoverDaySummary(storeId: string, date: string, noteKey: st
     enabled: !!storeId && !!noteKey && isRealApi('handover'),
     retry: false,
     staleTime: 5 * 60_000,
+  })
+}
+
+/** 매주 월요일 (YYYY-MM-DD, 한국 시간 기준 오늘이 속한 주) */
+function weekStartOf(today: Date) {
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  return toDateKey(monday)
+}
+
+/**
+ * AI 사수 답변율 (데스크톱 홈 오른쪽 칸). 진짜 API 는 BE 제안 단계(docs/07): GET /stores/{storeId}/assistant-stats?week=
+ * 질문 · 답변 기록이라 assistantChat 스위치를 따른다. 실패하면(아직 없는 API 등) 화면이 인건비 카드로 바꿔 보여 준다
+ */
+export function useAssistantStats(storeId: string) {
+  const week = weekStartOf(todayInKst())
+  return useQuery({
+    queryKey: ['owner', 'stores', storeId, 'assistant-stats', week] as const,
+    queryFn: (): Promise<AssistantStats> =>
+      isRealApi('assistantChat')
+        ? http.get(`/stores/${storeId}/assistant-stats?week=${week}`)
+        : getAssistantStats(storeId),
+    enabled: !!storeId,
+    retry: false,
   })
 }

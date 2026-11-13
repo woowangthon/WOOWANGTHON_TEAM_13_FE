@@ -7,7 +7,7 @@ import { IconButton } from '@/ui/IconButton'
 import { Toaster } from '@/ui/Toast'
 import { cn } from '@/ui/utils'
 
-// 매장 등록 단계 화면 틀 (11/14 나현). 휴대폰 · 태블릿은 예전 그대로(가운데 460px 기둥 + 위쪽 뒤로 · 점 + "사장님 · 2 / 4"),
+// 매장 등록 단계 화면 틀 (11/14 나현). 바탕은 사장님 홈(OwnerFrame)과 같게: 가운데 기둥 · 데스크톱 오른쪽 흰색, 바깥 canvas. 휴대폰 · 태블릿은 예전 그대로(가운데 460px 기둥 + 위쪽 뒤로 · 점 + "사장님 · 2 / 4"),
 // 데스크톱(lg 1024px 이상)은 두 칸: 왼쪽 420px 패널(로고 · 제목 · 세로 타임라인) + 오른쪽(뒤로 · 계정 · 가운데 폼 · 아래 액션 바).
 // 같은 children 한 벌을 CSS 로만 나눠서(.lg:) 창 크기를 바꿔도 입력한 값이 그대로다. 진행 표시는 데스크톱에서 왼쪽 타임라인 하나로.
 // 민지 부품은 OnboardingHeader · ProviderLogo 를 import 만 한다 (AuthFrame 은 쓰지 않고 같은 모양을 여기서 만든다)
@@ -53,7 +53,7 @@ export function StoreStepFrame({
   return (
     // .owner-wide: 사장님 화면 색 팔레트 (index.css)
     <div className="owner-wide">
-      <div className="min-h-dvh bg-canvas lg:grid lg:grid-cols-[420px_1fr] lg:bg-background">
+      <div className="min-h-dvh bg-canvas lg:grid lg:grid-cols-[420px_1fr] lg:bg-white">
         <aside className="sticky top-0 hidden h-dvh flex-col gap-9 bg-brand-soft p-11 lg:flex">
           <span className="flex items-center gap-2.5">
             <img src="/logo-bean.png" alt="" className="h-11 w-auto" />
@@ -124,7 +124,7 @@ export function StoreStepFrame({
           </div>
         </aside>
 
-        <main className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[22px] bg-background px-4 pt-3.5 pb-7 lg:mx-0 lg:max-w-none lg:gap-0 lg:px-14 lg:py-9">
+        <main className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-[22px] bg-white px-4 pt-3.5 pb-7 lg:mx-0 lg:max-w-none lg:gap-0 lg:px-14 lg:py-9">
           {/* 휴대폰: 뒤로 + 진행 점 + 로그인 방식 (민지 부품) */}
           <div className="lg:hidden">
             <OnboardingHeader step={1} onBack={onBack} />
