@@ -41,7 +41,7 @@ export default function OwnerMyPage() {
       <Header title="마이페이지" onBack={close} />
 
       {profile.data ? (
-        <ProfileName key={profile.data.name} name={profile.data.name} storeName={store.name} />
+        <ProfileName key={profile.data.name} name={profile.data.name} />
       ) : (
         <Spinner />
       )}
@@ -143,8 +143,8 @@ export default function OwnerMyPage() {
   )
 }
 
-/** 머리: 알바 마이페이지와 같은 모양 — 56px 이니셜 원 + 이름(눌러서 고치기, 칸을 벗어나면 저장) · 지금 매장 한 줄, 왼쪽 정렬 (11/14) */
-function ProfileName({ name, storeName }: { name: string; storeName: string }) {
+/** 머리: 알바 마이페이지와 같은 모양 — 56px 이니셜 원 + 이름(눌러서 고치기, 칸을 벗어나면 저장), 왼쪽 정렬 · 매장 이름은 없음 (11/14) */
+function ProfileName({ name }: { name: string }) {
   const [value, setValue] = useState(name)
   const update = useUpdateOwnerProfile()
   const save = () => {
@@ -158,7 +158,7 @@ function ProfileName({ name, storeName }: { name: string; storeName: string }) {
     })
   }
   return (
-    <section className="-mt-4 flex items-start gap-4 px-1">
+    <section className="-mt-4 flex items-center gap-4 px-1">
       <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand text-[26px] font-extrabold text-background">
         {(value || name).slice(0, 1)}
       </span>
@@ -187,7 +187,6 @@ function ProfileName({ name, storeName }: { name: string; storeName: string }) {
             className="size-4 shrink-0 text-subtle group-focus-within:text-brand"
           />
         </label>
-        <span className="truncate text-[13px] font-medium text-muted-foreground">{storeName}</span>
       </div>
     </section>
   )
