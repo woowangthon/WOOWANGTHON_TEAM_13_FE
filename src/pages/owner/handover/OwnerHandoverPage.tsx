@@ -28,7 +28,12 @@ export default function OwnerHandoverPage() {
       </div>
       <HomeHandover key={store.storeId} storeId={store.storeId} today={today} />
       {writing && (
-        <OwnerHandoverWriteSheet storeId={store.storeId} onClose={() => setWriting(false)} />
+        <OwnerHandoverWriteSheet
+          storeId={store.storeId}
+          storeName={store.name}
+          today={today}
+          onClose={() => setWriting(false)}
+        />
       )}
     </div>
   )
