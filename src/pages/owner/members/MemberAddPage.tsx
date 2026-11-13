@@ -20,7 +20,7 @@ export default function MemberAddPage() {
       <MemberBoard />
       <BottomSheet open onClose={close} label="알바생 초대" closeButton>
         <div className="flex flex-col gap-3.5">
-          <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
+          <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
           <InviteForm onDone={done} />
         </div>
       </BottomSheet>

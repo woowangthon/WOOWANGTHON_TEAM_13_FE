@@ -45,7 +45,7 @@ export function TaxTypeField({ member }: { member: Member }) {
               disabled={!joined || !ready || update.isPending}
               onClick={() => pick(o.value)}
               className={cn(
-                'h-[42px] rounded-[14px] text-sm font-bold whitespace-nowrap transition-transform enabled:active:scale-[0.97] disabled:cursor-not-allowed',
+                'h-[42px] rounded-[14px] text-[15px] font-bold whitespace-nowrap transition-transform enabled:active:scale-[0.97] disabled:cursor-not-allowed',
                 on ? 'bg-brand text-white' : 'bg-background text-foreground disabled:text-faint',
               )}
             >

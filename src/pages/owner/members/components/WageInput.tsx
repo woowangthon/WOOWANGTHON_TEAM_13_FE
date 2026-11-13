@@ -22,7 +22,7 @@ export function WageInput({
           low ? 'border-[#E7A39D]' : 'border-line',
         )}
       >
-        <span className="text-sm text-muted-foreground">시급</span>
+        <span className="text-[13px] text-muted-foreground">시급</span>
         <input
           inputMode="numeric"
           value={value ? Number(value).toLocaleString('ko-KR') : ''}
@@ -31,7 +31,7 @@ export function WageInput({
           aria-invalid={low}
           className="min-w-0 flex-1 border-none bg-transparent text-right text-base"
         />
-        <span className="text-sm text-muted-foreground">원</span>
+        <span className="text-[13px] text-muted-foreground">원</span>
       </label>
       {low && (
         <span role="alert" className="px-1 text-[13px] text-destructive-foreground">

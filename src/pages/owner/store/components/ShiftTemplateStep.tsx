@@ -58,7 +58,7 @@ export function ShiftTemplateStep({
                 placeholder="타임 이름 (예: 주말 오후)"
                 aria-label="타임 이름"
                 maxLength={50}
-                className="min-w-0 flex-1 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+                className="min-w-0 flex-1 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint"
               />
               <button
                 type="button"
@@ -71,7 +71,7 @@ export function ShiftTemplateStep({
               </button>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[15px] font-semibold">
+              <span className="flex items-center gap-1.5 text-[15px] font-medium">
                 <TimeField
                   value={row.start}
                   onChange={(start) => setRow(row.key, { start })}
@@ -94,7 +94,7 @@ export function ShiftTemplateStep({
                 >
                   <Minus className="size-4" />
                 </button>
-                <span className="w-9 text-center text-sm font-bold" aria-live="polite">
+                <span className="w-9 text-center text-[15px] font-bold" aria-live="polite">
                   {row.headcount}명
                 </span>
                 <button

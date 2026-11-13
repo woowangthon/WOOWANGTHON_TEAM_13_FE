@@ -222,7 +222,7 @@ export function WorkCalendar({
                       <span
                         className={cn(
                           'flex size-[22px] items-center justify-center self-center rounded-full text-xs tabular-nums',
-                          isToday ? 'bg-brand font-bold text-white' : 'font-semibold',
+                          isToday ? 'bg-brand font-bold text-white' : 'font-medium',
                           !isToday && (holiday || day.getDay() === 0) && 'text-[#C0574A]',
                         )}
                       >
@@ -317,10 +317,10 @@ export function WorkCalendar({
         {query.isPending || query.error ? null : (
           <>
             <div className="mt-1.5 flex items-center justify-between gap-2 px-1 lg:mt-0">
-              <h3 className="m-0 text-lg font-extrabold tracking-[-0.02em]">
+              <h3 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]">
                 {formatDate(selected)} 근무
                 {HOLIDAYS[selectedKey] && (
-                  <span className="ml-2 text-sm font-bold text-[#C0574A]">
+                  <span className="ml-2 text-[15px] font-bold text-[#C0574A]">
                     {HOLIDAYS[selectedKey]}
                   </span>
                 )}
@@ -335,7 +335,7 @@ export function WorkCalendar({
               </button>
             </div>
             {selectedShifts.length === 0 ? (
-              <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
+              <p className="m-0 rounded-[20px] bg-card px-4 py-4 text-[13px] text-muted-foreground">
                 {selectedClosed ? '매장이 쉬는 날이에요' : '이날은 근무가 없어요'}
               </p>
             ) : (

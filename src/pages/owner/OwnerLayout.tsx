@@ -92,7 +92,7 @@ export default function OwnerLayout() {
           <Link
             to="/owner/me"
             aria-label="마이페이지"
-            className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-background lg:size-[42px] lg:text-base"
+            className="flex size-9 items-center justify-center rounded-full bg-brand text-[15px] font-extrabold text-background lg:size-[42px] lg:text-base"
           >
             {initial}
           </Link>

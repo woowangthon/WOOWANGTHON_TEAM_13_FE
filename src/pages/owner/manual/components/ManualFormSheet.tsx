@@ -75,7 +75,7 @@ export function ManualFormSheet({
   return (
     <BottomSheet open onClose={onClose} label={editing ? '매뉴얼 수정' : '매뉴얼 작성'} closeButton>
       <div className="flex flex-col gap-3.5">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">
           {editing ? '매뉴얼 수정' : '매뉴얼 작성'}
         </h2>
         <Input
@@ -86,7 +86,7 @@ export function ManualFormSheet({
           }}
           placeholder={template ? '제목' : FREE_TITLE_HINT}
           aria-label="제목"
-          className="h-[54px] px-[18px] text-base font-semibold"
+          className="h-[54px] px-[18px] text-base font-medium"
         />
         <Textarea
           value={body}
@@ -108,7 +108,7 @@ export function ManualFormSheet({
         )}
         {askDelete && (
           <div className="flex flex-col gap-2.5 rounded-[18px] bg-destructive-soft p-3.5">
-            <span className="text-sm text-destructive-foreground">
+            <span className="text-[15px] text-destructive-foreground">
               알바생 화면과 AI 사수 답변에서도 사라져요.
             </span>
             <Button

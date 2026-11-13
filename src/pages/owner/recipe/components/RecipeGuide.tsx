@@ -192,12 +192,12 @@ export function RecipeGuide({
             <span className="text-[11px] font-bold tracking-[.08em] text-warm-foreground">
               {index + 1}/{steps.length} · {step.label}
             </span>
-            <h2 id={titleId} className="m-0 text-[17px] font-black text-brand">
+            <h2 id={titleId} className="m-0 text-[16px] font-extrabold text-brand">
               {step.title}
             </h2>
             <p
               id={bodyId}
-              className="m-0 text-[13.5px] leading-[1.5] text-pretty break-keep text-muted-foreground"
+              className="m-0 text-[13px] leading-[1.5] text-pretty break-keep text-muted-foreground"
             >
               {step.body}
             </p>
@@ -206,7 +206,7 @@ export function RecipeGuide({
                 <button
                   type="button"
                   onClick={close}
-                  className="px-1 py-2 text-[13px] font-semibold text-subtle"
+                  className="px-1 py-2 text-[13px] font-medium text-subtle"
                 >
                   건너뛰기
                 </button>
@@ -215,7 +215,7 @@ export function RecipeGuide({
                 ref={primaryRef}
                 type="button"
                 onClick={next}
-                className="rounded-full bg-brand px-5 py-[9px] text-sm font-bold text-white transition-transform active:scale-[0.97] motion-reduce:transition-none"
+                className="rounded-full bg-brand px-5 py-[9px] text-[15px] font-bold text-white transition-transform active:scale-[0.97] motion-reduce:transition-none"
               >
                 {isLast ? '시작하기' : '다음'}
               </button>

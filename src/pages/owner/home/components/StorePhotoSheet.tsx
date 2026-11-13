@@ -35,7 +35,7 @@ export function StorePhotoSheet({ storeId, onClose }: { storeId: string; onClose
   return (
     <BottomSheet open onClose={onClose} label="매장 사진 변경" closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">매장 사진 변경</h2>
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">매장 사진 변경</h2>
         <StorePhotoStep value={photo} onChange={setPhoto} onCroppingChange={setCropping} />
         {!cropping && (
           <Button className="h-[54px]" disabled={!photo || save.isPending} onClick={submit}>

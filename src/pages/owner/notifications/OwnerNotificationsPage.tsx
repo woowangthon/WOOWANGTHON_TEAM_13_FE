@@ -131,7 +131,7 @@ export default function OwnerNotificationsPage() {
                         <span aria-label="새 알림" className="size-2 rounded-full bg-destructive" />
                       )}
                     </span>
-                    <span className="text-sm leading-snug text-balance break-keep text-foreground">
+                    <span className="text-[15px] leading-snug text-balance break-keep text-foreground">
                       {n.sub}
                     </span>
                     {meta && <span className="text-xs text-muted-foreground">{meta}</span>}

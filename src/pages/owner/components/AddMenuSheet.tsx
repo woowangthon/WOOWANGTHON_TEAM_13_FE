@@ -24,7 +24,7 @@ export function AddMenuSheet({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <BottomSheet open={open} onClose={onClose} label="추가">
       <div className="flex flex-col gap-3.5">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">추가</h2>
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">추가</h2>
         <div className="grid grid-cols-2 gap-2.5">
           {ITEMS.map(({ to, label, icon: Icon, primary, wide }) => (
             <button

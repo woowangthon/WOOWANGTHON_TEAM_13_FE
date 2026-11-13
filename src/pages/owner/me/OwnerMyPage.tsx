@@ -68,7 +68,7 @@ export default function OwnerMyPage() {
         <Link
           to="/owner/store/new"
           state={{ from: '/owner/me' }}
-          className="flex h-[54px] items-center justify-center gap-1.5 rounded-full border-[1.5px] border-dashed border-line text-sm font-bold text-muted-foreground"
+          className="flex h-[54px] items-center justify-center gap-1.5 rounded-full border-[1.5px] border-dashed border-line text-[13px] font-bold text-muted-foreground"
         >
           <Plus className="size-[18px]" />
           매장 추가
@@ -120,7 +120,7 @@ export default function OwnerMyPage() {
           <button
             type="button"
             onClick={() => setAskWithdraw(true)}
-            className="p-2 text-sm font-semibold text-destructive-foreground"
+            className="p-2 text-[15px] font-medium text-destructive-foreground"
           >
             회원탈퇴
           </button>
@@ -156,7 +156,7 @@ function ProfileName({ name }: { name: string }) {
         <span className="inline-grid max-w-[calc(100%-2rem)]">
           <span
             aria-hidden="true"
-            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[28px] font-extrabold tracking-[-0.03em] whitespace-pre"
+            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[26px] font-extrabold tracking-[-0.03em] whitespace-pre"
           >
             {value || ' '}
           </span>
@@ -167,7 +167,7 @@ function ProfileName({ name }: { name: string }) {
             // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
             size={1}
             aria-label="이름"
-            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-center text-[28px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-center text-[26px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
           />
         </span>
         <Pencil

@@ -106,7 +106,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
         <span className="inline-grid min-w-0 max-w-full">
           <span
             aria-hidden="true"
-            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[28px] font-extrabold tracking-[-0.03em] whitespace-pre"
+            className="invisible col-start-1 row-start-1 overflow-hidden px-0.5 text-[26px] font-extrabold tracking-[-0.03em] whitespace-pre"
           >
             {name || ' '}
           </span>
@@ -116,7 +116,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
             // 기본 너비를 없애야 보이지 않는 글자 길이만큼만 넓어진다
             size={1}
             aria-label="매장 이름"
-            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-[28px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
+            className="col-start-1 row-start-1 w-full min-w-[2ch] border-none bg-transparent p-0 text-[26px] font-extrabold tracking-[-0.03em] underline decoration-line decoration-dotted decoration-2 underline-offset-[6px] focus:decoration-brand"
           />
         </span>
         <Pencil
@@ -152,7 +152,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
 
       <Section label="직원별 시급">
         {members.length === 0 ? (
-          <div className="rounded-[22px] bg-card p-5 text-center text-sm text-muted-foreground">
+          <div className="rounded-[22px] bg-card p-5 text-center text-[13px] text-muted-foreground">
             아직 직원이 없어요
           </div>
         ) : (
@@ -191,7 +191,7 @@ function DetailForm({ store, members }: { store: OwnerStoreView; members: Member
                     aria-invalid={isLow}
                     className="min-w-0 flex-1 border-none bg-transparent text-right text-base font-bold"
                   />
-                  <span className="text-sm text-muted-foreground">원</span>
+                  <span className="text-[13px] text-muted-foreground">원</span>
                 </label>
               </div>
             )

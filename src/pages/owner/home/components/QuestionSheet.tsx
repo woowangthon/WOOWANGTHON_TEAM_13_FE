@@ -76,7 +76,7 @@ export function QuestionSheet({
               </span>
             )}
           </div>
-          <h2 className="m-0 text-[22px] leading-[1.4] font-extrabold tracking-[-0.02em] break-keep">
+          <h2 className="m-0 text-[26px] leading-[1.4] font-extrabold tracking-[-0.02em] break-keep">
             {questionSentence(question.question)}
           </h2>
           <span className="text-[13px] text-muted-foreground">

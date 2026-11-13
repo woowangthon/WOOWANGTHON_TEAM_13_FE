@@ -65,11 +65,11 @@ export function HomeHandover({ storeId, today }: { storeId: string; today: Date 
     // id: 출근 전 배너 [인수인계 보기]가 여기로 내려온다
     <section id="today-handover" className="flex scroll-mt-20 flex-col gap-3.5">
       <div className="flex items-baseline justify-between gap-2.5 px-1">
-        <h2 className="m-0 text-xl font-extrabold tracking-[-0.02em]">
+        <h2 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]">
           {live ? '오늘의 인수인계' : `${formatDate(date)} 인수인계`}
         </h2>
         {items.length > 0 && (
-          <span className="text-[13px] font-semibold whitespace-nowrap text-muted-foreground">
+          <span className="text-[13px] font-medium whitespace-nowrap text-muted-foreground">
             {done} / {items.length}
           </span>
         )}
@@ -173,7 +173,7 @@ function WeekDay({
       )}
     >
       <span className="text-[11px] font-medium opacity-70">{WEEKDAYS[day.getDay()]}</span>
-      <span className="text-[17px] font-bold">{day.getDate()}</span>
+      <span className="text-[16px] font-bold">{day.getDate()}</span>
       <span
         className={cn(
           'size-[5px] rounded-full',
@@ -193,11 +193,11 @@ function SummaryCard({ from, summary }: { from: string; summary: string }) {
           <Sparkles className="size-[17px]" fill="currentColor" />
           AI 요약
         </span>
-        <span className="shrink-0 text-xs font-semibold whitespace-nowrap text-muted-foreground">
+        <span className="shrink-0 text-xs font-medium whitespace-nowrap text-muted-foreground">
           {from}
         </span>
       </div>
-      <p className="m-0 text-[15px] leading-[1.55] font-semibold whitespace-pre-line break-keep text-foreground">
+      <p className="m-0 text-[15px] leading-[1.55] font-medium whitespace-pre-line break-keep text-foreground">
         {summary}
       </p>
     </div>

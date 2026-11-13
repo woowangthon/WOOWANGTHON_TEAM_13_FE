@@ -35,7 +35,7 @@ export function StoreInfoBoard({ segment }: { segment: StoreInfoSegment }) {
       <div className="flex items-end justify-between gap-2.5 px-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>
-          <h1 className="m-0 flex items-center gap-1.5 text-[28px] font-extrabold tracking-[-0.03em]">
+          <h1 className="m-0 flex items-center gap-1.5 text-[26px] font-extrabold tracking-[-0.03em]">
             매장 정보
             {segment === 'recipe' && (
               <button
@@ -148,7 +148,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
             }}
           />
           <div className="flex items-center justify-between gap-2.5 px-1">
-            <h2 className="m-0 text-lg font-extrabold tracking-[-0.02em]">
+            <h2 className="m-0 text-[19px] font-extrabold tracking-[-0.02em]">
               {q ? `"${q}" ${shown.length}개` : `${category} ${shown.length}개`}
             </h2>
             <Link
@@ -251,7 +251,7 @@ function DashedCard({
       <span className="flex size-10 items-center justify-center rounded-full border-[1.5px] border-dashed border-line">
         {icon}
       </span>
-      <span className="text-[17px] font-extrabold">{title}</span>
+      <span className="text-[16px] font-extrabold">{title}</span>
       <span className="mt-auto text-xs text-faint">{caption}</span>
     </Link>
   )

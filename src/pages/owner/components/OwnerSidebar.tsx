@@ -102,7 +102,7 @@ export function OwnerSidebar() {
         <button
           type="button"
           onClick={logout}
-          className="flex h-11 items-center gap-3 rounded-[14px] px-3.5 text-left text-[15px] font-semibold text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+          className="flex h-11 items-center gap-3 rounded-[14px] px-3.5 text-left text-[15px] font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
         >
           <LogOut className="size-5" strokeWidth={1.9} />
           로그아웃
@@ -135,7 +135,7 @@ function SideLink({
           isActive || extra
             ? // 지금 화면: 본문과 같은 흰색으로 메뉴 오른쪽 끝(경계선)까지 이어진 탭 — 왼쪽만 둥글게 + 위 · 아래 안쪽 곡선
               '-mr-[21px] rounded-r-none bg-white font-extrabold text-brand'
-            : 'font-semibold text-muted-foreground hover:bg-background hover:text-foreground',
+            : 'font-medium text-muted-foreground hover:bg-background hover:text-foreground',
         )
       }
     >

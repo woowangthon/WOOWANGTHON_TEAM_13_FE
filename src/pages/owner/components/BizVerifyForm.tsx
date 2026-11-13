@@ -71,10 +71,10 @@ export function BizVerifyForm({
           onChange={(event) => change(event.target.value)}
           placeholder="000-00-00000"
           aria-label="사업자등록번호"
-          className="min-w-0 flex-1 border-none bg-transparent p-0 text-[17px] font-bold placeholder:text-faint"
+          className="min-w-0 flex-1 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint"
         />
         {verified ? (
-          <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-brand">
+          <span className="flex shrink-0 items-center gap-1 text-[15px] font-bold text-brand">
             <Check className="size-[18px]" />
             확인
           </span>
@@ -84,7 +84,7 @@ export function BizVerifyForm({
             disabled={!filled || verify.isPending}
             onClick={check}
             className={cn(
-              'h-9 shrink-0 rounded-full px-4 text-sm font-bold transition-transform enabled:active:scale-[0.97]',
+              'h-9 shrink-0 rounded-full px-4 text-[15px] font-bold transition-transform enabled:active:scale-[0.97]',
               filled ? 'bg-ink text-white' : 'bg-background text-faint',
             )}
           >

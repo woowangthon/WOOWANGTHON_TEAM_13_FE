@@ -27,7 +27,7 @@ export function MemberBoard({ panel, selectedId }: { panel?: ReactNode; selected
       <div className="flex items-end justify-between gap-2.5 px-1 lg:mb-1">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-muted-foreground">{store.name}</span>
-          <h1 className="m-0 text-[28px] font-extrabold tracking-[-0.03em]">
+          <h1 className="m-0 text-[26px] font-extrabold tracking-[-0.03em]">
             직원 {query.data ? members.length : ''}명
           </h1>
         </div>
@@ -125,7 +125,7 @@ export function InvitePanel({ onDone }: { onDone?: (member: Member) => void }) {
   const [round, setRound] = useState(0)
   return (
     <section className="flex flex-col gap-4 rounded-[28px] bg-card p-6 shadow-soft">
-      <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
+      <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">알바생 초대</h2>
       <InviteForm
         key={round}
         onDone={(member) => {

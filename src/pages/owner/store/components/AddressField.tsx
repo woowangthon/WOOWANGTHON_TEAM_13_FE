@@ -74,13 +74,13 @@ export function AddressField({
         {address ? (
           <>
             <MapPin className="size-[18px] shrink-0 text-brand" />
-            <span className="min-w-0 flex-1 text-[17px] font-bold break-keep">{address}</span>
-            <span className="shrink-0 text-xs font-semibold text-muted-foreground">바꾸기</span>
+            <span className="min-w-0 flex-1 text-[16px] font-bold break-keep">{address}</span>
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">바꾸기</span>
           </>
         ) : (
           <>
             <Search className="size-[18px] shrink-0 text-faint" />
-            <span className="text-[17px] font-bold text-faint">주소 검색</span>
+            <span className="text-[16px] font-bold text-faint">주소 검색</span>
           </>
         )}
       </button>
@@ -149,7 +149,7 @@ function PostcodeSheet({
   return (
     <BottomSheet open onClose={onClose} label="주소 검색" closeButton>
       <div className="flex flex-col gap-3">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">주소 검색</h2>
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">주소 검색</h2>
         <div className="relative h-[440px] overflow-hidden rounded-[18px] bg-white">
           {!ready && (
             <div className="absolute inset-0 flex items-center justify-center">

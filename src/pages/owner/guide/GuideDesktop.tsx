@@ -50,7 +50,7 @@ export function GuideDesktop({
               <button
                 type="button"
                 onClick={onDone}
-                className="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-background"
+                className="rounded-full px-3 py-2 text-[13px] font-medium text-muted-foreground hover:bg-background"
               >
                 건너뛰기
               </button>
@@ -71,7 +71,7 @@ export function GuideDesktop({
                       'flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left text-[15px] transition-colors',
                       on
                         ? 'font-extrabold text-foreground'
-                        : 'font-semibold text-subtle hover:text-foreground',
+                        : 'font-medium text-subtle hover:text-foreground',
                     )}
                   >
                     <span
@@ -97,7 +97,7 @@ export function GuideDesktop({
             aria-live="polite"
             className="flex flex-col gap-2.5 animate-in duration-300 ease-out fade-in-0 slide-in-from-bottom-2 motion-reduce:animate-none"
           >
-            <h2 className="m-0 text-[30px] leading-[1.3] font-extrabold tracking-[-0.03em] text-balance break-keep">
+            <h2 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em] text-balance break-keep">
               {slide.title}
             </h2>
             <p className="m-0 text-base leading-[1.6] text-balance break-keep text-muted-foreground">
@@ -106,7 +106,7 @@ export function GuideDesktop({
           </div>
 
           <div className="mt-auto flex items-center gap-3">
-            <span className="mr-auto text-sm font-semibold text-muted-foreground tabular-nums">
+            <span className="mr-auto text-[13px] font-medium text-muted-foreground tabular-nums">
               {index + 1} / {slides.length}
             </span>
             {index > 0 && (

@@ -162,7 +162,7 @@ export function ScanSheet({
   return (
     <BottomSheet open onClose={onClose} label="사진으로 추가" closeButton>
       <div className="flex flex-col gap-4">
-        <h2 className="m-0 text-[22px] font-extrabold tracking-[-0.02em]">
+        <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">
           사진으로 추가
           {items.length > 0 && (
             <span className="ml-2 text-base font-bold text-muted-foreground">
@@ -210,7 +210,7 @@ export function ScanSheet({
               </div>
             )}
             {scan.isPending && (
-              <div className="flex items-center gap-2 rounded-[18px] bg-warm px-4 py-3.5 text-sm font-semibold text-warm-foreground">
+              <div className="flex items-center gap-2 rounded-[18px] bg-warm px-4 py-3.5 text-[15px] font-medium text-warm-foreground">
                 <Sparkles className="size-[18px]" />
                 읽고 있어요…
               </div>
@@ -236,7 +236,7 @@ export function ScanSheet({
                 >
                   <ChevronLeft className="size-5" />
                 </button>
-                <span className="text-sm font-bold">
+                <span className="text-[15px] font-bold">
                   {page + 1} / {items.length}
                 </span>
                 <button
@@ -252,7 +252,7 @@ export function ScanSheet({
             )}
 
             {current.draft.hasMoreRecipes && (
-              <div className="rounded-[18px] bg-warm px-4 py-3 text-[13px] font-semibold text-warm-foreground">
+              <div className="rounded-[18px] bg-warm px-4 py-3 text-[13px] font-medium text-warm-foreground">
                 사진에 레시피가 여러 개 있어서 맨 위 메뉴만 읽었어요. 나머지는 [다음 메뉴 찍기]로 한
                 메뉴씩 찍어 주세요
               </div>
@@ -265,7 +265,7 @@ export function ScanSheet({
               <button
                 type="button"
                 onClick={removeCurrent}
-                className="p-0 text-[13px] font-semibold text-destructive-foreground"
+                className="p-0 text-[13px] font-medium text-destructive-foreground"
               >
                 빼기
               </button>
@@ -307,7 +307,7 @@ function PickButton({
   return (
     <label className="flex h-[150px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed border-line bg-white text-muted-foreground">
       {icon}
-      <span className="text-sm font-semibold">{label}</span>
+      <span className="text-[15px] font-medium">{label}</span>
       <input
         type="file"
         accept={ACCEPT}
@@ -390,7 +390,7 @@ function DraftFields({
                 }
                 placeholder="입력"
                 aria-label={`${ing.name} 양`}
-                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-sm"
+                className="h-[38px] w-[120px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-[15px]"
               />
             ) : (
               <span className="font-bold">{ing.amount}</span>
@@ -424,7 +424,7 @@ function Row({
             onChange={(event) => onChange(event.target.value)}
             placeholder="입력"
             aria-label={label}
-            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-sm"
+            className="h-[38px] w-[160px] rounded-xl border-[1.5px] border-[#AB7743] bg-warm px-2.5 text-[15px]"
           />
         </dd>
       </div>
