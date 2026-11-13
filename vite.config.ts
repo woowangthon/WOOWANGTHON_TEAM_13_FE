@@ -29,10 +29,17 @@ export default defineConfig({
         theme_color: '#F1ECE3',
         // 홈 화면 · 설치 아이콘 (public/, 나현). maskable 은 넣지 않는다: 지금 아이콘은 배경이 투명하고
         // 캐릭터가 가장자리(안전 영역 80% 밖)까지 있어서, 안드로이드가 동그랗게 자르면 모자 · 발이 잘린다
+        // 앱 아이콘: 흰 배경 PNG (투명이면 아이폰이 검은색으로 채움, 11/14). 탭 아이콘(favicon.svg)은 index.html 에서만
+        // maskable: 안드로이드가 원 · 둥근 네모로 자를 때 캐릭터가 잘리지 않게 여백을 넉넉히 (안전 영역 80% 안)
         icons: [
-          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          {
+            src: '/icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
     }),
