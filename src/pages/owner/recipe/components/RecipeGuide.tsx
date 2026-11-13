@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import { createPortal } from 'react-dom'
 import {
   markRecipeGuideSeen,
@@ -13,7 +21,7 @@ import { cn } from '@/ui/utils'
 // 단계 데이터 · 본 기록은 recipeGuideSteps.ts
 
 // 디자인 수치
-const DIM = 'rgba(35,38,20,.66)' // 다크올리브 계열
+const DIM = 'rgba(20,30,24,.66)' // 검정에 가까운 반투명 (디자인 2a 값)
 const RING = '0 0 0 5px #fff, 0 0 0 9px #ab7743'
 const GAP = 22 // 링(9px) + 화살표(7px) + 여백
 const EDGE = 16 // 화면 가장자리 여백
@@ -36,6 +44,7 @@ export function RecipeGuide({
   /** 잰 위치 (어느 단계 대상인지 같이 — 단계가 바뀌면 새로 잴 때까지 null) */
   const [measured, setMeasured] = useState<{ target: string; rect: DOMRect } | null>(null)
   const [radius, setRadius] = useState('14px')
+  const [brand, setBrand] = useState<CSSProperties>()
   const [bubbleH, setBubbleH] = useState(170)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const primaryRef = useRef<HTMLButtonElement>(null)
@@ -58,14 +67,26 @@ export function RecipeGuide({
   useEffect(() => {
     let el: HTMLElement | null = null
     let frame = 0
+    let watch = 0
     let timer = 0
+    let last = ''
     const started = Date.now()
     const measure = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         if (!el?.isConnected) el = findTarget(step.target)
-        if (el) setMeasured({ target: step.target, rect: el.getBoundingClientRect() })
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const key = `${rect.top}:${rect.left}:${rect.width}:${rect.height}`
+        if (key === last) return
+        last = key
+        setMeasured({ target: step.target, rect })
       })
+    }
+    // 글꼴 · 목록이 늦게 들어와 화면이 밀려도(스크롤 · 크기 신호 없음) 따라가게, 열려 있는 동안 매 프레임 위치를 본다 (바뀔 때만 다시 그림)
+    const follow = () => {
+      measure()
+      watch = requestAnimationFrame(follow)
     }
     const find = () => {
       el = findTarget(step.target)
@@ -75,22 +96,32 @@ export function RecipeGuide({
         else timer = window.setTimeout(find, 100)
         return
       }
-      setRadius(getComputedStyle(el).borderRadius || '14px')
+      const style = getComputedStyle(el)
+      setRadius(style.borderRadius || '14px')
+      // 가이드는 body 에 그려져 사장님 화면 색(.owner-wide) 밖이라, 그 자리의 매장 색을 받아 온다
+      setBrand({
+        '--brand': style.getPropertyValue('--brand'),
+        '--brand-soft': style.getPropertyValue('--brand-soft'),
+      } as CSSProperties)
       const box = el.getBoundingClientRect()
       if (box.top < EDGE || box.bottom > window.innerHeight - EDGE) {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
         el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
       }
-      measure()
+      follow()
     }
     find()
     window.addEventListener('resize', measure)
     window.addEventListener('scroll', measure, true)
+    // 휴대폰 주소창 · 확대로 보이는 화면이 바뀌어도 다시 잰다
+    window.visualViewport?.addEventListener('resize', measure)
     return () => {
       clearTimeout(timer)
       cancelAnimationFrame(frame)
+      cancelAnimationFrame(watch)
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure, true)
+      window.visualViewport?.removeEventListener('resize', measure)
     }
   }, [step.target, next])
 
@@ -132,8 +163,11 @@ export function RecipeGuide({
   }, [close, next])
 
   // 말풍선 자리: 대상 아래(또는 위), 가로는 대상 가운데에 맞추되 화면 안으로
-  const vw = typeof window === 'undefined' ? 390 : window.innerWidth
-  const vh = typeof window === 'undefined' ? 844 : window.innerHeight
+  // 실제로 보이는 화면 크기 (휴대폰은 innerWidth 가 보이는 폭보다 클 때가 있어 visualViewport 를 먼저)
+  const vw =
+    typeof window === 'undefined' ? 390 : (window.visualViewport?.width ?? window.innerWidth)
+  const vh =
+    typeof window === 'undefined' ? 844 : (window.visualViewport?.height ?? window.innerHeight)
   const width = Math.min(BUBBLE_W, vw - EDGE * 2)
   let placement = step.placement
   let left = 0
@@ -151,7 +185,7 @@ export function RecipeGuide({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[70]">
+    <div className="owner-wide fixed inset-0 z-[70]" style={brand}>
       {/* 어두운 곳 누르면 다음 (마지막이면 닫기) */}
       <div aria-hidden="true" className="absolute inset-0" onClick={next} />
       {rect ? (
