@@ -14,7 +14,16 @@ const PROVIDER_MARK: Record<string, { label: string; mark: string; bg: string; f
 const STEPS = 2 // 역할 선택 → 매장 등록 · 초대코드 입력
 
 /** step: 0 역할 선택 · 1 매장 등록 · 초대코드 입력 */
-export function OnboardingHeader({ step, onBack }: { step: 0 | 1; onBack: () => void }) {
+export function OnboardingHeader({
+  step,
+  onBack,
+  hideDots = false,
+}: {
+  step: 0 | 1
+  onBack: () => void
+  /** 데스크톱 역할 선택 위 바: 단계가 둘뿐이라 점을 빼고 뒤로 · 계정만 */
+  hideDots?: boolean
+}) {
   const provider = useAuthStore((state) => state.me?.provider)
   const mark = provider ? PROVIDER_MARK[provider] : undefined
 
@@ -23,7 +32,7 @@ export function OnboardingHeader({ step, onBack }: { step: 0 | 1; onBack: () => 
       <IconButton aria-label="뒤로" onClick={onBack}>
         <ArrowLeft />
       </IconButton>
-      <div className="flex items-center gap-1.5" aria-hidden="true">
+      <div className={cn('items-center gap-1.5', hideDots ? 'hidden' : 'flex')} aria-hidden="true">
         {Array.from({ length: STEPS }, (_, i) => (
           <span
             key={i}

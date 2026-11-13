@@ -9,6 +9,8 @@ import { cn } from '@/ui/utils'
 // 데스크톱(lg 1024px 이상, 11/13 나현 · 민지 OK): 두 칸 — 왼쪽 소개 패널(aside, 없으면 기본 소개) · 오른쪽 가운데에 지금 화면.
 //   showcase 를 주면(로그인, 11/14 나현 · 민지 OK): 왼쪽 640px 패널에 aside(헤드라인 · 버튼)를 세로 가운데로 ·
 //   오른쪽 전체에 showcase(대화 미리보기) · children 은 휴대폰 · 태블릿에서만 보인다. 높이는 화면 높이(최소 860px)
+//   desktopForm 을 주면(역할 선택, 11/14 나현 · 민지 OK): 같은 왼쪽 640px 패널 + 오른쪽 흰 칸에 desktopTop(뒤로 · 계정) 아래 가운데 desktopForm(폭 640px).
+//   children 은 휴대폰 · 태블릿에서만 보인다
 //   휴대폰 · 태블릿은 그대로
 export function AuthFrame({
   children,
@@ -16,6 +18,8 @@ export function AuthFrame({
   tone = 'cream',
   aside,
   showcase,
+  desktopTop,
+  desktopForm,
 }: {
   children: ReactNode
   className?: string
@@ -24,8 +28,14 @@ export function AuthFrame({
   aside?: ReactNode
   /** 데스크톱 오른쪽 전체 (로그인 대화 미리보기). 주면 children 은 데스크톱에서 숨긴다 */
   showcase?: ReactNode
+  /** 데스크톱 오른쪽 위 바 (역할 선택: 뒤로 + 로그인 계정). desktopForm 과 같이 쓴다 */
+  desktopTop?: ReactNode
+  /** 데스크톱 오른쪽 가운데 내용 (폭 640px). 주면 children 은 데스크톱에서 숨긴다 */
+  desktopForm?: ReactNode
 }) {
   useThemeColor(tone === 'white' ? WHITE_THEME_COLOR : null)
+  /** 왼쪽 640px 패널 + 오른쪽 칸 구성 (로그인 · 역할 선택) */
+  const split = !!showcase || !!desktopForm
   const logo = (
     <span className="flex items-center gap-2.5">
       <img src="/logo-bean.png" alt="" className="h-11 w-auto" />
@@ -36,12 +46,12 @@ export function AuthFrame({
     <div
       className={cn(
         'min-h-dvh bg-canvas lg:grid',
-        showcase
+        split
           ? 'lg:grid-cols-[560px_1fr] xl:grid-cols-[640px_1fr]'
           : 'lg:grid-cols-[minmax(360px,5fr)_7fr]',
       )}
     >
-      {showcase ? (
+      {split ? (
         <aside className="hidden h-dvh min-h-[860px] flex-col bg-[#e8e9dc] px-14 py-12 lg:flex xl:px-[72px]">
           {logo}
           <div className="my-auto">{aside}</div>
@@ -58,11 +68,17 @@ export function AuthFrame({
           {showcase}
         </section>
       )}
+      {desktopForm && (
+        <section className="hidden min-h-[860px] flex-col bg-white px-14 py-9 lg:flex lg:min-h-dvh">
+          {desktopTop}
+          <div className="my-auto w-full max-w-[640px] self-center py-8">{desktopForm}</div>
+        </section>
+      )}
       <div
         className={cn(
           'lg:flex lg:min-h-dvh lg:items-center lg:justify-center',
           tone === 'white' ? 'lg:bg-white' : 'lg:bg-background',
-          showcase && 'lg:hidden',
+          split && 'lg:hidden',
         )}
       >
         <main

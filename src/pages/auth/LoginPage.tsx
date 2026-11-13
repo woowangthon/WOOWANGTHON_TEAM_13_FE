@@ -6,6 +6,7 @@ import { getHomePath, useAuthStore } from '@/lib/authStore'
 import { wakeServer } from '@/lib/wakeServer'
 import loginPhoto from '@/pages/auth/assets/login-photo.webp'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
+import { HeroHeadline } from '@/pages/auth/components/HeroHeadline'
 import { LoginShowcase } from '@/pages/auth/components/LoginShowcase'
 import { ProviderLogo } from '@/pages/auth/components/ProviderLogo'
 import { Button } from '@/ui/Button'
@@ -90,14 +91,7 @@ type StartProps = { pending: OAuthProvider | null; onStart: (provider: OAuthProv
 function DesktopIntro({ pending, onStart }: StartProps) {
   return (
     <div className="flex flex-col gap-7">
-      <h1
-        aria-label="혼자 막막했던 근무를 함께하는 크루로, crewBean"
-        className="m-0 text-[42px] leading-[1.25] font-extrabold tracking-[-1.5px] break-keep text-[#373d20]"
-      >
-        혼자 막막했던 근무를 <br />
-        함께하는 크루로, <br />
-        crewBean
-      </h1>
+      <HeroHeadline />
       <p className="m-0 text-base leading-[1.7] break-keep text-[#4a5340]">
         사장님은 레시피 · 매뉴얼을 올리고, 알바생은 근무 중에 바로 물어봐요. 매뉴얼에 없으면 AI가
         지어내지 않고 사장님께 넘겨요.
