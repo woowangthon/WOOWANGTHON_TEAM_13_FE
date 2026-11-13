@@ -1,5 +1,5 @@
 import { ArrowRight, BookOpen, Check, Coffee, UserPlus } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { useAuthStore } from '@/lib/authStore'
@@ -17,10 +17,10 @@ import { AddressField } from '@/pages/owner/store/components/AddressField'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
 import { PaydayField } from '@/pages/owner/store/components/PaydayField'
 import { StorePhotoStep } from '@/pages/owner/store/components/StorePhotoStep'
+import { StoreStepFrame } from '@/pages/owner/store/components/StoreStepFrame'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { OWNER_THEME, useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { AuthFrame } from '@/pages/auth/components/AuthFrame'
-import { OnboardingHeader } from '@/pages/auth/components/OnboardingHeader'
 import { STORE_THEME, themeOf } from '@/shared/storeTheme'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
@@ -39,9 +39,8 @@ const SIZES: { label: string; size: StoreSize }[] = [
 ]
 
 type Step = 'info' | 'shifts' | 'owner' | 'photo'
-const STEP_TOTAL = 4
-/** 데스크톱 왼쪽 패널 단계 목록 (StepFrame step 순서) */
-const STEP_NAMES = ['매장 정보', '근무 타임 · 휴무 · 급여일', '사장님 근무', '매장 사진']
+/** 데스크톱 왼쪽 타임라인에서 눌러 갈 수 있는 단계 (StoreStepFrame step 순서) */
+const STEP_ORDER: Step[] = ['info', 'shifts', 'owner', 'photo']
 
 const initialRows = (): ShiftRow[] =>
   DEFAULT_SHIFT_TEMPLATES.map((t, i) => ({ ...t, key: `row_${i}` }))
@@ -84,6 +83,20 @@ export default function StoreCreatePage() {
       .filter((day) => ownerCells.has(cellKey(row.key, day)) && !closedWeekdays.includes(day))
       .map((weekday) => ({ templateName: row.name.trim(), weekday })),
   )
+
+  // 데스크톱 틀: 끝낸 단계 요약 · ① 에서 남은 필수 항목
+  const summaries = [
+    name.trim() || undefined,
+    `${rows.length}개 근무 타임`,
+    ownerShifts.length > 0 ? `${ownerShifts.length}칸 근무` : '건너뜀',
+    undefined,
+  ]
+  const missing = [!name.trim(), verificationId === null, !address.trim()].filter(Boolean).length
+  const frame = {
+    summaries,
+    stepLocked: !!created,
+    onGoStep: (n: number) => setStep(STEP_ORDER[n - 1]),
+  }
 
   const enterStore = (store: OwnerStore) => {
     setCurrentStoreId(store.storeId)
@@ -176,25 +189,47 @@ export default function StoreCreatePage() {
 
   if (step === 'info')
     return (
-      <StepFrame step={1} title="매장 정보" onBack={() => navigate(from)}>
-        <div className="flex flex-col gap-2.5">
-          <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
-            <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="달빛 카페"
-              className="min-w-0 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint"
-            />
-          </label>
-          <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
+      <StoreStepFrame
+        {...frame}
+        step={1}
+        title="매장 정보"
+        onBack={() => navigate(from)}
+        status={missing > 0 ? `필수 항목 ${missing}개 남음` : '모두 입력했어요'}
+        actions={
+          <Button
+            className="h-14 w-full text-base"
+            disabled={!name.trim() || verificationId === null || !address.trim()}
+            onClick={() => setStep('shifts')}
+          >
+            다음
+            <ArrowRight className="hidden size-5 lg:block" />
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-2.5 lg:gap-3.5">
+          {/* 데스크톱: 매장 이름 · 사업자등록번호 한 줄 두 칸 */}
+          <div className="grid gap-2.5 lg:grid-cols-2 lg:gap-3.5">
+            <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
+              <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="달빛 카페"
+                className="min-w-0 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint lg:text-[19px]"
+              />
+            </label>
+            <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />
+          </div>
+          <span className="hidden px-2 text-xs text-muted-foreground lg:block">
+            국세청에서 영업 중인 사업자인지 확인해요
+          </span>
           <AddressField
             address={address}
             onAddressChange={setAddress}
             detail={addressDetail}
             onDetailChange={setAddressDetail}
           />
-          <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft">
+          <div className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 shadow-soft lg:px-[22px] lg:py-4">
             <span className="text-xs font-bold text-muted-foreground">사업장 규모</span>
             <div
               className="mt-0.5 grid grid-cols-2 gap-1.5"
@@ -222,19 +257,28 @@ export default function StoreCreatePage() {
             직원 수 기준 · 주휴 · 가산 수당 계산에 반영돼요
           </span>
         </div>
-        <Button
-          className="mt-auto h-14 text-base"
-          disabled={!name.trim() || verificationId === null || !address.trim()}
-          onClick={() => setStep('shifts')}
-        >
-          다음
-        </Button>
-      </StepFrame>
+      </StoreStepFrame>
     )
 
   if (step === 'shifts')
     return (
-      <StepFrame step={2} title="근무 타임 · 휴무 · 급여일" onBack={() => setStep('info')}>
+      <StoreStepFrame
+        {...frame}
+        step={2}
+        title="근무 타임 · 휴무 · 급여일"
+        onBack={() => setStep('info')}
+        status={rowsError ? String(rowsError) : '모두 입력했어요'}
+        actions={
+          <Button
+            className="h-14 w-full text-base"
+            disabled={!!rowsError}
+            onClick={() => setStep('owner')}
+          >
+            다음
+            <ArrowRight className="hidden size-5 lg:block" />
+          </Button>
+        }
+      >
         <ShiftTemplateStep
           rows={rows}
           onRowsChange={setRows}
@@ -248,19 +292,38 @@ export default function StoreCreatePage() {
           <span className="px-1 text-[13px] font-bold text-muted-foreground">급여일</span>
           <PaydayField value={payday} onChange={setPayday} />
         </section>
-        <Button
-          className="mt-auto h-14 shrink-0 text-base"
-          disabled={!!rowsError}
-          onClick={() => setStep('owner')}
-        >
-          다음
-        </Button>
-      </StepFrame>
+      </StoreStepFrame>
     )
 
   if (step === 'owner')
     return (
-      <StepFrame step={3} title="사장님 근무" onBack={() => setStep(created ? 'photo' : 'shifts')}>
+      <StoreStepFrame
+        {...frame}
+        step={3}
+        title="사장님 근무"
+        onBack={() => setStep(created ? 'photo' : 'shifts')}
+        status="사장님 근무는 건너뛰어도 돼요"
+        actionsWide
+        actions={
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="soft"
+              className="h-14 text-base"
+              disabled={pending}
+              onClick={() => submit([])}
+            >
+              건너뛰기
+            </Button>
+            <Button
+              className="h-14 text-base"
+              disabled={pending || ownerShifts.length === 0}
+              onClick={() => submit(ownerShifts)}
+            >
+              {pending ? '등록 중…' : '다음'}
+            </Button>
+          </div>
+        }
+      >
         <span className="px-1 text-[13px] text-muted-foreground">
           사장님도 근무하는 요일 · 타임을 눌러 주세요. 같은 날 여러 타임도 돼요
         </span>
@@ -270,117 +333,34 @@ export default function StoreCreatePage() {
           onChange={setOwnerCells}
           closedWeekdays={closedWeekdays}
         />
-        <div className="mt-auto grid grid-cols-2 gap-2">
-          <Button
-            variant="soft"
-            className="h-14 text-base"
-            disabled={pending}
-            onClick={() => submit([])}
-          >
-            건너뛰기
-          </Button>
-          <Button
-            className="h-14 text-base"
-            disabled={pending || ownerShifts.length === 0}
-            onClick={() => submit(ownerShifts)}
-          >
-            {pending ? '등록 중…' : '다음'}
-          </Button>
-        </div>
-      </StepFrame>
+      </StoreStepFrame>
     )
 
   return (
-    <StepFrame step={4} title="매장 사진" onBack={() => setDone(true)}>
+    <StoreStepFrame
+      {...frame}
+      step={4}
+      title="매장 사진"
+      onBack={() => setDone(true)}
+      status="사진은 나중에 올려도 돼요"
+      actions={
+        cropping ? null : photo ? (
+          <Button
+            className="h-14 w-full text-base"
+            disabled={savePhoto.isPending}
+            onClick={finishPhoto}
+          >
+            {savePhoto.isPending ? '올리는 중…' : '완료'}
+          </Button>
+        ) : (
+          <Button variant="soft" className="h-14 w-full text-base" onClick={() => setDone(true)}>
+            건너뛰기
+          </Button>
+        )
+      }
+    >
       <StorePhotoStep value={photo} onChange={setPhoto} onCroppingChange={setCropping} />
-      {cropping ? null : photo ? (
-        <Button
-          className="mt-auto h-14 text-base"
-          disabled={savePhoto.isPending}
-          onClick={finishPhoto}
-        >
-          {savePhoto.isPending ? '올리는 중…' : '완료'}
-        </Button>
-      ) : (
-        <Button variant="soft" className="mt-auto h-14 text-base" onClick={() => setDone(true)}>
-          건너뛰기
-        </Button>
-      )}
-    </StepFrame>
-  )
-}
-
-/** 단계 화면 틀: 위쪽 뒤로 + 제목 위 "사장님 · 2 / 4" */
-function StepFrame({
-  step,
-  title,
-  onBack,
-  children,
-}: {
-  step: number
-  title: string
-  onBack: () => void
-  children: ReactNode
-}) {
-  return (
-    // .owner-wide: 사장님 화면 색 팔레트 (index.css) — 민지 AuthFrame 은 그대로 감싸기만
-    <div className="owner-wide">
-      <AuthFrame className="gap-[22px]" aside={<StepList current={step} />}>
-        {/* 위쪽 진행 점은 역할 선택 → 매장 등록 두 칸이라(민지 부품) 단계는 제목 위에서 보여 준다 */}
-        <OnboardingHeader step={1} onBack={onBack} />
-        <div className="flex flex-col gap-2 px-1 pt-1.5">
-          <span className="text-[13px] font-medium text-muted-foreground">
-            사장님 · {step} / {STEP_TOTAL}
-          </span>
-          <h1 className="m-0 text-[26px] leading-[1.3] font-extrabold tracking-[-0.03em]">
-            {title}
-          </h1>
-        </div>
-        {children}
-      </AuthFrame>
-    </div>
-  )
-}
-
-/** 데스크톱 왼쪽 패널: 매장 등록 단계 (지금 단계는 매장 색 번호 + 링 · 지난 단계는 체크) */
-function StepList({ current }: { current: number }) {
-  return (
-    <div className="flex flex-col gap-5">
-      <h2 className="m-0 text-[28px] leading-[1.3] font-extrabold tracking-[-0.03em] text-foreground">
-        매장 등록
-      </h2>
-      <ol className="m-0 flex list-none flex-col gap-3 p-0">
-        {STEP_NAMES.map((name, i) => {
-          const n = i + 1
-          const on = n === current
-          const done = n < current
-          return (
-            <li
-              key={name}
-              aria-current={on ? 'step' : undefined}
-              className={cn(
-                'flex items-center gap-3 text-base',
-                on ? 'font-extrabold text-foreground' : 'font-medium text-muted-foreground',
-              )}
-            >
-              <span
-                className={cn(
-                  'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold tabular-nums',
-                  on
-                    ? 'bg-brand text-white ring-4 ring-white'
-                    : done
-                      ? 'bg-brand/80 text-white'
-                      : 'bg-white text-muted-foreground',
-                )}
-              >
-                {done ? <Check className="size-4" /> : n}
-              </span>
-              {name}
-            </li>
-          )
-        })}
-      </ol>
-    </div>
+    </StoreStepFrame>
   )
 }
 
