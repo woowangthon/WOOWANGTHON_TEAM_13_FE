@@ -5,6 +5,8 @@ import {
   ChevronRight,
   Coffee,
   UserPlus,
+  TrendingDown,
+  TrendingUp,
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
@@ -262,6 +264,15 @@ function PayrollCard({ storeId, today }: { storeId: string; today: Date }) {
 function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
   const payroll = useStorePayroll(storeId, toDateKey(today).slice(0, 7))
   const total = (payroll.data?.members ?? []).reduce((sum, m) => sum + m.total, 0)
+  // 지난달과 비교: BE 예상 급여는 그달 전체(한 근무 + 예정 근무)라 이번 달 예상 vs 지난달 전체
+  const lastMonth = toDateKey(new Date(today.getFullYear(), today.getMonth() - 1, 1)).slice(0, 7)
+  const last = useStorePayroll(storeId, lastMonth)
+  const lastTotal = (last.data?.members ?? []).reduce((sum, m) => sum + m.total, 0)
+  // 지난달 기록이 없거나 아직 못 불러왔으면 비교를 안 보인다
+  const change =
+    payroll.data && last.data && lastTotal > 0
+      ? Math.round(((total - lastTotal) / lastTotal) * 100)
+      : null
   const days = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
   const percent = Math.round((today.getDate() / days) * 100)
   const r = 44
@@ -312,6 +323,26 @@ function PayrollRing({ storeId, today }: { storeId: string; today: Date }) {
           <span className="text-[13px] leading-snug break-keep text-muted-foreground">
             {formatDate(today)}까지 · 주휴수당 포함 · 참고용
           </span>
+          {change !== null && (
+            <span
+              className={cn(
+                'mt-1 inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-bold',
+                change > 0
+                  ? 'bg-warm text-warm-foreground'
+                  : change < 0
+                    ? 'bg-brand-soft text-brand'
+                    : 'bg-background text-muted-foreground',
+              )}
+            >
+              {change > 0 ? (
+                <TrendingUp className="size-3.5" />
+              ) : change < 0 ? (
+                <TrendingDown className="size-3.5" />
+              ) : null}
+              지난달보다 {change > 0 ? '+' : ''}
+              {change}%
+            </span>
+          )}
         </div>
       </div>
     </section>
