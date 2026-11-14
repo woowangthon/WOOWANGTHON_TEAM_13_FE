@@ -140,13 +140,7 @@ const putHourlyWage = async (storeId: string, { memberId, hourlyWage, invited }:
   })
 }
 
-/**
- * 급여 공제(taxType) 바꾸기 — BE 는 저장 · 계산은 하지만 바꾸는 API 가 아직 없다 (요청 중, 제안: PUT …/members/{memberId}/tax-type).
- * 생기면 true 로. 그 전에는 진짜 모드에서 고를 수 없게 안내만
- */
-const TAX_TYPE_IN_BE = false
-export const canSetTaxType = () => !isRealApi('members') || TAX_TYPE_IN_BE
-
+/** 급여 공제(taxType) 바꾸기 — PUT …/members/{memberId}/tax-type (BE 11/12), 입장한 직원만 */
 const putTaxType = async (
   storeId: string,
   { memberId, taxType }: { memberId: string; taxType: TaxType },
