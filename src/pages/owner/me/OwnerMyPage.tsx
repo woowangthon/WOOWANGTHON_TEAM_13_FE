@@ -31,6 +31,8 @@ export default function OwnerMyPage() {
   const profile = useOwnerProfile()
   const [askWithdraw, setAskWithdraw] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  // 탈퇴도 매장 삭제처럼 같은 순간 두 번 눌러도 한 번만 부르게 잠금
+  const withdrawLock = useRef(false)
   // 매장 삭제: 줄의 X → 아래 확인 상자(탈퇴 확인과 같은 모양) → [매장 삭제]에서만 API
   const [askDelete, setAskDelete] = useState<OwnerStoreView | null>(null)
   const remove = useDeleteStore()
@@ -71,12 +73,15 @@ export default function OwnerMyPage() {
 
   // 탈퇴: DELETE /users/me 뒤 로그아웃 (알바 마이페이지와 같게). 같은 계정으로 다시 로그인하면 새 사용자로 시작 (BE 11/14)
   const withdraw = async () => {
+    if (withdrawLock.current) return
+    withdrawLock.current = true
     setWithdrawing(true)
     try {
       await withdrawAccount()
       navigate('/login', { replace: true })
       toast('탈퇴했어요')
     } catch (error) {
+      withdrawLock.current = false
       setWithdrawing(false)
       toastApiError(error, '탈퇴하지 못했어요. 다시 시도해 주세요')
     }
@@ -172,7 +177,8 @@ export default function OwnerMyPage() {
         {askWithdraw && (
           <div className="flex flex-col gap-3 rounded-3xl bg-destructive-soft p-4">
             <span className="text-[15px] leading-[1.55] font-bold break-keep text-destructive-foreground">
-              탈퇴하면 매장, 레시피, 매뉴얼, 직원 기록이 모두 삭제돼요.
+              정말 탈퇴할까요? 탈퇴하면 내 매장과 레시피·매뉴얼, 직원 기록을 더 이상 볼 수 없어요.
+              같은 계정으로 다시 가입하면 새 계정으로 시작해요.
             </span>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="white" size="md" onClick={() => setAskWithdraw(false)}>
