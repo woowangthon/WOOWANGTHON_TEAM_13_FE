@@ -68,7 +68,7 @@ export function PushNotificationSetting() {
   return (
     <section className="flex flex-col gap-3">
       <SectionHeader title="앱 알림" />
-      <div className="flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-3.5 shadow-soft">
+      <div className="flex items-center gap-3.5 rounded-[22px] border border-line/60 bg-card px-4 py-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
           {enabled ? <BellRing className="size-5" /> : <BellOff className="size-5" />}
         </span>
