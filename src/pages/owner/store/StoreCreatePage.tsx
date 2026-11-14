@@ -21,6 +21,7 @@ import { StoreCreateDone } from '@/pages/owner/store/components/StoreCreateDone'
 import { StoreStepFrame } from '@/pages/owner/store/components/StoreStepFrame'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { useCloseTo } from '@/lib/useCloseTo'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
@@ -48,8 +49,10 @@ type OwnerShift = { templateName: string; weekday: number }
 
 export default function StoreCreatePage() {
   const navigate = useNavigate()
-  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로
+  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로.
+  // 앱 안에서 왔으면 기록을 하나 되돌린다 — 새로 쌓으면 마이페이지 [뒤로]가 다시 매장 등록으로 와서 빙빙 돈다 (QA 11/15)
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/role'
+  const leave = useCloseTo(from)
   const create = useCreateStore()
   const saveShifts = useSaveOwnerShifts()
   const savePhoto = useSaveStorePhoto()
@@ -206,7 +209,7 @@ export default function StoreCreatePage() {
         {...frame}
         step={1}
         title="매장 정보"
-        onBack={() => navigate(from)}
+        onBack={leave}
         status={missing > 0 ? `필수 항목 ${missing}개 남음` : undefined}
         actions={
           <Button
