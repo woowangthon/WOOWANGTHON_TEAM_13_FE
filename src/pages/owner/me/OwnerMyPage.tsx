@@ -112,7 +112,7 @@ export default function OwnerMyPage() {
         {askDelete && (
           <div className="flex flex-col gap-3 rounded-3xl bg-destructive-soft p-4">
             <span className="text-[15px] leading-[1.55] font-bold break-keep text-destructive-foreground">
-              정말 '{askDelete.name}'을 삭제할까요?
+              정말 '{askDelete.name}'{objectParticle(askDelete.name)} 삭제할까요?
             </span>
             <span className="text-[13px] leading-[1.45] font-medium break-keep text-destructive-foreground">
               삭제하면 매장 정보와 레시피·매뉴얼, 직원·근무·급여 기록을 더 이상 확인할 수 없어요.
@@ -288,6 +288,13 @@ function LinkedAccount() {
       </div>
     </section>
   )
+}
+
+/** 받침에 맞는 목적격 조사: '달빛 카페'를 · '감자빵'을. 한글로 안 끝나면(영어 · 숫자) 을(를) */
+function objectParticle(word: string) {
+  const code = word.trim().charCodeAt(word.trim().length - 1) - 0xac00
+  if (code < 0 || code > 11171) return '을(를)'
+  return code % 28 === 0 ? '를' : '을'
 }
 
 function StoreRow({ store, onAskDelete }: { store: OwnerStoreView; onAskDelete: () => void }) {
