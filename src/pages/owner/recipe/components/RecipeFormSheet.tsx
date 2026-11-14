@@ -241,14 +241,14 @@ export function RecipeFormSheet({
                     onChange={(event) => setRow(i, { name: event.target.value })}
                     placeholder="재료"
                     aria-label={`재료 ${i + 1}`}
-                    className="min-w-0 flex-1 border-none bg-transparent text-[13px] text-muted-foreground placeholder:text-faint"
+                    className="min-w-0 flex-1 border-none bg-transparent text-base text-muted-foreground placeholder:text-faint"
                   />
                   <input
                     value={row.amount}
                     onChange={(event) => setRow(i, { amount: event.target.value })}
                     placeholder="양"
                     aria-label={`재료 ${i + 1} 양`}
-                    className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-[13px] placeholder:text-faint"
+                    className="h-10 w-[110px] rounded-xl border-none bg-background px-3 text-base placeholder:text-faint"
                   />
                   <button
                     type="button"
