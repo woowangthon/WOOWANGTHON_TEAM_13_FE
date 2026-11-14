@@ -1,8 +1,8 @@
 import { BookOpen, ChevronRight, Pencil, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
-import { signOut, withdrawAccount } from '@/lib/auth'
+import { refreshMe, signOut, withdrawAccount } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
 import { toastApiError } from '@/lib/api/errors'
 import { useMembers } from '@/pages/owner/api/members'
@@ -31,6 +31,38 @@ export default function OwnerMyPage() {
   const profile = useOwnerProfile()
   const [askWithdraw, setAskWithdraw] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  // 매장 삭제: 줄의 X → 아래 확인 상자(탈퇴 확인과 같은 모양) → [매장 삭제]에서만 API
+  const [askDelete, setAskDelete] = useState<OwnerStoreView | null>(null)
+  const remove = useDeleteStore()
+  // isPending 은 다시 그린 뒤에야 true 라, 같은 순간 두 번 눌러도 한 번만 부르게 잠금
+  const deleteLock = useRef(false)
+  const setPendingRole = useAuthStore((state) => state.setPendingRole)
+
+  const deleteStore = (target: OwnerStoreView) => {
+    if (deleteLock.current) return
+    deleteLock.current = true
+    remove.mutate(target.storeId, {
+      onSuccess: async () => {
+        setAskDelete(null)
+        toast(`${target.name} 매장을 삭제했어요`)
+        // 내 정보(매장 목록) 다시 받기 — 로그인 없이 보는 중(가짜)에는 실패해도 그대로 진행
+        await refreshMe().catch(() => {})
+        const rest = stores.filter((s) => s.storeId !== target.storeId)
+        if (rest.length > 0) {
+          if (target.storeId === store.storeId) setCurrentStoreId(rest[0].storeId)
+          return
+        }
+        // 마지막 매장: 지금 매장 · 고른 역할을 비우고 역할 선택으로 (뒤로 가도 마이페이지로 안 돌아오게 replace)
+        setCurrentStoreId(null)
+        setPendingRole(null)
+        navigate('/role', { replace: true })
+      },
+      onError: (error) => toastApiError(error, '삭제하지 못했어요. 다시 시도해 주세요'),
+      onSettled: () => {
+        deleteLock.current = false
+      },
+    })
+  }
 
   const logout = async () => {
     await signOut()
@@ -72,17 +104,35 @@ export default function OwnerMyPage() {
           // 알바 마이페이지 소속 매장처럼 카드 한 장 안에 줄 + 구분선 (11/14)
           <div className="flex flex-col overflow-hidden rounded-[22px] border border-line/60 bg-card">
             {stores.map((s) => (
-              <StoreRow
-                key={s.storeId}
-                store={s}
-                canDelete={stores.length > 1}
-                onDeleted={() => {
-                  if (s.storeId === store.storeId) {
-                    setCurrentStoreId(stores.find((o) => o.storeId !== s.storeId)?.storeId ?? null)
-                  }
-                }}
-              />
+              <StoreRow key={s.storeId} store={s} onAskDelete={() => setAskDelete(s)} />
             ))}
+          </div>
+        )}
+        {/* 매장 삭제 확인: 회원탈퇴 확인과 같은 상자 */}
+        {askDelete && (
+          <div className="flex flex-col gap-3 rounded-3xl bg-destructive-soft p-4">
+            <span className="text-[15px] leading-[1.55] font-bold break-keep text-destructive-foreground">
+              정말 '{askDelete.name}'{objectParticle(askDelete.name)} 삭제할까요?
+            </span>
+            <span className="text-[13px] leading-[1.45] font-medium break-keep text-destructive-foreground">
+              삭제하면 매장 정보와 레시피·매뉴얼, 직원·근무·급여 기록을 더 이상 확인할 수 없어요.
+              소속 직원들도 매장에 접근할 수 없어요.
+              <br />
+              삭제한 매장은 앱에서 복구할 수 없어요.
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="white" size="md" onClick={() => setAskDelete(null)}>
+                취소
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                disabled={remove.isPending}
+                onClick={() => deleteStore(askDelete)}
+              >
+                매장 삭제
+              </Button>
+            </div>
           </div>
         )}
         {/* 매장 추가는 온보딩과 같은 4단계로 (사업자등록번호 · 근무 타임 · 사진까지) */}
@@ -240,30 +290,18 @@ function LinkedAccount() {
   )
 }
 
-function StoreRow({
-  store,
-  canDelete,
-  onDeleted,
-}: {
-  store: OwnerStoreView
-  canDelete: boolean
-  onDeleted: () => void
-}) {
-  const [asking, setAsking] = useState(false)
-  const remove = useDeleteStore()
+/** 받침에 맞는 목적격 조사: '달빛 카페'를 · '감자빵'을. 한글로 안 끝나면(영어 · 숫자) 을(를) */
+function objectParticle(word: string) {
+  const code = word.trim().charCodeAt(word.trim().length - 1) - 0xac00
+  if (code < 0 || code > 11171) return '을(를)'
+  return code % 28 === 0 ? '를' : '을'
+}
+
+function StoreRow({ store, onAskDelete }: { store: OwnerStoreView; onAskDelete: () => void }) {
   const members = useMembers(store.storeId)
   const Icon = STORE_ICON[store.icon]
   const count = members.data?.members.length ?? store.staffCount
   const payday = store.payday === 31 ? '말일' : `${store.payday}일`
-
-  const doDelete = () =>
-    remove.mutate(store.storeId, {
-      onSuccess: () => {
-        onDeleted()
-        toast(`${store.name} 매장을 삭제했어요`)
-      },
-      onError: (error) => toastApiError(error, '삭제하지 못했어요. 다시 시도해 주세요'),
-    })
 
   return (
     <div className="flex items-center gap-3 border-b border-line/60 py-3 pr-3 pl-3.5 last:border-b-0">
@@ -282,21 +320,14 @@ function StoreRow({
         </span>
         <ChevronRight className="size-[22px] shrink-0 text-faint" />
       </Link>
-      {canDelete &&
-        (asking ? (
-          <Button variant="danger" size="sm" disabled={remove.isPending} onClick={doDelete}>
-            삭제
-          </Button>
-        ) : (
-          <button
-            type="button"
-            aria-label={`${store.name} 삭제`}
-            onClick={() => setAsking(true)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
-          >
-            <X className="size-5" />
-          </button>
-        ))}
+      <button
+        type="button"
+        aria-label={`${store.name} 삭제`}
+        onClick={onAskDelete}
+        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground"
+      >
+        <X className="size-5" />
+      </button>
     </div>
   )
 }
