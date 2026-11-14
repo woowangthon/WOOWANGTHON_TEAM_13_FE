@@ -129,6 +129,11 @@ const fetchHandoverNotifications = async (
       questionId: null,
       isRead: n.isRead,
       createdAt: n.createdAt,
+      // BE #54 부터 target.workDate (그 전에는 없어서 알림이 온 날로)
+      workDate:
+        'workDate' in n
+          ? n.workDate
+          : ((n.target as { workDate?: string | null } | undefined)?.workDate ?? null),
     })),
   )
 }
