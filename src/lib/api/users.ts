@@ -67,5 +67,10 @@ export function useUpdateNickname() {
 
 /** 내 매장 (알바 화면 매장 전환 · 홈 · 마이페이지) */
 export function useMyStores() {
-  return useQuery({ queryKey: userKeys.myStores, queryFn: fetchMyStores })
+  return useQuery({
+    queryKey: userKeys.myStores,
+    queryFn: fetchMyStores,
+    // 앱으로 돌아오면 다시 받기 (사장님이 그사이 매장을 지웠으면 목록에서 빠진다)
+    refetchOnWindowFocus: true,
+  })
 }

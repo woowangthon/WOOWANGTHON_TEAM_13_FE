@@ -8,6 +8,8 @@ import {
   retryDelay,
   shouldRetry,
 } from '@/lib/api/errors'
+import { userKeys } from '@/lib/api/users'
+import { ApiError } from '@/lib/apiClient'
 import { toast } from '@/ui/toastStore'
 
 /*
@@ -31,7 +33,13 @@ export const queryClient: QueryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
       if (isUnauthorized(error)) return void handleUnauthorized()
-      if (isNotFound(error)) return
+      if (isNotFound(error)) {
+        // 매장이 지워졌으면(사장님이 삭제) 내 매장 목록을 다시 받아 알바 화면이 다른 매장 · 역할 선택으로 가게 (토스트 없음)
+        if (error instanceof ApiError && error.code === 'STORE_NOT_FOUND') {
+          void queryClient.invalidateQueries({ queryKey: userKeys.myStores })
+        }
+        return
+      }
       // 실패해도 화면이 대체 내용을 조용히 보여 주는 조회 (예: 하루 인수인계 AI 요약). 401 로그아웃은 위에서 그대로
       if (query.meta?.silent) return
       toast.error(errorMessage(error, ERROR_MESSAGE.load), {

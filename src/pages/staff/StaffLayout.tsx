@@ -1,7 +1,9 @@
 import { Bell, CalendarDays, ChevronDown, House, MessagesSquare, Plus, Store } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useNotifications } from '@/lib/api/notifications'
+import { refreshMe } from '@/lib/auth'
+import { useAuthStore } from '@/lib/authStore'
 import { StaffFrame } from '@/pages/staff/components/StaffFrame'
 import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 import { useProfileName } from '@/pages/staff/useProfileName'
@@ -53,6 +55,32 @@ export default function StaffLayout() {
       { replace: true, preventScrollReset: true },
     )
   }, [linkedStoreId, isPending, setCurrentStoreId, setParams, stores])
+  // 사장님이 매장을 지웠을 때 (내 매장 목록을 다시 받으면 빠진다):
+  // 소속 매장이 0개면 역할 선택으로 (한 번만), 보고 있던 매장만 사라졌으면 남은 첫 매장으로 바뀌었다고 알림
+  const setPendingRole = useAuthStore((state) => state.setPendingRole)
+  const leftLock = useRef(false)
+  const shownStoreId = useRef<string | null>(null)
+  useEffect(() => {
+    if (isPending || error) return
+    if (stores.length === 0) {
+      if (leftLock.current) return
+      leftLock.current = true
+      void (async () => {
+        await refreshMe().catch(() => {})
+        setCurrentStoreId(null)
+        setPendingRole(null)
+        toast('소속 매장이 없어서 처음 화면으로 왔어요')
+        navigate('/role', { replace: true })
+      })()
+      return
+    }
+    const before = shownStoreId.current
+    if (before && !stores.some((item) => item.id === before)) {
+      setCurrentStoreId(stores[0].id)
+      toast(`매장이 삭제돼서 ${withRo(stores[0].name)} 바꿨어요`)
+    }
+    shownStoreId.current = store.id
+  }, [isPending, error, stores, store.id, setCurrentStoreId, setPendingRole, navigate])
   // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
   const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)
@@ -171,4 +199,11 @@ export default function StaffLayout() {
       />
     </StaffFrame>
   )
+}
+
+/** 받침에 맞춰 "로/으로"를 붙인다 (받침 없거나 ㄹ 받침이면 "로": 달빛 카페로 · 오후의 커피로) — staff/join 과 같은 규칙 */
+function withRo(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00
+  const jong = code >= 0 && code <= 11171 ? code % 28 : 0
+  return `${word}${jong === 0 || jong === 8 ? '로' : '으로'}`
 }
