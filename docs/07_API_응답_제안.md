@@ -1084,7 +1084,7 @@ FE (민지 결정, 11/11): 알림 화면을 열면 전부 읽음 · 출근 30분
 17. **레시피 응답(목록 · 상세)에 메뉴 사진 `imageUrl`(없으면 `null`)을 넣어 주세요.** 사장님이 사진을 올리면(레시피 등록 multipart `images`) 그 주소를 주면 돼요. 지금은 FE가 메뉴 이름으로 시연 사진을 찾아요
     - 11/11 연서와 정함 (BE `feature_recipe_images`): 등록 multipart `recipe`(JSON 문자열) · `image`(메뉴 사진) · `recipeImage`(레시피 사진, FE는 당분간 안 씀). 수정은 글 PATCH(JSON) 그대로 + 사진만 `PUT` · `DELETE /stores/{storeId}/recipes/{recipeId}/images/{slot}` (`slot` = `menu` · `recipe`, PUT 파일 칸 `image`, DELETE는 204). FE는 새 파일이면 PUT · `null`이면 DELETE · `undefined`면 안 불러요. 응답 `imageUrl` · `recipeImageUrl`(6시간짜리 주소라 저장하지 않고 조회할 때마다 받아 써요). JPEG · PNG · WebP, 10MB 이하 — 넘으면 `413 IMAGE_TOO_LARGE`, 다른 형식이면 `415 UNSUPPORTED_IMAGE_TYPE`
 
-## AI 사수 답변율 (사장님 데스크톱 홈, 11/14 FE 제안 · BE 아직 없음)
+## AI 사수 답변율 (사장님 데스크톱 홈, 11/14 FE 제안 → BE `main` 반영)
 - `GET /stores/{storeId}/assistant-stats?week=YYYY-MM-DD` (week = 그 주 월요일, 한국 시간) — 사장님만
 - 이번 주 알바생 질문 중 AI 사수가 매뉴얼 근거로 답한 수, 매뉴얼에 없어서 못 답한 질문(사장님께 넘긴 질문)을 매뉴얼 분류별로
 
@@ -1105,5 +1105,7 @@ FE (민지 결정, 11/11): 알림 화면을 열면 전부 읽음 · 출근 30분
 }
 ```
 - `lastWeekRate`: 지난주 답변율 0~100 (지난주 질문이 없으면 `null`) · `unanswered`는 많은 분류부터
+- 11/14 BE 반영 (`feat: AI 사수 주간 답변 통계 API 구현`): 응답 모양은 위와 같아요. 다만 지금은 매뉴얼 분류를 나누지 않아 `unanswered`는 `category: "기타"` 하나이고, 못 답한 질문은 **최근 5건까지만** 와요. `week`는 아무 날짜나 보내도 그 주 월요일로 맞춰 줘요. 사장님이 아니면 403
+  - FE: 못 답한 건수는 `total - answered`로 세고, 분류가 하나면 분류 칩 · 분류 이름을 숨겨요 (버튼은 [매뉴얼 보강하기])
 - FE: `src/pages/owner/api/home.ts`의 `useAssistantStats` (assistantChat 스위치). 진짜 API 가 없거나 실패하면 화면은 예전 인건비 링을 보여 준다
 
