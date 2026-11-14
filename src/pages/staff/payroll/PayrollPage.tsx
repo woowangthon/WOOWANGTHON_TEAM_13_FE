@@ -170,7 +170,7 @@ export default function PayrollPage() {
               </span>
               <div className="mt-3 grid grid-cols-[auto_1fr_1fr] border-t border-white/15 pt-3">
                 <PayTile
-                  label={`${total.hours}시간 × ${hourly.toLocaleString('ko-KR')}`}
+                  label={`${formatHours(total.hours)} × ${hourly.toLocaleString('ko-KR')}`}
                   value={formatWon(total.base)}
                 />
                 <PayTile label="주휴수당" value={`+ ${formatWon(total.weeklyAllowance)}`} />

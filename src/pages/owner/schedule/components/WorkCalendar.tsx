@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { shiftHours, shiftKey } from '@/lib/api/schedule'
 import type { CalendarShift } from '@/lib/api/types'
 import { addDays, isSameDay, toDateKey } from '@/lib/date'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatHours } from '@/lib/format'
 import { useOwnerCalendar } from '@/pages/owner/api/fixedSchedule'
 import { DailyShiftSheet } from '@/pages/owner/schedule/components/DailyShiftSheet'
 import { HOLIDAYS, isClosedDay } from '@/pages/owner/store/holidays'
@@ -372,7 +372,8 @@ export function WorkCalendar({
                         </>
                       }
                       sub={[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
-                      right={`${shiftHours(shift)}시간`}
+                      // 4:40~13:00 → 8.3시간 (소수 첫째 자리 반올림, QA 11/15)
+                      right={formatHours(shiftHours(shift))}
                     />
                   )
                 })}
