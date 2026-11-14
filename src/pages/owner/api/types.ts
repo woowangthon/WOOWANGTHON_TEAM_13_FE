@@ -237,6 +237,10 @@ export interface OwnerNotification {
   isRead?: boolean
   /** 온 시각 ("3분 전"). 대타 요청은 BE 에 시각이 없어서 비어 있다 */
   createdAt?: string
+  /** 인수인계를 남긴 근무일 YYYY-MM-DD (BE target.workDate, #54 — 없으면 null) */
+  workDate?: string | null
+  /** 같은 매장 · 같은 날 인수인계를 한 줄로 묶었을 때 묶인 알림 ID들 (notifications/groupHandovers) */
+  groupedIds?: string[]
 }
 
 /**

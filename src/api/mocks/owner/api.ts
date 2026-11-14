@@ -364,8 +364,8 @@ export async function getNotifications(): Promise<{ notifications: OwnerNotifica
 }
 
 /**
- * GET /stores/{storeId}/notifications 의 사장님 인수인계 알림 (BE #34 HANDOVER_CREATED) — 시연: 달빛 카페 민수 1개.
- * POST …/notifications/read 하면 읽음
+ * GET /stores/{storeId}/notifications 의 사장님 인수인계 알림 (BE #34 HANDOVER_CREATED, workDate 는 #54 target.workDate).
+ * 시연: 달빛 카페 오늘 2개(민수 · 도윤 — 알림 화면에서 한 줄로 묶인다) + 어제 1개. POST …/notifications/read 하면 읽음
  */
 const handoverNotices = [
   {
@@ -375,6 +375,25 @@ const handoverNotices = [
     body: '우유 2팩 남음 · 외상 1건 (단골 김OO님 아메리카노)',
     createdAt: '2026-11-20T08:40:00Z',
     isRead: false,
+    workDate: '2026-11-20',
+  },
+  {
+    notificationId: 'HANDOVER_CREATED:hnd_demo_2',
+    storeId: 'dalbit',
+    title: '도윤님이 인수인계를 남겼어요',
+    body: '원두 1봉 남음 · 영수증 용지 교체',
+    createdAt: '2026-11-20T05:10:00Z',
+    isRead: false,
+    workDate: '2026-11-20',
+  },
+  {
+    notificationId: 'HANDOVER_CREATED:hnd_demo_19',
+    storeId: 'dalbit',
+    title: '민수님이 인수인계를 남겼어요',
+    body: '꽃집 외상 1잔 · 내일 계산',
+    createdAt: '2026-11-19T13:55:00Z',
+    isRead: true,
+    workDate: '2026-11-19',
   },
 ]
 
