@@ -29,7 +29,8 @@ export default function OwnerPayrollPage() {
   const [offset, setOffset] = useState(0)
   const base = new Date(today.getFullYear(), today.getMonth() + offset, 1)
   const month = toDateKey(base).slice(0, 7)
-  const monthLabel = `${base.getFullYear() !== today.getFullYear() ? `${base.getFullYear()}년 ` : ''}${base.getMonth() + 1}월`
+  // 어느 달 급여인지 늘 연도까지 (QA 11/15: 달만 보면 몇 년 것인지 헷갈린다)
+  const monthLabel = `${base.getFullYear()}년 ${base.getMonth() + 1}월`
   const targets = scope === 'all' ? stores : stores.filter((s) => s.storeId === scope)
   const effective = targets.length ? targets : [store]
 
@@ -216,7 +217,7 @@ export default function OwnerPayrollPage() {
         </>
       )}
 
-      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} month={base.getMonth() + 1} />}
+      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} monthLabel={monthLabel} />}
     </div>
   )
 }
@@ -239,13 +240,21 @@ function payNote(store: OwnerStoreView | null) {
   return `주휴수당 포함 · ${size} 사업장 · 매월 ${day} 지급`
 }
 
-function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onClose: () => void }) {
+function PaySheet({
+  pay,
+  monthLabel,
+  onClose,
+}: {
+  pay: MemberPay
+  monthLabel: string
+  onClose: () => void
+}) {
   return (
     <BottomSheet open onClose={onClose} label={`${pay.name} 급여`} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] text-muted-foreground">
-            {pay.name} · {month}월 실수령 · 참고용
+            {pay.name} · {monthLabel} 실수령 · 참고용
           </span>
           <span className="text-[26px] font-extrabold tracking-[-0.03em]">
             {formatWon(pay.netPay)}
