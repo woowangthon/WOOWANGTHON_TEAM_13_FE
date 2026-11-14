@@ -104,6 +104,8 @@ export function useCurrentStore() {
     stores,
     setCurrentStoreId,
     isPending: storesQuery.isPending,
+    /** 내 매장 목록을 다시 받는 중 (캐시에 예전 목록이 남아 있을 수 있음 — 매장 0개 판단은 다 받은 뒤에) */
+    isFetching: storesQuery.isFetching,
     /** 내 매장을 못 불러왔을 때 (알바 화면 틀이 LoadError 를 보여 준다) */
     error: storesQuery.error,
     retry: storesQuery.refetch,
