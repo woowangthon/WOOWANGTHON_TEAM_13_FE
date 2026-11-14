@@ -6,7 +6,9 @@ import { canSaveInviteSchedule, useCreateMember, useMembers } from '@/pages/owne
 import type { Member } from '@/pages/owner/api/types'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
 import { InviteCodeCard } from '@/pages/owner/members/components/InviteCodeCard'
+import { TaxTypePicker } from '@/pages/owner/members/components/TaxTypePicker'
 import { WageInput } from '@/pages/owner/members/components/WageInput'
+import type { TaxType } from '@/pages/owner/payroll/tax'
 import { cellKey, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { Button } from '@/ui/Button'
@@ -15,7 +17,7 @@ import { Input } from '@/ui/Input'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
 
-// 알바생 초대 폼 (docs/03 S4): 이름 · (매장) · 시급 · 고정 근무(선택, 요일 × 타임) → 초대코드 → 복사 / 카톡 → [완료]
+// 알바생 초대 폼 (docs/03 S4): 이름 · (매장) · 시급 · 급여 공제(BE #52, 입장하면 그대로) · 고정 근무(선택, 요일 × 타임) → 초대코드 → 복사 / 카톡 → [완료]
 // 휴대폰은 초대 시트(MemberAddPage) 안, 데스크톱은 직원 탭 오른쪽 칸에 그대로 쓴다
 // 고정 근무는 BE 초대에 칸이 생기기 전까지 진짜 모드에서는 안내만 (입장하면 근무 탭에서 정한다)
 // 같은 매장에 같은 이름(띄어쓰기 · 대소문자 무시) 직원 · 초대가 있으면 만들지 않는다 — 근무 · 급여에서 구별이 안 돼서 (QA 11/15)
@@ -24,6 +26,7 @@ export function InviteForm({ onDone }: { onDone: (member: Member) => void }) {
   const [storeId, setStoreId] = useState(store.storeId)
   const [name, setName] = useState('')
   const [wage, setWage] = useState(String(MIN_WAGE))
+  const [taxType, setTaxType] = useState<TaxType>('none')
   const [created, setCreated] = useState<Member | null>(null)
   /** 고정 근무 칸: cellKey(templateId, 요일) */
   const [cells, setCells] = useState<Set<string>>(new Set())
@@ -40,6 +43,7 @@ export function InviteForm({ onDone }: { onDone: (member: Member) => void }) {
       {
         name: name.trim(),
         hourlyWage: Number(wage),
+        taxType,
         schedule: withSchedule
           ? (templates.data ?? []).flatMap((t) =>
               WEEKDAY_LABELS.flatMap((_, weekday) =>
@@ -124,6 +128,7 @@ export function InviteForm({ onDone }: { onDone: (member: Member) => void }) {
         </div>
       )}
       <WageInput value={wage} onChange={setWage} />
+      <TaxTypePicker value={taxType} onChange={setTaxType} />
       <div className="flex flex-col gap-2">
         <span className="px-1 text-[13px] font-bold text-muted-foreground">고정 근무 (선택)</span>
         {!withSchedule ? (

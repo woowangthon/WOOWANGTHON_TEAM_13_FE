@@ -134,6 +134,8 @@ export interface InvitationResponse {
   hourlyWage: number
   /** 입장하면 들어갈 고정 근무 (BE #38) */
   schedule?: WeekShift[]
+  /** 입장하면 들어갈 급여 공제 (BE #52) */
+  taxType?: TaxType
   createdAt: string
 }
 
@@ -188,7 +190,7 @@ export interface Member {
   shiftLabel: string
   /** 입장 전에 정해 둔 고정 근무 (초대할 때, BE 칸이 생기기 전에는 가짜 서버만) */
   schedule?: WeekShift[]
-  /** 급여 공제 (입장한 직원만, 입장 전은 없음) */
+  /** 급여 공제 (입장 전이면 초대에 정해 둔 것 — 입장하면 그대로, BE #52) */
   taxType?: TaxType
 }
 
@@ -198,6 +200,8 @@ export interface NewMember {
   hourlyWage: number
   /** 입장하면 들어갈 고정 근무 (선택) — canSaveInviteSchedule() 일 때만 보낸다 */
   schedule?: WeekShift[]
+  /** 입장하면 들어갈 급여 공제 (BE #52, 안 고르면 공제 없음) */
+  taxType?: TaxType
 }
 
 /** 지금 근무 중인 사람 (홈 카드) — 직원 · 사장님 모두, 근무 달력에서 지금 시간이 근무 시간 안인 사람 */

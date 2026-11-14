@@ -44,7 +44,7 @@ export interface CreatedMember {
 const invitedMember = (
   storeId: string,
   invitation: Pick<InvitationResponse, 'invitationId' | 'code' | 'staffName' | 'hourlyWage'> &
-    Partial<Pick<InvitationResponse, 'schedule'>>,
+    Partial<Pick<InvitationResponse, 'schedule' | 'taxType'>>,
 ): Member => ({
   memberId: invitation.invitationId,
   invitationId: invitation.invitationId,
@@ -55,6 +55,7 @@ const invitedMember = (
   inviteCode: invitation.code,
   shiftLabel: '입장 전',
   schedule: invitation.schedule ?? [],
+  taxType: invitation.taxType ?? 'none',
 })
 
 /*
@@ -94,6 +95,7 @@ const postInvitation = async (storeId: string, input: NewMember): Promise<Create
     const invitation = await http.post<InvitationResponse>(`/stores/${storeId}/invitations`, {
       staffName: input.name,
       hourlyWage: input.hourlyWage,
+      taxType: input.taxType ?? 'none',
       ...(INVITE_SCHEDULE_IN_BE && input.schedule?.length ? { schedule: input.schedule } : {}),
     })
     return { member: invitedMember(storeId, invitation), existing: false }
@@ -140,26 +142,35 @@ const putHourlyWage = async (storeId: string, { memberId, hourlyWage, invited }:
   })
 }
 
-/** 급여 공제(taxType) 바꾸기 — PUT …/members/{memberId}/tax-type (BE 11/12), 입장한 직원만 */
+/**
+ * 급여 공제(taxType) 바꾸기 — 입장한 직원은 PUT …/members/{memberId}/tax-type (BE 11/12),
+ * 입장 전이면 초대에 저장 PATCH …/invitations/{invitationId} (BE #52, 입장하면 그대로)
+ */
 const putTaxType = async (
   storeId: string,
-  { memberId, taxType }: { memberId: string; taxType: TaxType },
+  { member, taxType }: { member: Member; taxType: TaxType },
 ) => {
   if (!isRealApi('members')) {
-    await updateTaxType(memberId, taxType)
+    await updateTaxType(member.memberId, taxType)
     return
   }
-  await apiFetch(`/stores/${storeId}/members/${memberId}/tax-type`, {
+  if (member.status === 'invited' && member.invitationId) {
+    await http.patch<InvitationResponse>(`/stores/${storeId}/invitations/${member.invitationId}`, {
+      taxType,
+    })
+    return
+  }
+  await apiFetch(`/stores/${storeId}/members/${member.memberId}/tax-type`, {
     method: 'PUT',
     body: JSON.stringify({ taxType }),
   })
 }
 
-/** 직원 급여 공제 바꾸기 (입장한 직원만) → 급여 다시 계산 */
+/** 직원 급여 공제 바꾸기 (입장 전 · 입장한 직원 모두) → 급여 다시 계산 */
 export function useUpdateTaxType(storeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: { memberId: string; taxType: TaxType }) => putTaxType(storeId, input),
+    mutationFn: (input: { member: Member; taxType: TaxType }) => putTaxType(storeId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ownerKeys.members(storeId) })
       queryClient.invalidateQueries({ queryKey: ownerKeys.payroll(storeId) })
