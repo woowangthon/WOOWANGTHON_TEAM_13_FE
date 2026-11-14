@@ -55,18 +55,21 @@ export default function OwnerMyPage() {
         {isPending ? (
           <Spinner />
         ) : (
-          stores.map((s) => (
-            <StoreRow
-              key={s.storeId}
-              store={s}
-              canDelete={stores.length > 1}
-              onDeleted={() => {
-                if (s.storeId === store.storeId) {
-                  setCurrentStoreId(stores.find((o) => o.storeId !== s.storeId)?.storeId ?? null)
-                }
-              }}
-            />
-          ))
+          // 알바 마이페이지 소속 매장처럼 카드 한 장 안에 줄 + 구분선 (11/14)
+          <div className="flex flex-col overflow-hidden rounded-[22px] border border-line/60 bg-card">
+            {stores.map((s) => (
+              <StoreRow
+                key={s.storeId}
+                store={s}
+                canDelete={stores.length > 1}
+                onDeleted={() => {
+                  if (s.storeId === store.storeId) {
+                    setCurrentStoreId(stores.find((o) => o.storeId !== s.storeId)?.storeId ?? null)
+                  }
+                }}
+              />
+            ))}
+          </div>
         )}
         {/* 매장 추가는 온보딩과 같은 4단계로 (사업자등록번호 · 근무 타임 · 사진까지) */}
         <Link
@@ -249,7 +252,7 @@ function StoreRow({
     })
 
   return (
-    <div className="flex items-center gap-3 rounded-[22px] border border-line/60 bg-card py-3 pr-3 pl-3.5">
+    <div className="flex items-center gap-3 border-b border-line/60 py-3 pr-3 pl-3.5 last:border-b-0">
       <Link
         to={`/owner/stores/${store.storeId}`}
         className="flex min-w-0 flex-1 items-center gap-3 text-foreground"
