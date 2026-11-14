@@ -6,7 +6,7 @@ import type { AppNotification, NotificationFeed, ShiftBanner } from '@/lib/api/t
 /*
  * 가짜 서버: 알림 API (docs/07 10) — BE feature_notifications 모양.
  * 시연(달빛 카페): 알바용 알림 3종(대타 요청 · 대타 구해짐 · 사장님 답변, 안 읽음 2개) +
- * 출근 전 배너(오늘 18:00 마감 근무 · 오늘 인수인계 중 체크 안 된 항목 — 홈에서 체크하면 줄어든다).
+ * 출근 전 배너(오늘 18:00 마감 근무 · 최근 7일 인수인계 중 체크 안 된 항목, 근무일 최신 순 — BE 와 같게. 홈에서 체크하면 줄어든다).
  * 읽음은 "마지막으로 읽은 시각" 하나로 정한다 (POST /read = 지금까지 전부 읽음).
  */
 
@@ -56,19 +56,26 @@ const SHIFT: Record<string, { start: string; end: string }> = {
 async function banner(storeId: string): Promise<ShiftBanner | null> {
   const shift = SHIFT[storeId]
   if (!shift) return null
-  const workDate = toDateKey(findStaffStore(storeId).today)
-  const { notes } = await getHandoverNotes(storeId, workDate)
-  const items = notes.flatMap((note) =>
-    note.items
-      .filter((item) => !item.checked)
-      .map((item) => ({
-        noteId: note.noteId,
-        itemId: item.itemId,
-        tag: item.tag,
-        text: item.text,
-        authorName: note.author.name,
-        workDate,
-      })),
+  const today = findStaffStore(storeId).today
+  const workDate = toDateKey(today)
+  // BE HANDOVER_LOOKBACK_DAYS = 7: 오늘부터 7일 전까지
+  const days = Array.from({ length: 8 }, (_, i) =>
+    toDateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - i)),
+  )
+  const lists = await Promise.all(days.map((day) => getHandoverNotes(storeId, day)))
+  const items = lists.flatMap(({ date, notes }) =>
+    notes.flatMap((note) =>
+      note.items
+        .filter((item) => !item.checked)
+        .map((item) => ({
+          noteId: note.noteId,
+          itemId: item.itemId,
+          tag: item.tag,
+          text: item.text,
+          authorName: note.author.name,
+          workDate: date,
+        })),
+    ),
   )
   return {
     workDate,
