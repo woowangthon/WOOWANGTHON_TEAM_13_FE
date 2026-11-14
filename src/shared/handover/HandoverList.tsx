@@ -3,7 +3,8 @@ import { HandoverItem } from '@/shared/handover/HandoverItem'
 import { HANDOVER_TAG_LABEL } from '@/shared/icons'
 
 // 공용 보기 부품: 인수인계 목록 · 사장/알바 화면이 함께 사용 — 담당: 민지
-// live(오늘): 체크할 수 있고 처리한 항목은 흐리게. 지난 날짜: 모두 처리됨으로 보여 주고 체크 불가
+// live(오늘 · 지난 날): 실제 체크 상태 그대로, 체크할 수 있고 처리한 항목은 흐리게. 앞날(live 아님)은 체크 불가.
+// 지난 날짜를 '모두 처리됨'으로 보여 주면 출근 전 배너(최근 7일 체크 안 된 항목)와 어긋나서 실제 상태로 바꿨다 (QA 11/15)
 // variant: 'card'(기본, 지금 모양) = 항목마다 따로 떨어진 카드 · 'list' = 카드 한 장 안의 할 일 목록 (알바 홈)
 interface HandoverListProps {
   items: HandoverItemData[]
@@ -17,15 +18,15 @@ interface HandoverListProps {
 
 export function HandoverList({ items, live, onToggle, meta, variant = 'card' }: HandoverListProps) {
   const renderItem = (item: HandoverItemData) => {
-    const done = live ? item.checked : true
+    const done = item.checked
     const tag = HANDOVER_TAG_LABEL[item.tag]
     return (
       <HandoverItem
         key={item.itemId}
         item={item}
         done={done}
-        faded={live && done}
-        subText={live ? tag : `${tag} · 처리됨`}
+        faded={done}
+        subText={tag}
         disabled={!live}
         meta={meta?.(item)}
         variant={variant}

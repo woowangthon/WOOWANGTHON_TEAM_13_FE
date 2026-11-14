@@ -67,6 +67,8 @@ function toNote(
 ): HandoverNote {
   const [name, time] = d.from.split(' · ')
   const createdAt = `${dateKey(new Date(today.getFullYear(), today.getMonth(), day))}T${time}:00+09:00`
+  // 시연: 지난 날 항목은 다음 근무자가 이미 처리한 것으로 (오늘 것만 체크 안 됨)
+  const past = day < today.getDate()
   return {
     noteId: i === 0 ? `hnd_${storeId}_${day}` : `hnd_${storeId}_${day}_${i}`,
     author: { userId: authorId(storeId, name), name },
@@ -79,9 +81,9 @@ function toNote(
       itemId: item.id,
       tag: TAG[item.tag],
       text: item.text,
-      checked: false,
-      checkedBy: null,
-      checkedAt: null,
+      checked: past,
+      checkedBy: past ? { userId: 'usr_jieun', name: '지은' } : null,
+      checkedAt: past ? createdAt : null,
     })),
   }
 }

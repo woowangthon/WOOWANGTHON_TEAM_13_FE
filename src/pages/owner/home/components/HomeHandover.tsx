@@ -58,6 +58,8 @@ export function HomeHandover({
   }
   const date = fromDateKey(selected)
   const live = isSameDay(date, today)
+  // 오늘 · 지난 날 모두 체크할 수 있다 (출근 전 배너가 최근 7일 체크 안 된 항목을 보여 줘서, QA 11/15)
+  const canCheck = date <= today
   const notesQuery = useHandoverNotes(storeId, selected)
   const confirm = useConfirmHandoverItem(storeId, selected)
 
@@ -66,7 +68,7 @@ export function HomeHandover({
   // 노트 구분 없이 한 목록 (노트 순서 · 항목 순서 그대로). 체크할 때 쓸 noteId 와 "작성자 · 시간"
   const items = withItems.flatMap((note) => note.items)
   const noteOf = new Map(withItems.flatMap((note) => note.items.map((item) => [item.itemId, note])))
-  const done = live ? items.filter((item) => item.checked).length : items.length
+  const done = items.filter((item) => item.checked).length
   const workers = useScheduleWorkers(storeId).data
   const nameOf = (userId: string, fallback: string) =>
     workers?.find((w) => w.userId === userId)?.name ?? fallback
@@ -127,7 +129,7 @@ export function HomeHandover({
           <HandoverList
             variant="list"
             items={items}
-            live={live}
+            live={canCheck}
             meta={(item) => {
               const note = noteOf.get(item.itemId)
               return (

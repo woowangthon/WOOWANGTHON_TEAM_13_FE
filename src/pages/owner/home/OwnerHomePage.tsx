@@ -51,6 +51,8 @@ export default function OwnerHomePage() {
 
 function OwnerHome() {
   const { store, today } = useOwnerStore()
+  /** 출근 전 배너 [인수인계 보기]로 고른 날 (YYYY-MM-DD) — 홈 인수인계를 그날로 */
+  const [handoverDate, setHandoverDate] = useState<string>()
   const profile = useOwnerProfile()
   const questions = useOwnerQuestions(store.storeId)
   const [params, setParams] = useSearchParams()
@@ -124,14 +126,20 @@ function OwnerHome() {
         </section>
 
         <div className="order-6 lg:order-none">
-          <HomeHandover key={store.storeId} storeId={store.storeId} today={today} />
+          {/* 출근 전 배너 [인수인계 보기]로 고른 날을 열어 둔다 (key 로 다시 그려 그날 · 그 주로) */}
+          <HomeHandover
+            key={`${store.storeId}_${handoverDate ?? ''}`}
+            storeId={store.storeId}
+            today={today}
+            initialDate={handoverDate}
+          />
         </div>
       </div>
 
       <aside className="contents lg:sticky lg:top-7 lg:flex lg:flex-col lg:gap-5">
         {/* 사장님 근무 30분 전 ~ 끝까지: 체크 안 된 인수인계 (BE #41, 알바 홈과 같은 배너) — 없으면 칸도 없앤다 */}
         <div className="order-2 empty:hidden lg:order-none">
-          <ShiftBanner storeId={store.storeId} today={today} />
+          <ShiftBanner storeId={store.storeId} today={today} onShowHandover={setHandoverDate} />
         </div>
         <AnswerRateOrPayroll storeId={store.storeId} today={today} />
         <QuickTiles />
