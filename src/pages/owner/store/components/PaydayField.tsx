@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '@/ui/utils'
 
-// 급여일 휠 (매장 등록 ② · 매장 상세): 매월 1~30일 · 말일(31)
+// 급여일 휠 (매장 등록 ② · 매장 상세): 매월 1~28일 · 말일(31) — 29 · 30일은 2월에 없어서 고르지 않는다 (QA 11/15)
 // BE 는 1~31 을 받는다 (31 은 짧은 달에도 마지막 날, 마이그레이션 17)
 
-const PAYDAYS = [...Array.from({ length: 30 }, (_, i) => i + 1), 31]
+const PAYDAYS = [...Array.from({ length: 28 }, (_, i) => i + 1), 31]
 const ROW = 44
 
 export function PaydayField({
@@ -17,9 +17,10 @@ export function PaydayField({
   const wheel = useRef<HTMLDivElement>(null)
   const initial = useRef(value)
 
-  // 처음 열 때 고른 급여일로 휠을 맞춘다
+  // 처음 열 때 고른 급여일로 휠을 맞춘다. 예전에 고른 29 · 30일은 말일 칸으로
   useEffect(() => {
-    wheel.current?.scrollTo({ top: Math.max(0, PAYDAYS.indexOf(initial.current)) * ROW })
+    const index = PAYDAYS.indexOf(initial.current)
+    wheel.current?.scrollTo({ top: (index >= 0 ? index : PAYDAYS.length - 1) * ROW })
   }, [])
 
   const onScroll = () => {
