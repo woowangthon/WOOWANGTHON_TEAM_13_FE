@@ -1,5 +1,5 @@
 import { BookOpen, ChevronRight, LoaderCircle, Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
 import { isRealApi } from '@/lib/api/source'
@@ -43,6 +43,8 @@ export default function MyPage() {
   const [codeError, setCodeError] = useState('')
   const [askWithdraw, setAskWithdraw] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  // withdrawing 은 다시 그린 뒤에야 true 라, 같은 순간 두 번 눌러도 한 번만 부르게 잠금
+  const withdrawLock = useRef(false)
   const real = isRealApi('users')
 
   // 이름: 고친 뒤 [저장] (Enter 도 저장)
@@ -78,12 +80,15 @@ export default function MyPage() {
   }
 
   const withdraw = async () => {
+    if (withdrawLock.current) return
+    withdrawLock.current = true
     setWithdrawing(true)
     try {
       await withdrawAccount()
       navigate('/login', { replace: true })
       toast('탈퇴했어요')
     } catch (error) {
+      withdrawLock.current = false
       setWithdrawing(false)
       toastApiError(error, '탈퇴하지 못했어요. 다시 시도해 주세요')
     }
@@ -326,7 +331,8 @@ export default function MyPage() {
         {askWithdraw ? (
           <div className="flex flex-col gap-3 rounded-3xl bg-destructive-soft p-4">
             <span className="text-[15px] leading-[1.55] font-bold break-keep text-destructive-foreground">
-              정말 탈퇴할까요? 탈퇴하면 이 계정으로 다시 들어올 수 없어요.
+              정말 탈퇴할까요? 탈퇴하면 소속 매장에서 빠지고 지금까지의 기록을 볼 수 없어요. 같은
+              계정으로 다시 가입하면 새 계정으로 시작해요.
             </span>
             <div className="grid grid-cols-2 gap-2">
               <Button
