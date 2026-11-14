@@ -1,5 +1,14 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { HandoverWriteSheet } from '@/pages/staff/handover/components/HandoverWriteSheet'
+import { StaffHome } from '@/pages/staff/home/components/StaffHome'
+import { useCloseTo } from '@/lib/useCloseTo'
 
+// 인수인계 남기기: 홈 위에 작성 시트를 띄운다 (하단 + 버튼)
 export default function HandoverPage() {
-  return <PagePlaceholder title="인수인계" owner="민지" />
+  const close = useCloseTo('/staff')
+  return (
+    <>
+      <StaffHome />
+      <HandoverWriteSheet onClose={close} />
+    </>
+  )
 }

@@ -1,5 +1,14 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { ScheduleMonth } from '@/pages/staff/schedule/components/ScheduleMonth'
+import { ReceivedSubstitutes } from '@/pages/staff/schedule/components/SubstituteRequests'
+import { WorkHeader } from '@/pages/staff/schedule/components/WorkHeader'
 
+// 근무표 탭: 받은 대타 요청 → 매장 전체 근무 달력 (모두가 같이 봄, 날짜를 누르면 그날 근무 + 그날 보낸 대타 요청)
 export default function MySchedulePage() {
-  return <PagePlaceholder title="내 근무표 (P1)" owner="민지" />
+  return (
+    <div className="flex flex-col gap-5">
+      <WorkHeader segment="shift" />
+      <ReceivedSubstitutes />
+      <ScheduleMonth />
+    </div>
+  )
 }

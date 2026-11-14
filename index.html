@@ -2,10 +2,20 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>AI 사수</title>
+    <!-- 탭 아이콘 (crewBean 원두 캐릭터, public/ 나현). ?v=2: 예전 Vite 기본 아이콘 캐시를 무시하게 — 아이콘을 바꾸면 숫자를 올린다.
+         .ico 를 먼저(SVG 못 쓰는 브라우저), SVG 를 뒤에 두면 SVG 를 쓰는 브라우저는 SVG 를 고른다 -->
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+    <!-- 아이폰 홈 화면에 추가할 때 아이콘 (흰 배경 — 투명이면 검은색으로 채워짐). 바꾸면 ?v 숫자를 올린다 -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+    <!-- interactive-widget: 키보드가 올라오면 화면 높이를 줄여서 아래 고정 입력칸(채팅)이 가려지지 않게 (안드로이드 크롬) -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <!-- 주소창 · 상태 바 색 = 앱 배경색 (canvas #F1ECE3) -->
+    <meta name="theme-color" content="#F1ECE3" />
+    <title>crewBean</title>
   </head>
   <body>
     <div id="root"></div>

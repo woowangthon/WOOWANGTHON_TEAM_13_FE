@@ -1,30 +1,191 @@
 /*
  * 전역 스타일 — 담당: 나현 (디자인 시스템)
- * Tailwind 설정(@import "tailwindcss")과 디자인 값은 나현이 ui 세팅 때 추가한다.
- * 아래는 디자인 시스템이 들어오기 전까지 쓰는 최소 기본값이다.
+ * 색은 아래 :root 토큰으로만 바꾼다. 화면에서는 bg-card, text-muted-foreground, bg-brand 처럼 토큰 이름으로 쓴다.
+ * --brand 는 매장마다 다르다 (달빛 카페 #606C45 모스 · 오후의 커피 #826245 어스, 11/13 차분한 말차 · 커피 톤). 화면 틀에서 style 로 덮어쓴다.
+ * 가독성(11/12): 글자색은 배경 위 대비 4.5:1 이상 (muted-foreground 5.4 · subtle 4.6). faint 는 비활성 · 꾸밈 전용, 읽을 글자에는 쓰지 않는다.
+ * 모서리: 카드 rounded-card(24) · 카드 안 덩어리 rounded-inner(18) · 버튼 rounded-full
  */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://cdn.jsdelivr.net/gh/sun-typeface/SUITE@2/fonts/variable/woff2/SUITE-Variable.css');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 1.5rem;
+
+  /* 매장 색 — 화면 틀에서 매장에 맞게 바꾼다 */
+  --brand: #606c45;
+  --brand-soft: #e8eadd;
+
+  --canvas: #e6e0d5; /* 앱 바깥 배경 */
+  --background: #f1ece3; /* 앱 배경 (index.html · vite.config · 채팅 입력 그라데이션에도 같은 값) */
+  --foreground: #1f2a24;
+  --card: #fbf8f3;
+  --card-foreground: #1f2a24;
+  --popover: #fbf8f3;
+  --popover-foreground: #1f2a24;
+  --primary: #606c45;
+  --primary-foreground: #ffffff;
+  --secondary: #ede7dc; /* 연한 버튼 */
+  --secondary-foreground: #1f2a24;
+  --muted: #e7e1d6; /* 세그먼트 바탕 · 시스템 말풍선 */
+  --muted-foreground: #5c6159; /* 보조 글자 — 배경 위 대비 5.4 (예전 #7b8078 은 3.4) */
+  --subtle: #666b63; /* 보조 설명 · 입력칸 안내 — 대비 4.6 (예전 #8a8e86 은 2.8) */
+  --faint: #8a8e86; /* 비활성 · 꾸밈 (읽을 글자에는 쓰지 않기) */
+  --line: #cfc8ba; /* 선 · 빈 체크박스 */
+  --accent: #e8eadd;
+  --accent-foreground: #4b5535;
+  --ink: #282c1e; /* 진한 버튼 · 토스트 */
+  --warm: #ede3d6; /* 사장님 답변 · 메모 */
+  --warm-foreground: #7a5c3e;
+  --new: #b4733f; /* NEW 배지 */
+  --destructive: #b9574b;
+  --destructive-soft: #f6e4df;
+  --destructive-foreground: #9b4237;
+  --border: #eceae3;
+  --input: #eceae3;
+  --ring: #606c45;
+
+  /* 다크 카드의 옅은 원형 라인 텍스처 */
+  --texture: repeating-radial-gradient(
+    circle at 105% -5%,
+    rgba(255, 255, 255, 0.07) 0 1px,
+    transparent 1px 15px
+  );
 }
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
+@theme inline {
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, system-ui, sans-serif;
+  --radius-sm: 0.75rem;
+  --radius-md: 1.125rem;
+  --radius-lg: var(--radius);
+  --radius-xl: 1.75rem;
+  /* 모서리 3단계: rounded-card · rounded-inner · rounded-full(버튼) */
+  --radius-card: 1.5rem;
+  --radius-inner: 1.125rem;
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-canvas: var(--canvas);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--brand);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ink: var(--ink);
+  --color-warm: var(--warm);
+  --color-warm-foreground: var(--warm-foreground);
+  --color-new: var(--new);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --shadow-soft: 0 8px 24px rgba(40, 46, 36, 0.06);
+  --shadow-float: 0 8px 30px rgba(40, 46, 36, 0.12);
+  --shadow-lift: 0 10px 22px rgba(30, 40, 32, 0.22);
 }
 
-body {
+/* 다크 카드 텍스처: <div className="bg-brand texture"> */
+@utility texture {
+  background-image: var(--texture);
+}
+
+/* SUITE 글꼴: 사장님 홈 인사말에만 (11/13, 다른 글씨는 Pretendard). 불러오기 실패하면 Pretendard → 시스템 글꼴 */
+@utility font-suite {
   font-family:
-    'Pretendard',
-    system-ui,
+    'SUITE Variable',
+    SUITE,
+    'Pretendard Variable',
+    Pretendard,
     -apple-system,
-    'Segoe UI',
-    'Apple SD Gothic Neo',
-    'Malgun Gothic',
+    system-ui,
     sans-serif;
-  -webkit-font-smoothing: antialiased;
 }
+
+/* 가로 스크롤 줄에서 스크롤바 숨기기 */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  /* 모바일: 누를 때 회색 번쩍임 없애기 · 두 번 탭 확대 막기 (스크롤 · 두 손가락 확대는 그대로) */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  body {
+    @apply bg-canvas text-foreground font-sans antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  input,
+  textarea,
+  button {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: none;
+  }
+}
+
+/*
+ * 사장님 화면(OwnerFrame 의 .owner-wide 안)에서만 카드 그림자를 조금 더 — 알바 화면의 shadow-soft 는 그대로.
+ * Tailwind 4 는 shadow-soft 값을 클래스 안에 넣어서, 토큰 대신 --tw-shadow 를 덮어쓴다 (레이어 밖이라 유틸리티보다 우선)
+ */
+.owner-wide .shadow-soft {
+  --tw-shadow:
+    0 1px 3px var(--tw-shadow-color, rgba(40, 46, 36, 0.06)),
+    0 10px 28px var(--tw-shadow-color, rgba(40, 46, 36, 0.1));
+}
+
+/*
+ * 사장님 화면 색 (11/14, 나현): 알바 화면과 같은 기본 토큰(:root)을 쓴다. 11/13 사장님 전용 팔레트(.owner-wide 덮어쓰기)는 없앴다.
+ * .owner-wide 클래스는 그대로 남는다 — 사장님 데스크톱 시트(ui/BottomSheet) · 위 그림자(shadow-soft)용
+ */

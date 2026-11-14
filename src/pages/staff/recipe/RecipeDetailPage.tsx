@@ -1,5 +1,36 @@
-import { PagePlaceholder } from '@/app/PagePlaceholder'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router'
+import { isNotFound } from '@/lib/api/errors'
+import { useRecipe } from '@/lib/api/recipes'
+import { RecipeBoard } from '@/pages/staff/recipe/components/RecipeBoard'
+import { RecipeSheet } from '@/pages/staff/recipe/components/RecipeSheet'
+import { useCloseTo } from '@/lib/useCloseTo'
+import { useCurrentStore } from '@/pages/staff/useCurrentStore'
 
+// 레시피 상세: 레시피 목록 위에 상세 시트를 띄운다
 export default function RecipeDetailPage() {
-  return <PagePlaceholder title="레시피 상세" owner="민지" />
+  const { recipeId = '' } = useParams()
+  const { store } = useCurrentStore()
+  const { search } = useLocation()
+  const navigate = useNavigate()
+  const close = useCloseTo(`/staff/recipes${search}`)
+  const recipeQuery = useRecipe(store.id, recipeId, { fromList: true })
+
+  // 다른 매장 레시피 · 삭제된 레시피면 (매장을 바꾼 경우 등) 목록으로 돌아간다
+  if (isNotFound(recipeQuery.error)) return <Navigate to="/staff/recipes" replace />
+
+  const recipe = recipeQuery.data
+  return (
+    <>
+      <RecipeBoard segment="recipe" />
+      {recipe && (
+        <RecipeSheet
+          recipe={recipe}
+          stepsPending={recipeQuery.isPlaceholderData}
+          storeName={store.name}
+          onClose={close}
+          onAsk={() => navigate('/staff/chat', { state: { draft: `${recipe.name} ` } })}
+        />
+      )}
+    </>
+  )
 }

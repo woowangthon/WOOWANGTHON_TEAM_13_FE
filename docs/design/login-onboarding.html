@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="268ded27-e6d3-4caa-bf42-6e2d80233379"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/**
+ * Minified by jsDelivr using clean-css v5.3.3.
+ * Original file: /gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css
+ *
+ * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
+ */
+/*# sourceMappingURL=/sm/49af798104dba87a942919357f383e653ce9152ba9bdc9bbfa8ba846a1b04235.map */</style>
+<style>/* fallback */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+</style>
+<script src="9d722943-a8ff-4389-9101-4810efce67db"></script>
+<style>body{margin:0;background:#E6E0D5;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#2A4536}a:hover{color:#1A2E23}input,button{font-family:inherit}input:focus{outline:none}@keyframes spin{to{transform:rotate(360deg)}}</style>
+</helmet>
+<div style="min-height:100vh;background:#E6E0D5;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;color:#1F2A24;letter-spacing:-0.01em">
+<div style="width:100%;max-width:460px;margin:0 auto;min-height:100vh;background:#F1ECE3;padding:14px 16px 28px;display:flex;flex-direction:column;gap:20px">
+
+  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;display:flex;flex-direction:column;gap:22px;min-height:calc(100vh - 42px)">
+      <section style="position:relative;flex:1;min-height:420px;border-radius:32px;overflow:hidden;isolation:isolate">
+        <div style="position:absolute;inset:0;z-index:-1"><image-slot id="login-photo" shape="rect" src="../../src/pages/auth/assets/login-photo.webp" placeholder="매장 사진"></image-slot></div>
+        <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(24,36,29,0.25) 0%,rgba(24,36,29,0.1) 35%,rgba(24,36,29,0.88) 88%)"></div>
+        <div style="position:relative;height:100%;min-height:420px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;pointer-events:none">
+          <span style="align-self:flex-start;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;background:rgba(255,255,255,0.16);backdrop-filter:blur(8px);padding:5px 14px 5px 5px;border-radius:999px"><span style="width:30px;height:30px;border-radius:15px;background:#fff;color:#2A4536;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:17px;font-variation-settings:'FILL' 1">local_cafe</span>AI 사수</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:34px;font-weight:800;line-height:1.22;letter-spacing:-0.035em">매장 일,<br>묻고 바로 알기</span>
+            <span style="font-size:14px;opacity:0.82">레시피 · 매뉴얼 · 인수인계 · 근무</span>
+          </div>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button sc-camel-on-click="{{ loginKakao }}" style="height:56px;border-radius:18px;border:none;background:#FEE500;color:rgba(0,0,0,0.85);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;position:relative">
+          <sc-if value="{{ kakaoIdle }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3C6.48 3 2 6.5 2 10.82c0 2.8 1.87 5.25 4.68 6.63-.2.73-.74 2.67-.85 3.08-.13.51.19.5.39.37.16-.11 2.55-1.73 3.58-2.43.72.1 1.45.16 2.2.16 5.52 0 10-3.5 10-7.81C22 6.5 17.52 3 12 3z"></path></svg>카카오로 시작하기</sc-if>
+          <sc-if value="{{ kakaoBusy }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;border-radius:10px;border:2.5px solid rgba(0,0,0,0.2);border-top-color:#000;animation:spin .8s linear infinite"></span></sc-if>
+        </button>
+        <button sc-camel-on-click="{{ loginGoogle }}" style="height:56px;border-radius:18px;border:1px solid #DDD6C9;background:#FBF8F3;color:#1F2A24;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+          <sc-if value="{{ googleIdle }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" sc-camel-view-box="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>Google로 시작하기</sc-if>
+          <sc-if value="{{ googleBusy }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;border-radius:10px;border:2.5px solid #DDD6C9;border-top-color:#2A4536;animation:spin .8s linear infinite"></span></sc-if>
+        </button>
+        <span style="font-size:12px;color:#8A8E86;text-align:center;line-height:1.6;padding:6px 10px 0">시작하면 <a href="#" style="color:#4F554D">이용약관</a> 및 <a href="#" style="color:#4F554D">개인정보처리방침</a>에 동의합니다</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ inFlow }}" hint-placeholder-val="{{ false }}">
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px">
+      <button sc-camel-on-click="{{ back }}" aria-label="뒤로" style="width:42px;height:42px;border-radius:21px;border:none;background:#FBF8F3;color:#1F2A24;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px">arrow_back</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <sc-for list="{{ dots }}" as="d" hint-placeholder-count="3"><span style="height:6px;width:{{ d.w }};border-radius:3px;background:{{ d.bg }};transition:all .25s"></span></sc-for>
+      </div>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#6B7068;background:#FBF8F3;padding:7px 11px 7px 8px;border-radius:999px"><span style="width:16px;height:16px;border-radius:8px;background:{{ provBg }};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:{{ provFg }}">{{ provMark }}</span>{{ provLabel }}</span>
+    </header>
+  </sc-if>
+
+  <sc-if value="{{ isRole }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:8px;padding:6px 4px 0">
+        <span style="font-size:13px;font-weight:500;color:#7B8078">{{ userName }} 님, 환영해요</span>
+        <span style="font-size:28px;font-weight:800;line-height:1.3;letter-spacing:-0.03em">어떻게<br>사용하세요?</span>
+      </div>
+      <button sc-camel-on-click="{{ pickOwner }}" style="border:none;background-color:#2A4536;background-image:repeating-radial-gradient(circle at 105% -5%, rgba(255,255,255,0.07) 0 1px, transparent 1px 15px);color:#fff;border-radius:30px;padding:22px;min-height:190px;display:flex;flex-direction:column;gap:10px;text-align:left;cursor:pointer">
+        <span style="width:46px;height:46px;border-radius:23px;background:#fff;color:#2A4536;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px">storefront</span>
+        <span style="font-size:22px;font-weight:800;margin-top:8px;letter-spacing:-0.02em">사장님</span>
+        <span style="margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;width:100%">
+          <span style="font-size:14px;opacity:0.8">매장 등록 · 직원 초대</span>
+          <span style="width:42px;height:42px;border-radius:21px;background:#fff;color:#1F2A24;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;flex-shrink:0">chevron_right</span>
+        </span>
+      </button>
+      <button sc-camel-on-click="{{ pickWorker }}" style="border:none;background:#FBF8F3;color:#1F2A24;border-radius:30px;padding:22px;min-height:190px;display:flex;flex-direction:column;gap:10px;text-align:left;cursor:pointer;box-shadow:0 8px 24px rgba(40,46,36,0.06)">
+        <span style="width:46px;height:46px;border-radius:23px;background:#E3E8DC;color:#2A4536;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px">badge</span>
+        <span style="font-size:22px;font-weight:800;margin-top:8px;letter-spacing:-0.02em">알바생</span>
+        <span style="margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;width:100%">
+          <span style="font-size:14px;color:#6B7068">초대코드로 입장</span>
+          <span style="width:42px;height:42px;border-radius:21px;background:#1F2A24;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;flex-shrink:0">chevron_right</span>
+        </span>
+      </button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOwner }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:8px;padding:6px 4px 0">
+        <span style="font-size:13px;font-weight:500;color:#7B8078">사장님</span>
+        <span style="font-size:28px;font-weight:800;line-height:1.3;letter-spacing:-0.03em">매장 등록</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:6px;background:#FBF8F3;border-radius:20px;padding:14px 18px;box-shadow:0 8px 24px rgba(40,46,36,0.06)">
+          <span style="font-size:12px;font-weight:700;color:#7B8078">매장 이름</span>
+          <input value="{{ storeName }}" sc-camel-on-change="{{ onStoreName }}" placeholder="달빛 카페" style="border:none;background:transparent;font-size:17px;font-weight:700;color:#1F2A24;padding:0;min-width:0">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;background:#FBF8F3;border-radius:20px;padding:14px 18px;box-shadow:0 8px 24px rgba(40,46,36,0.06)">
+          <span style="font-size:12px;font-weight:700;color:#7B8078">직원 수</span>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:2px">
+            <sc-for list="{{ sizeChips }}" as="c" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ c.onClick }}" style="height:42px;border-radius:14px;border:none;background:{{ c.bg }};color:{{ c.fg }};font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ under5 }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:#7B8078;padding:0 8px">5인 미만 · 급여 계산에 반영</span></sc-if>
+      </div>
+      <button sc-camel-on-click="{{ finishOwner }}" style="margin-top:auto;height:56px;border-radius:999px;border:none;background:{{ ownerBtnBg }};color:#fff;font-size:16px;font-weight:700;cursor:pointer">시작하기</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isWorker }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:8px;padding:6px 4px 0">
+        <span style="font-size:13px;font-weight:500;color:#7B8078">알바생</span>
+        <span style="font-size:28px;font-weight:800;line-height:1.3;letter-spacing:-0.03em">초대코드 입력</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;cursor:text">
+          <sc-for list="{{ codeCells }}" as="c" hint-placeholder-count="6">
+            <span style="aspect-ratio:0.82;border-radius:16px;background:#FBF8F3;border:2px solid {{ c.border }};display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-size:24px;font-weight:700;color:#1F2A24;box-shadow:0 6px 18px rgba(40,46,36,0.05)">{{ c.ch }}</span>
+          </sc-for>
+          <input value="{{ code }}" sc-camel-on-change="{{ onCode }}" maxlength="6" autocomplete="one-time-code" aria-label="초대코드" style="position:absolute;inset:0;opacity:0;font-size:16px;text-transform:uppercase">
+        </label>
+        <sc-if value="{{ codeErr }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#9B4237;padding:0 6px">유효하지 않은 코드</span></sc-if>
+        <span style="font-size:12px;color:#8A8E86;padding:0 6px">사장님께 받은 6자리 · 예) K7P2QX</span>
+      </div>
+      <sc-if value="{{ codeOk }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FBF8F3;border-radius:24px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(40,46,36,0.06)">
+          <span style="width:52px;height:52px;border-radius:18px;overflow:hidden;flex-shrink:0"><image-slot id="login-store-thumb" shape="rect" src="../../public/images/cafe-dalbit.jpg" placeholder="매장"></image-slot></span>
+          <span style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0"><span style="font-size:17px;font-weight:800">달빛 카페</span><span style="font-size:13px;color:#7B8078">박 사장님 · 지은 님 자리</span></span>
+          <span style="width:30px;height:30px;border-radius:15px;background:#2A4536;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;flex-shrink:0">check</span>
+        </div>
+      </sc-if>
+      <button sc-camel-on-click="{{ finishWorker }}" style="margin-top:auto;height:56px;border-radius:999px;border:none;background:{{ workerBtnBg }};color:#fff;font-size:16px;font-weight:700;cursor:pointer">{{ workerBtnLabel }}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;gap:22px;min-height:calc(100vh - 42px)">
+      <section style="flex:1;min-height:360px;border-radius:32px;background-color:#2A4536;background-image:repeating-radial-gradient(circle at 105% -5%, rgba(255,255,255,0.07) 0 1px, transparent 1px 15px);color:#fff;padding:24px;display:flex;flex-direction:column;justify-content:space-between">
+        <span style="width:56px;height:56px;border-radius:28px;background:#fff;color:#2A4536;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:30px">check</span>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:14px;opacity:0.75">{{ doneSub }}</span>
+          <span style="font-size:32px;font-weight:800;line-height:1.22;letter-spacing:-0.035em;word-break:keep-all;white-space:pre-line">{{ doneTitle }}</span>
+        </div>
+      </section>
+      <a href="{{ doneHref }}" style="height:56px;border-radius:999px;background:#1F2A24;color:#fff;font-size:16px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px">시작하기<span style="font-family:'Material Symbols Rounded';font-size:20px">arrow_forward</span></a>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="">
+const VALID = ['K7P2QX','M3XR9D','T8VN4K','H4MW8R'];
+const PROV = {kakao:{label:'카카오', mark:'K', bg:'#FEE500', fg:'#000'}, google:{label:'Google', mark:'G', bg:'#E8EEF9', fg:'#4285F4'}};
+
+class Component extends DCLogic {
+  state = { step:'login', prov:null, busy:null, role:null, storeName:'', size:'1~4명', code:'', codeErr:false };
+  componentWillUnmount(){ clearTimeout(this.t); }
+  login(p){ if (this.state.busy) return; this.setState({busy:p}); this.t = setTimeout(() => this.setState({busy:null, prov:p, step:'role'}), 900); }
+  renderVals(){
+    const s = this.state, P = PROV[s.prov] || PROV.kakao;
+    const order = ['role', s.role==='worker' ? 'worker' : 'owner', 'done'];
+    const idx = Math.max(0, order.indexOf(s.step));
+    const code = s.code;
+    const full = code.length===6;
+    const ok = full && VALID.includes(code);
+    const ownerOk = !!s.storeName.trim();
+    return {
+      isLogin: s.step==='login', isRole: s.step==='role', isOwner: s.step==='owner', isWorker: s.step==='worker', isDone: s.step==='done',
+      inFlow: s.step!=='login' && s.step!=='done',
+      kakaoIdle: s.busy!=='kakao', kakaoBusy: s.busy==='kakao', googleIdle: s.busy!=='google', googleBusy: s.busy==='google',
+      loginKakao: () => this.login('kakao'), loginGoogle: () => this.login('google'),
+      provLabel: P.label, provMark: P.mark, provBg: P.bg, provFg: P.fg,
+      userName: s.prov==='google' ? '박지은' : '지은',
+      dots: order.slice(0,2).map((_,i) => ({w: i===idx ? '22px' : '6px', bg: i<=idx ? '#2A4536' : '#D6CFC2'})),
+      back: () => this.setState(st => ({step: st.step==='role' ? 'login' : 'role', codeErr:false})),
+      pickOwner: () => this.setState({role:'owner', step:'owner'}),
+      pickWorker: () => this.setState({role:'worker', step:'worker', code:'', codeErr:false}),
+      storeName: s.storeName, onStoreName: e => this.setState({storeName:e.target.value}),
+      sizeChips: ['1~4명','5~9명','10명+'].map(l => ({label:l, bg:s.size===l?'#2A4536':'#F1ECE3', fg:s.size===l?'#fff':'#1F2A24', onClick:()=>this.setState({size:l})})),
+      under5: s.size==='1~4명',
+      ownerBtnBg: ownerOk ? '#2A4536' : '#B9BFBB',
+      finishOwner: () => { if (ownerOk) this.setState({step:'done'}); },
+      code, onCode: e => this.setState({code:e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6), codeErr:false}),
+      codeCells: Array.from({length:6}, (_,i) => ({ch: code[i] || '', border: s.codeErr ? '#E7A39D' : (i===code.length ? '#2A4536' : (code[i] ? '#CFC8BA' : 'transparent'))})),
+      codeErr: s.codeErr, codeOk: ok,
+      workerBtnBg: full ? '#2A4536' : '#B9BFBB', workerBtnLabel: ok ? '입장' : '확인',
+      finishWorker: () => { if (!full) return; if (!ok) { this.setState({codeErr:true}); return; } this.setState({step:'done'}); },
+      doneSub: s.role==='worker' ? '달빛 카페' : '사장님',
+      doneTitle: s.role==='worker' ? '입장 완료' : `${s.storeName.trim() || '매장'}\n등록 완료`,
+      doneHref: s.role==='worker' ? '알바생 v3.dc.html' : '사장님 v3.dc.html'
+    };
+  }
+}
+</script>
+
+
