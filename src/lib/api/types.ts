@@ -425,38 +425,6 @@ export interface MySchedule {
   shifts: Shift[]
 }
 
-export type AvailabilityStatus = 'available' | 'unavailable'
-
-export interface AvailabilityDay {
-  date: string
-  status: AvailabilityStatus
-}
-
-/** GET /stores/{storeId}/availabilities/me — 아직 안 냈으면 availabilityId · submittedAt 이 null */
-export interface MyAvailability {
-  /** 낸 근무 가능 시간 ID (수정 · 삭제할 때). 안 냈으면 null */
-  availabilityId: string | null
-  /** 가능 시간을 받는 달 "2026-12" */
-  month: string
-  deadline: string
-  days: AvailabilityDay[]
-  memo: string
-  /** 제출 시각. 안 냈으면 null */
-  submittedAt: string | null
-}
-
-/** PATCH /stores/{storeId}/availabilities/{availabilityId} 요청 */
-export interface AvailabilityInput {
-  days: AvailabilityDay[]
-  memo: string
-}
-
-/** POST /stores/{storeId}/availabilities 요청 (처음 낼 때) */
-export interface NewAvailability extends AvailabilityInput {
-  /** 받는 달 "2026-12" */
-  month: string
-}
-
 // ── 급여 (docs/07 8, P1) ──
 
 /** none 공제 없음 · 3.3 3.3% · ins 4대보험 */

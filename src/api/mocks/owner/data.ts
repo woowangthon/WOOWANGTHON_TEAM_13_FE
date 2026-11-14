@@ -129,13 +129,6 @@ export const seedStockNotices = [
   },
 ]
 
-/** 다음 달 근무 가능 시간 제출 현황 */
-export const availabilityStatus: Record<string, { submittedIds: string[] }> = {
-  dalbit: { submittedIds: ['mbr_jieun', 'mbr_minsu', 'mbr_seoyeon'] },
-  roasters: { submittedIds: ['mbr_hajun', 'mbr_yuna'] },
-}
-export const AVAILABILITY_MONTH = { month: '2026-12', deadline: '2026-11-25' }
-
 /** 추천 스케줄 (12월 3주차). 12/16 마감 1명 부족 */
 export const draftRows: Record<string, DraftRow[]> = {
   dalbit: [

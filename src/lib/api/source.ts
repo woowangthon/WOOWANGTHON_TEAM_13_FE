@@ -18,8 +18,6 @@ export const API_FEATURES = [
   'assistantChat',
   'handover',
   'schedule',
-  // 근무 가능 시간: 내 근무표(schedule)와 BE 나오는 시기가 달라서 따로 켠다
-  'availability',
   'payroll',
   // 알림 · 출근 전 인수인계 배너 (알바 · 사장님 같이)
   'notifications',

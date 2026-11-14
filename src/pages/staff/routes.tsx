@@ -1,5 +1,4 @@
 import type { RouteObject } from 'react-router'
-import AvailabilityPage from '@/pages/staff/schedule/AvailabilityPage'
 import ChatPage from '@/pages/staff/chat/ChatPage'
 import HandoverPage from '@/pages/staff/handover/HandoverPage'
 import StaffGuidePage from '@/pages/staff/guide/StaffGuidePage'
@@ -36,7 +35,6 @@ export const staffRoutes: RouteObject[] = [
       { path: 'manuals/:manualId', element: <ManualDetailPage /> },
       { path: 'chat', element: <ChatPage /> },
       { path: 'handover', element: <HandoverPage /> },
-      { path: 'availability', element: <AvailabilityPage /> },
       { path: 'schedule', element: <MySchedulePage /> },
       { path: 'payroll', element: <PayrollPage /> },
     ],

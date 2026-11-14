@@ -1,5 +1,4 @@
 import {
-  AVAILABILITY_MONTH,
   DRAFT_WEEK_LABEL,
   MIN_WAGE,
   OWNER_TODAY,
@@ -14,7 +13,6 @@ import {
   seedStockNotices,
   seedStores,
   shiftPatterns,
-  availabilityStatus,
 } from '@/api/mocks/owner/data'
 import { manuals as staffManuals, type Manual as StaffManual } from '@/api/mocks/staff/manuals'
 import {
@@ -29,7 +27,6 @@ import { fromDateKey, toDateKey } from '@/lib/date'
 import type { StoreTheme } from '@/lib/api/types'
 import type {
   AssistantStats,
-  AvailabilityStatus,
   BizVerification,
   BizVerifyInput,
   ManualDraft,
@@ -647,19 +644,6 @@ export async function deleteShift(storeId: string, shiftId: string): Promise<voi
 export async function saveDayMemo(storeId: string, date: string, text: string): Promise<void> {
   await wait(150)
   db.memos[`${storeId}|${date}`] = text
-}
-
-/** GET /stores/{storeId}/availabilities/status (제안) — 다음 달 가능 시간 제출 현황 */
-export async function getAvailabilityStatus(storeId: string): Promise<AvailabilityStatus> {
-  await wait(150)
-  const members = db.members.filter((m) => m.storeId === storeId && m.status !== 'removed')
-  const submittedIds = availabilityStatus[storeId]?.submittedIds ?? []
-  return {
-    ...AVAILABILITY_MONTH,
-    submitted: members.filter((m) => submittedIds.includes(m.memberId)).length,
-    total: members.length,
-    missing: members.filter((m) => !submittedIds.includes(m.memberId)).map((m) => m.name),
-  }
 }
 
 function toDraft(storeId: string): ScheduleDraft {

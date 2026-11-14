@@ -107,7 +107,6 @@ export const ownerKeys = {
   notifications: ['owner', 'notifications'] as const,
   shifts: (storeId: string, month: string) =>
     ['owner', 'stores', storeId, 'shifts', month] as const,
-  availability: (storeId: string) => ['owner', 'stores', storeId, 'availability'] as const,
   draft: (storeId: string) => ['owner', 'stores', storeId, 'draft'] as const,
   payroll: (storeId: string) => ['owner', 'stores', storeId, 'payroll'] as const,
 }

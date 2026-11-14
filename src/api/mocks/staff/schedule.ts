@@ -1,6 +1,4 @@
-// 가짜 데이터: 공유 근무 달력 · 근무 가능 시간 — BE 연결 전까지 사용 (API 모양은 api/schedule.ts)
-
-const d = (month: number, day: number) => new Date(2026, month - 1, day)
+// 가짜 데이터: 공유 근무 달력 — BE 연결 전까지 사용 (API 모양은 api/schedule.ts)
 
 /** 근무하는 사람. userId 'me' 는 로그인한 사람(시연: 지은)으로 바뀐다 */
 export interface MockWorker {
@@ -165,19 +163,3 @@ export const storeSchedules: Record<string, MockStoreSchedule> = {
     substitutes: {},
   },
 }
-
-/** 가능 시간을 받는 달과 마감일 */
-export const availabilityMonth = { year: 2026, month: 12, deadline: d(11, 25) }
-
-/** 0 비움 · 1 가능 · 2 불가 */
-export type AvailabilityMark = 0 | 1 | 2
-
-export const initialAvailability: Record<number, AvailabilityMark> = {
-  15: 2,
-  16: 2,
-  17: 2,
-  18: 2,
-  19: 2,
-}
-
-export const initialAvailabilityMemo = '15~19일 기말고사 · 주 3회 마감 희망'

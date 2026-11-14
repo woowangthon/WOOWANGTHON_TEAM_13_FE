@@ -6,12 +6,7 @@ import {
   useHandoverDaySummary,
   useHandoverNotes,
 } from '@/lib/api/handover'
-import {
-  availabilityEnabled,
-  myUserId,
-  useMySchedule,
-  useScheduleCalendar,
-} from '@/lib/api/schedule'
+import { myUserId, useMySchedule, useScheduleCalendar } from '@/lib/api/schedule'
 import { isRealApi } from '@/lib/api/source'
 import { useScheduleWorkers } from '@/lib/api/substitute'
 import type { Shift, UserRef } from '@/lib/api/types'
@@ -153,16 +148,9 @@ function HomeBody({
           <EmptyGuide
             message="아직 정해진 근무가 없어요"
             action={
-              // 근무 가능 시간은 BE 에서 없어져서 진짜 모드면 전체 근무표로
-              availabilityEnabled() ? (
-                <Button size="md" onClick={() => navigate('/staff/availability')}>
-                  가능 시간 내기
-                </Button>
-              ) : (
-                <Button size="md" variant="soft" onClick={() => navigate('/staff/schedule')}>
-                  근무표 보기
-                </Button>
-              )
+              <Button size="md" variant="soft" onClick={() => navigate('/staff/schedule')}>
+                근무표 보기
+              </Button>
             }
           />
         )}

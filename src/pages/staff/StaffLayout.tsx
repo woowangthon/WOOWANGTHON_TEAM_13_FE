@@ -27,7 +27,7 @@ const NAV_ITEMS: BottomNavItem[] = [
     to: '/staff/schedule',
     label: '근무',
     icon: CalendarDays,
-    alsoActive: ['/staff/payroll', '/staff/availability'],
+    alsoActive: ['/staff/payroll'],
   },
 ]
 
