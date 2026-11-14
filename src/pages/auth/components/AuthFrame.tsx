@@ -11,6 +11,7 @@ import { cn } from '@/ui/utils'
 //   오른쪽 전체에 showcase(대화 미리보기) · children 은 휴대폰 · 태블릿에서만 보인다. 높이는 화면 높이(최소 860px)
 //   desktopForm 을 주면(역할 선택, 11/14 나현 · 민지 OK): 같은 왼쪽 640px 패널 + 오른쪽 흰 칸에 desktopTop(뒤로 · 계정) 아래 가운데 desktopForm(폭 640px).
 //   children 은 휴대폰 · 태블릿에서만 보인다
+//   mobileOnly 면(알바생 초대코드 입장 · 입장 완료, 11/14 나현 · 민지 OK): 데스크톱도 휴대폰과 같은 가운데 460px 기둥 하나 (알바 화면은 모바일만)
 //   휴대폰 · 태블릿은 그대로
 export function AuthFrame({
   children,
@@ -20,6 +21,7 @@ export function AuthFrame({
   showcase,
   desktopTop,
   desktopForm,
+  mobileOnly = false,
 }: {
   children: ReactNode
   className?: string
@@ -32,8 +34,26 @@ export function AuthFrame({
   desktopTop?: ReactNode
   /** 데스크톱 오른쪽 가운데 내용 (폭 640px). 주면 children 은 데스크톱에서 숨긴다 */
   desktopForm?: ReactNode
+  /** 데스크톱에서도 두 칸 없이 휴대폰 화면(가운데 460px 기둥)만 */
+  mobileOnly?: boolean
 }) {
   useThemeColor(tone === 'white' ? WHITE_THEME_COLOR : null)
+  if (mobileOnly) {
+    return (
+      <div className="min-h-dvh bg-canvas">
+        <main
+          className={cn(
+            'relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col gap-5 px-4 pt-3.5 pb-7',
+            tone === 'white' ? 'bg-white' : 'bg-background',
+            className,
+          )}
+        >
+          {children}
+        </main>
+        <Toaster bottom={32} />
+      </div>
+    )
+  }
   /** 왼쪽 640px 패널 + 오른쪽 칸 구성 (로그인 · 역할 선택) */
   const split = !!showcase || !!desktopForm
   const logo = (
