@@ -29,10 +29,25 @@ function weekOf(today: Date) {
   })
 }
 
-export function HomeHandover({ storeId, today }: { storeId: string; today: Date }) {
-  const [selected, setSelected] = useState(toDateKey(today))
+/** 두 날짜가 속한 주(월요일 시작) 차이 */
+const weeksBetween = (from: Date, to: Date) =>
+  Math.round((weekOf(to)[0].getTime() - weekOf(from)[0].getTime()) / (7 * 24 * 60 * 60 * 1000))
+
+/** initialDate: 처음 보여 줄 날 (YYYY-MM-DD, 인수인계 알림에서 그날로 올 때). 없으면 오늘 */
+export function HomeHandover({
+  storeId,
+  today,
+  initialDate,
+}: {
+  storeId: string
+  today: Date
+  initialDate?: string
+}) {
+  const [selected, setSelected] = useState(initialDate ?? toDateKey(today))
   // 보고 있는 주 (0 = 이번 주). ‹ › 로 한 주씩, 같은 요일을 골라 둔다 · [이번 주로]는 오늘로 (민지 shared/WeekNav)
-  const [weekOffset, setWeekOffset] = useState(0)
+  const [weekOffset, setWeekOffset] = useState(() =>
+    initialDate ? weeksBetween(today, fromDateKey(initialDate)) : 0,
+  )
   const moveWeek = (step: number) => {
     setWeekOffset((offset) => offset + step)
     setSelected((key) => {

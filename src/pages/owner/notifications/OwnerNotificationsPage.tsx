@@ -9,6 +9,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toastApiError } from '@/lib/api/errors'
+import { toDateKey } from '@/lib/date'
 import { formatRelative } from '@/lib/format'
 import { useCloseTo } from '@/lib/useCloseTo'
 import {
@@ -18,6 +19,10 @@ import {
 } from '@/pages/owner/api/home'
 import type { OwnerNotification } from '@/pages/owner/api/types'
 import { OwnerFrame } from '@/pages/owner/components/OwnerFrame'
+import {
+  readOpenedHandovers,
+  saveOpenedHandovers,
+} from '@/pages/owner/notifications/openedHandovers'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { EmptyGuide } from '@/shared/EmptyGuide'
 import { LoadError } from '@/shared/LoadError'
@@ -32,6 +37,7 @@ import { cn } from '@/ui/utils'
 // 처리할 것(대타 · 질문) 먼저, 그다음 인수인계. 질문 · 대타는 처리할 때까지 늘 새 알림
 // 화면을 열면 인수인계 알림을 전부 읽음(POST …/notifications/read) → 종 점이 꺼진다.
 // 이번에 열었을 때 새로 온 것은 점을 남겨 둔다 (읽음 처리 뒤에도 무엇이 새로 왔는지 보이게)
+// 인수인계 알림을 누르면 목록에서 빠지고, 그 알림이 온 날의 인수인계로 간다 (QA 11/15)
 
 const ICON: Record<OwnerNotification['kind'], LucideIcon> = {
   question: MessageCircleQuestion,
@@ -49,7 +55,11 @@ export default function OwnerNotificationsPage() {
   const query = useNotifications()
   const readHandovers = useReadHandoverNotifications()
   const dismiss = useDismissNotification()
-  const notifications = query.data?.notifications
+  /** 눌러서 본 인수인계 알림 (목록에서 뺀다) */
+  const [opened, setOpened] = useState(readOpenedHandovers)
+  const notifications = query.data?.notifications.filter(
+    (n) => n.kind !== 'handover' || !opened.has(n.notificationId),
+  )
 
   // 처음 받은 목록에서 새 알림을 기억하고, 안 읽은 인수인계가 있는 매장은 바로 읽음 처리
   const [newIds, setNewIds] = useState<Set<string> | null>(null)
@@ -68,7 +78,7 @@ export default function OwnerNotificationsPage() {
     if (storeIds.length > 0) markRead(storeIds)
   }, [notifications, markRead])
 
-  /** 누르면 갈 곳: 질문 → 그 매장 홈의 답하기 시트 · 대타 → 근무 탭(수락 · 거절) · 인수인계 → 인수인계 화면 */
+  /** 누르면 갈 곳: 질문 → 그 매장 홈의 답하기 시트 · 대타 → 근무 탭(수락 · 거절) · 인수인계 → 그날 인수인계 화면 */
   const open = (n: OwnerNotification) => {
     if (n.kind === 'stock') {
       // 재고 알림(가짜 서버만): 누르면 확인 → 목록에서 빠진다
@@ -79,7 +89,14 @@ export default function OwnerNotificationsPage() {
     }
     setCurrentStoreId(n.storeId)
     if (n.kind === 'question') return navigate(`/owner?question=${n.questionId}`)
-    navigate(n.kind === 'substitute' ? '/owner/schedule' : '/owner/handover')
+    if (n.kind === 'substitute') return navigate('/owner/schedule')
+    const next = new Set(opened).add(n.notificationId)
+    setOpened(next)
+    saveOpenedHandovers(next)
+    // BE 알림에는 인수인계 날짜가 없어서 알림이 온 날로 (인수인계는 그날 남긴다)
+    navigate(
+      n.createdAt ? `/owner/handover?date=${toDateKey(new Date(n.createdAt))}` : '/owner/handover',
+    )
   }
 
   return (
