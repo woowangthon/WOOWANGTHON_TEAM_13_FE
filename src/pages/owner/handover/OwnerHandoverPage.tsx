@@ -6,11 +6,12 @@ import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { Button } from '@/ui/Button'
 
 // 인수인계 (사장님): 홈의 인수인계 부분을 따로 크게 본다 (shared 부품 배치) + [인수인계 남기기]
-// 하단 + 메뉴에서 오면 ?write=1 로 작성 시트를 바로 연다
+// 하단 + 메뉴에서 오면 ?write=1 로 작성 시트를 바로 연다 · 인수인계 알림에서 오면 ?date=YYYY-MM-DD 그날을 보여 준다
 export default function OwnerHandoverPage() {
   const { store, today } = useOwnerStore()
   const [params, setParams] = useSearchParams()
   const writing = params.get('write') === '1'
+  const date = params.get('date') ?? undefined
   const setWriting = (on: boolean) => setParams(on ? { write: '1' } : {}, { replace: !on })
 
   return (
@@ -26,7 +27,12 @@ export default function OwnerHandoverPage() {
           남기기
         </Button>
       </div>
-      <HomeHandover key={store.storeId} storeId={store.storeId} today={today} />
+      <HomeHandover
+        key={`${store.storeId}_${date ?? ''}`}
+        storeId={store.storeId}
+        today={today}
+        initialDate={date}
+      />
       {writing && (
         <OwnerHandoverWriteSheet
           storeId={store.storeId}
