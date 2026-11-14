@@ -15,7 +15,8 @@ export function WageInput({
   const wage = Number(value) || 0
   const low = value !== '' && wage < MIN_WAGE
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    // min-w-0: 옆에 [저장]이 붙은 줄에서도 입력칸 기본 너비만큼 넓어지지 않게 (큰 글꼴 폰, QA 11/15)
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <label
         className={cn(
           'flex h-[54px] items-center gap-2 rounded-[18px] border-[1.5px] bg-white px-[18px]',

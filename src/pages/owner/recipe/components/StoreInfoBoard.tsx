@@ -122,7 +122,7 @@ function RecipeSection({ storeId }: { storeId: string }) {
           }}
           placeholder="메뉴, 재료 검색"
           aria-label="메뉴, 재료 검색"
-          className="min-w-0 flex-1 border-none bg-transparent text-[15px] placeholder:text-subtle"
+          className="min-w-0 flex-1 border-none bg-transparent text-base placeholder:text-subtle"
         />
         <Link
           to={{ pathname: '/owner/recipes/scan', search: params.toString() }}
