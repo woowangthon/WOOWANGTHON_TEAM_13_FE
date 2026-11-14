@@ -143,10 +143,9 @@ export async function updateStore(storeId: string, patch: StoreUpdate): Promise<
   return toStore(store)
 }
 
-/** DELETE /stores/{storeId} (제안) — 직원은 퇴사 처리(기록은 남김) */
+/** DELETE /stores/{storeId} (제안) — 직원은 퇴사 처리(기록은 남김). 마지막 매장도 삭제할 수 있다 (BE 개수 제한 없음) */
 export async function deleteStore(storeId: string): Promise<void> {
   await wait()
-  if (db.stores.length <= 1) fail(409, 'LAST_STORE', '매장이 하나뿐이라 삭제할 수 없어요')
   db.stores = db.stores.filter((s) => s.storeId !== storeId)
   db.members.forEach((m) => {
     if (m.storeId === storeId) m.status = 'removed'
