@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react'
+import { CalendarClock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { ScheduleWorker } from '@/lib/api/types'
@@ -12,7 +12,9 @@ import { useMembers, useUpdateInviteSchedule } from '@/pages/owner/api/members'
 import type { Member, ShiftTemplate, WeekShift } from '@/pages/owner/api/types'
 import { avatarColors } from '@/pages/owner/components/avatarColors'
 import { WeekShiftGrid } from '@/pages/owner/components/WeekShiftGrid'
+import { fromTomorrowNotice } from '@/pages/owner/schedule/fromTomorrow'
 import { cellKey, WEEKDAY_LABELS } from '@/pages/owner/store/shifts'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { LoadError } from '@/shared/LoadError'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -72,7 +74,7 @@ export function FixedScheduleCard({
       onSuccess: () => {
         toast(
           target.kind === 'worker'
-            ? '저장했어요. 근무 달력에 반영돼요'
+            ? '저장했어요. 내일부터 근무 달력에 반영돼요'
             : '저장했어요. 입장하면 이 근무로 시작해요',
         )
         done()
@@ -194,6 +196,7 @@ function EditSheet({
   const [cells, setCells] = useState(
     () => new Set(target.shifts.map((s) => cellKey(s.templateId, s.weekday))),
   )
+  const { today } = useOwnerStore()
 
   // 쉬는 요일 칸은 고를 수 없고, 예전에 넣어 둔 칸도 저장할 때 뺀다
   const submit = () =>
@@ -230,6 +233,13 @@ function EditSheet({
           onChange={setCells}
           closedWeekdays={closedWeekdays}
         />
+        {/* 입장한 직원만: 바꾸면 내일부터 (입장 전은 입장한 날부터라 안내 없음) */}
+        {target.kind === 'worker' && (
+          <span className="flex items-start gap-1.5 px-1 text-[13px] text-muted-foreground">
+            <CalendarClock className="mt-px size-4 shrink-0" />
+            {fromTomorrowNotice(today)}
+          </span>
+        )}
         <Button className="h-[54px]" disabled={pending} onClick={submit}>
           저장
         </Button>
