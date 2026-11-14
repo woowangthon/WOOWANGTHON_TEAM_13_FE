@@ -57,6 +57,7 @@ const toOwnerStore = (store: StoreResponse): OwnerStore => ({
   staffCount: 0,
   closedWeekdays: store.closedWeekdays ?? [],
   closedOnHolidays: store.closedOnHolidays ?? false,
+  createdAt: store.createdAt ?? null,
 })
 
 export const fetchStores = async (): Promise<{ stores: OwnerStore[] }> => {

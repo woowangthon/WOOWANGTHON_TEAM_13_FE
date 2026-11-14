@@ -27,6 +27,8 @@ export interface OwnerStore {
   closedWeekdays: number[]
   /** 공휴일에 쉬는지 (BE 칸 요청 중) */
   closedOnHolidays: boolean
+  /** 매장 등록 시각 (급여는 등록한 달부터 본다). BE 응답에 칸 요청 중 — 없으면 null */
+  createdAt?: string | null
 }
 
 /** 매장 등록 요청 (POST /stores — BE 는 name · address · 사업자 확인 결과 필수) */
@@ -119,6 +121,8 @@ export interface StoreResponse {
   /** BE 칸 요청 중 — 생기기 전에는 오지 않는다 */
   closedWeekdays?: number[] | null
   closedOnHolidays?: boolean | null
+  /** BE 칸 요청 중 (stores.created_at) */
+  createdAt?: string | null
 }
 
 /** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */
