@@ -218,6 +218,7 @@ export async function createMember(storeId: string, input: NewMember): Promise<M
     inviteCode: newInviteCode(),
     shiftLabel: '새 알바생',
     schedule: input.schedule ?? [],
+    taxType: input.taxType ?? 'none',
   }
   db.members.push(member)
   return { ...member }
@@ -251,7 +252,7 @@ export async function updateTaxType(memberId: string, taxType: TaxType): Promise
   await wait()
   const member = db.members.find((m) => m.memberId === memberId)
   if (!member) fail(404, 'NOT_FOUND', '직원을 찾지 못했어요')
-  if (member.status !== 'active') fail(400, 'MEMBER_NOT_JOINED', '입장한 뒤에 정할 수 있어요')
+  // 입장 전이면 초대에 저장 (BE #52 PATCH invitations taxType, 입장하면 그대로)
   member.taxType = taxType
   return { ...member }
 }
