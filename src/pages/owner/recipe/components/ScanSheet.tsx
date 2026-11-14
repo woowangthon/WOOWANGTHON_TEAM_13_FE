@@ -1,4 +1,4 @@
-import { Camera, ChevronLeft, ChevronRight, Images, Sparkles } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Crop, Images, Sparkles } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import type { RecipeTemp } from '@/lib/api/types'
@@ -15,6 +15,7 @@ import { cn } from '@/ui/utils'
 // 메뉴마다 사진을 찍어 초안을 쌓고(다음 메뉴 찍기), 넘겨 가며 고친 뒤 한 번에 공개한다
 // BE 는 사진에서 맨 위 레시피 하나만 읽는다 (여러 개면 hasMoreRecipes) → 다음 메뉴만 보이게 다시 찍는다
 // 사진 찍기 · 갤러리(파일)에서 고르기 → 자르기(ImageCropper)로 읽을 부분만 남긴 뒤 보낸다
+// 한 장에 레시피가 여러 개면 [같은 사진에서 다음 메뉴 자르기]로 마지막에 고른 원본을 다시 자른다 — 매번 새로 찍지 않게 (QA 11/15)
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif'
 
@@ -72,6 +73,8 @@ export function ScanSheet({
   const [photo, setPhoto] = useState<string | null>(null)
   /** 고르고 아직 자르지 않은 사진 */
   const [picked, setPicked] = useState<File | null>(null)
+  /** 마지막으로 찍거나 고른 원본 (같은 사진에서 다음 메뉴를 다시 자른다) */
+  const [source, setSource] = useState<File | null>(null)
   const [items, setItems] = useState<ScanItem[]>([])
   const [page, setPage] = useState(0)
   /** 메뉴가 있어도 사진 찍는 칸을 보여 줄지 (다음 메뉴 찍기) */
@@ -83,6 +86,17 @@ export function ScanSheet({
   useEffect(() => () => void (photo && URL.revokeObjectURL(photo)), [photo])
 
   const current = items[Math.min(page, items.length - 1)]
+
+  const pickNew = (file: File) => {
+    setSource(file)
+    setPicked(file)
+  }
+
+  const cropAgain = () => {
+    if (!source) return
+    setAdding(true)
+    setPicked(source)
+  }
   const picking = items.length === 0 || adding
 
   const read = (file: File) => {
@@ -173,9 +187,11 @@ export function ScanSheet({
 
         {picking && (
           <div className="flex flex-col gap-3.5">
-            {items.length > 0 && (
+            {items.length > 0 && !picked && (
               <span className="text-[13px] text-muted-foreground">
-                다음 메뉴만 보이게 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)
+                {source
+                  ? '같은 사진에서 다음 메뉴를 자르거나 새로 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)'
+                  : '다음 메뉴만 보이게 찍어 주세요 (사진에 레시피가 여러 개면 맨 위 하나만 읽어요)'}
               </span>
             )}
             {photo ? (
@@ -189,25 +205,37 @@ export function ScanSheet({
             ) : picked ? (
               <ImageCropper
                 file={picked}
-                hint="읽을 레시피 부분만 남겨 주세요. 그대로 두면 사진 전체를 읽어요"
+                hint={
+                  items.length > 0 && picked === source
+                    ? '다음에 읽을 레시피 부분만 남겨 주세요'
+                    : '읽을 레시피 부분만 남겨 주세요. 그대로 두면 사진 전체를 읽어요'
+                }
                 confirmLabel="읽기"
                 onCancel={() => setPicked(null)}
                 onConfirm={read}
               />
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <PickButton
-                  icon={<Camera className="size-7" />}
-                  label={items.length > 0 ? '다음 메뉴 찍기' : '사진 찍기'}
-                  capture
-                  onPick={setPicked}
-                />
-                <PickButton
-                  icon={<Images className="size-7" />}
-                  label="갤러리 · 파일"
-                  onPick={setPicked}
-                />
-              </div>
+              <>
+                {items.length > 0 && source && (
+                  <Button variant="soft" className="h-[54px]" onClick={cropAgain}>
+                    <Crop />
+                    같은 사진에서 다음 메뉴 자르기
+                  </Button>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <PickButton
+                    icon={<Camera className="size-7" />}
+                    label={items.length > 0 ? '다음 메뉴 찍기' : '사진 찍기'}
+                    capture
+                    onPick={pickNew}
+                  />
+                  <PickButton
+                    icon={<Images className="size-7" />}
+                    label="갤러리 · 파일"
+                    onPick={pickNew}
+                  />
+                </div>
+              </>
             )}
             {scan.isPending && (
               <div className="flex items-center gap-2 rounded-[18px] bg-warm px-4 py-3.5 text-[15px] font-medium text-warm-foreground">
@@ -253,8 +281,8 @@ export function ScanSheet({
 
             {current.draft.hasMoreRecipes && (
               <div className="rounded-[18px] bg-warm px-4 py-3 text-[13px] font-medium text-warm-foreground">
-                사진에 레시피가 여러 개 있어서 맨 위 메뉴만 읽었어요. 나머지는 [다음 메뉴 찍기]로 한
-                메뉴씩 찍어 주세요
+                사진에 레시피가 여러 개 있어서 맨 위 메뉴만 읽었어요. 나머지는 [같은 사진에서 다음
+                메뉴 자르기]로 한 메뉴씩 골라 주세요
               </div>
             )}
 
@@ -272,6 +300,12 @@ export function ScanSheet({
             </div>
             <DraftFields key={current.key} item={current} onChange={setDraft} />
 
+            {source && (
+              <Button variant="soft" className="h-[54px]" disabled={publishing} onClick={cropAgain}>
+                <Crop />
+                같은 사진에서 다음 메뉴 자르기
+              </Button>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="soft"
