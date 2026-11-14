@@ -120,7 +120,9 @@ function PickButton({
       {label}
       <input
         type="file"
-        accept={ACCEPT}
+        // 안드로이드 크롬은 accept 가 image/* 일 때만 capture 로 카메라를 바로 연다 (형식을 나열하면 갤러리가 열림, QA 11/15).
+        // 찍은 사진은 자르기(ImageCropper)에서 JPG 로 바뀌어 올라간다
+        accept={capture ? 'image/*' : ACCEPT}
         capture={capture ? 'environment' : undefined}
         className="sr-only"
         onChange={(event) => {
