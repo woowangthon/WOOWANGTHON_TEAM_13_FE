@@ -2,7 +2,7 @@ import { BookOpen, ChevronRight, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { OAuthProvider } from '@/lib/auth'
-import { signOut } from '@/lib/auth'
+import { signOut, withdrawAccount } from '@/lib/auth'
 import { useAuthStore } from '@/lib/authStore'
 import { toastApiError } from '@/lib/api/errors'
 import { useMembers } from '@/pages/owner/api/members'
@@ -30,10 +30,24 @@ export default function OwnerMyPage() {
   const { store, stores, isPending, setCurrentStoreId } = useOwnerStore()
   const profile = useOwnerProfile()
   const [askWithdraw, setAskWithdraw] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
 
   const logout = async () => {
     await signOut()
     navigate('/login', { replace: true })
+  }
+
+  // 탈퇴: DELETE /users/me 뒤 로그아웃 (알바 마이페이지와 같게). 같은 계정으로 다시 로그인하면 새 사용자로 시작 (BE 11/14)
+  const withdraw = async () => {
+    setWithdrawing(true)
+    try {
+      await withdrawAccount()
+      navigate('/login', { replace: true })
+      toast('탈퇴했어요')
+    } catch (error) {
+      setWithdrawing(false)
+      toastApiError(error, '탈퇴하지 못했어요. 다시 시도해 주세요')
+    }
   }
 
   return (
@@ -114,7 +128,7 @@ export default function OwnerMyPage() {
               <Button variant="white" size="md" onClick={() => setAskWithdraw(false)}>
                 취소
               </Button>
-              <Button variant="danger" size="md" onClick={logout}>
+              <Button variant="danger" size="md" disabled={withdrawing} onClick={withdraw}>
                 탈퇴하기
               </Button>
             </div>
