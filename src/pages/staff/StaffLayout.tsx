@@ -34,7 +34,8 @@ const NAV_ITEMS: BottomNavItem[] = [
 ]
 
 export default function StaffLayout() {
-  const { store, stores, setCurrentStoreId, isPending, error, retry } = useCurrentStore()
+  const { store, stores, setCurrentStoreId, isPending, isFetching, error, retry } =
+    useCurrentStore()
   const [profileName] = useProfileName()
   const [storeSheetOpen, setStoreSheetOpen] = useState(false)
   const { pathname } = useLocation()
@@ -61,7 +62,8 @@ export default function StaffLayout() {
   const leftLock = useRef(false)
   const shownStoreId = useRef<string | null>(null)
   useEffect(() => {
-    if (isPending || error) return
+    // 다시 받는 중엔 판단하지 않기 (초대코드로 다시 들어온 직후 예전 빈 목록이 캐시에 남아 있으면 /role 로 튕기지 않게)
+    if (isPending || isFetching || error) return
     if (stores.length === 0) {
       if (leftLock.current) return
       leftLock.current = true
@@ -80,7 +82,7 @@ export default function StaffLayout() {
       toast(`매장이 삭제돼서 ${withRo(stores[0].name)} 바꿨어요`)
     }
     shownStoreId.current = store.id
-  }, [isPending, error, stores, store.id, setCurrentStoreId, setPendingRole, navigate])
+  }, [isPending, isFetching, error, stores, store.id, setCurrentStoreId, setPendingRole, navigate])
   // 안 읽은 알림 수 (1분마다 · 화면에 돌아올 때 다시 부름)
   const unread = useNotifications(store.id).data?.unreadCount ?? 0
   // 조금이라도 스크롤하면 상단에 반투명 흐림 배경 (내용이 그 아래로 지나가게)
