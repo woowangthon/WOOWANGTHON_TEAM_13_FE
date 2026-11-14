@@ -52,8 +52,6 @@ React · PWA (Vercel) ──Bearer 토큰──▶ FastAPI (Render) ──▶ Po
                                             └─▶ Web Push (앱 알림)
 ```
 
-**AI 사수 채팅** — 질문 → 매장 매뉴얼 · 레시피를 근거로 Gemini에 요청 → `answered` / `not_found` / `out_of_scope` + 출처 id → **서버가 한 번 더 검사**(출처 없으면 답을 버리고 "찾지 못했어요") → `not_found`면 사장님께 넘기기
-
 | Core                         | 상태 · 데이터            | 스타일                      | 로그인 · 알림                  | 배포   |
 | ---------------------------- | ------------------------ | --------------------------- | ------------------------------ | ------ |
 | React 19 · TypeScript · Vite | TanStack Query · Zustand | Tailwind CSS v4 · shadcn/ui | Supabase Auth · Web Push (PWA) | Vercel |
@@ -73,6 +71,28 @@ npm run dev             # http://localhost:5173
 ```
 
 → 자세히: [실행 방법 · 환경변수 · 명령어](docs/getting-started.md)
+
+## FE 폴더 구조
+
+```text
+src/
+├── app/               # 라우터 · 로그인 가드 · 쿼리 공통 설정(에러 · 재시도) · 오프라인 안내 · 앱 알림 동기화
+├── lib/
+│   ├── api/           # 기능별 데이터 훅 + 진짜/가짜 스위치 (source.ts)
+│   ├── auth.ts        # Supabase 로그인 · 로그아웃 · 탈퇴
+│   └── apiClient.ts   # Bearer 토큰 · 에러 모양 통일
+├── api/
+│   ├── mocks/         # 가짜 서버 (staff · owner) — 시연 데이터
+│   └── generated/     # orval 자동 생성 (직접 수정 X)
+├── ui/                # 디자인 시스템 공용 부품 (Button · Card · BottomSheet …)
+├── shared/            # 사장님 · 알바생이 같이 쓰는 부품 (레시피 · 매뉴얼 · 인수인계 · 매장 · 사용법)
+├── pages/
+│   ├── auth/          # 로그인 · 로그인 처리 · 역할 선택
+│   ├── staff/         # 알바생 화면
+│   └── owner/         # 사장님 화면
+└── sw.ts              # 서비스 워커 (오프라인 캐시 · 앱 알림)
+docs/                  # 제출용 정리 · 개발 문서
+```
 
 ## 문서
 
