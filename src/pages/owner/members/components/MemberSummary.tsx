@@ -1,5 +1,5 @@
 import { toDateKey } from '@/lib/date'
-import { formatWon } from '@/lib/format'
+import { formatHours, formatWon } from '@/lib/format'
 import { useFixedSchedule } from '@/pages/owner/api/fixedSchedule'
 import { useMembers } from '@/pages/owner/api/members'
 import type { Member } from '@/pages/owner/api/types'
@@ -59,7 +59,7 @@ export function MemberSummary({ member, onEdit }: { member: Member; onEdit: () =
 
       <div className="grid grid-cols-3 gap-2.5">
         <Stat label="시급" value={formatWon(member.hourlyWage)} />
-        <Stat label={`${monthLabel} 근무`} value={pay ? `${pay.hours}시간` : '—'} />
+        <Stat label={`${monthLabel} 근무`} value={pay ? formatHours(pay.hours) : '—'} />
         <Stat label={`${monthLabel} 급여`} value={pay ? formatWon(pay.netPay) : '—'} strong />
       </div>
 

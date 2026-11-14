@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { fromDateKey, toDateKey } from '@/lib/date'
-import { formatDate, formatWon } from '@/lib/format'
+import { formatDate, formatHours, formatWon } from '@/lib/format'
 import type { MemberPay } from '@/pages/owner/api/types'
 import { useStorePayrolls } from '@/pages/owner/api/work'
 import { TAX_LABEL } from '@/pages/owner/payroll/tax'
@@ -102,7 +102,7 @@ export default function OwnerPayrollPage() {
           <span className="text-[13px] opacity-75 lg:hidden">세전 · {payNote(single)}</span>
           {!pending && (
             <div className="mt-3 grid grid-cols-[auto_1fr_1fr] border-t border-white/15 pt-3 lg:hidden">
-              <PayTile label={`${hours}시간 근무`} value={formatWon(basePay)} />
+              <PayTile label={`${formatHours(hours)} 근무`} value={formatWon(basePay)} />
               <PayTile label="주휴수당" value={`+ ${formatWon(weeklyAllowance)}`} />
               <PayTile label="공제" value={deduction ? `− ${formatWon(deduction)}` : '0원'} />
             </div>
@@ -164,7 +164,8 @@ export default function OwnerPayrollPage() {
                   </span>
                 </span>
                 <span className="text-[13px] text-muted-foreground tabular-nums">
-                  {m.hours}시간 · 주휴 {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'}
+                  {formatHours(m.hours)} · 주휴{' '}
+                  {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'}
                 </span>
                 <span className="text-right text-[13px] text-muted-foreground tabular-nums">
                   {formatWon(m.total)}
@@ -194,7 +195,7 @@ export default function OwnerPayrollPage() {
                       )}
                     </span>
                     <span className="text-xs whitespace-nowrap text-muted-foreground">
-                      {m.hours}시간 · 주휴{' '}
+                      {formatHours(m.hours)} · 주휴{' '}
                       {m.weeklyAllowance ? formatWon(m.weeklyAllowance) : '없음'} ·{' '}
                       {TAX_LABEL[m.taxType]}
                     </span>
@@ -253,7 +254,7 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
         </div>
         <dl className="m-0 flex flex-col rounded-[22px] bg-white px-[18px] py-1">
           <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
-            <dt className="text-muted-foreground">기본급 · {pay.hours}시간</dt>
+            <dt className="text-muted-foreground">기본급 · {formatHours(pay.hours)}</dt>
             <dd className="m-0 font-bold">{formatWon(pay.basePay)}</dd>
           </div>
           <div className="flex justify-between border-b border-border py-[13px] text-[15px]">
@@ -289,7 +290,7 @@ function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onCl
               )}
             >
               <span>
-                {formatDate(fromDateKey(w.weekStart))} 주 · {w.hours}시간
+                {formatDate(fromDateKey(w.weekStart))} 주 · {formatHours(w.hours)}
               </span>
               <span className={cn('font-bold', w.eligible ? 'text-brand' : 'text-faint')}>
                 {w.eligible ? '주휴 포함' : '15시간 미만'}
