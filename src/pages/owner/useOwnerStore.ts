@@ -19,7 +19,7 @@ interface OwnerUiState {
   setCurrentStoreId: (storeId: string | null) => void
 }
 
-const useOwnerUiStore = create<OwnerUiState>()(
+export const useOwnerUiStore = create<OwnerUiState>()(
   persist(
     (set) => ({
       currentStoreId: null,

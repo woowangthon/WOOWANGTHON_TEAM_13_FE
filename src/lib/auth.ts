@@ -3,6 +3,7 @@ import { useAuthStore, type LoginProvider, type Me } from '@/lib/authStore'
 import { fetchMe as getMe } from '@/lib/api/users'
 import { http, isRealApi } from '@/lib/api/source'
 import { env } from '@/lib/env'
+import { useStoreStore } from '@/lib/storeStore'
 import { wakeServer } from '@/lib/wakeServer'
 
 /*
@@ -37,6 +38,15 @@ export async function signOut() {
   await supabase?.auth.signOut()
   useAuthStore.getState().reset()
   rememberRedirect(null)
+  // 다음 사람(같은 기기 · 다른 계정)이 이전 계정의 데이터 · 고른 매장을 보지 않게 비운다.
+  // 쿼리 캐시(lib/api/errors 경유) · 사장님 매장 저장소는 이 파일을 import 해서, 서로 물리지 않게 여기서만 늦게 불러온다
+  const [{ queryClient }, { useOwnerUiStore }] = await Promise.all([
+    import('@/app/queryClient'),
+    import('@/pages/owner/useOwnerStore'),
+  ])
+  useStoreStore.getState().setCurrentStoreId(null)
+  useOwnerUiStore.getState().setCurrentStoreId(null)
+  queryClient.clear()
 }
 
 export async function getSession(): Promise<Session | null> {
