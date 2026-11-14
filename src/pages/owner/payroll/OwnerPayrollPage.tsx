@@ -17,21 +17,39 @@ import { cn } from '@/ui/utils'
 
 // 직원별 급여 (P1, docs/03 S7): 매장별 · 전체 합계 → 직원 → 주별 근거. 주휴 포함 · 공휴일 가산 없음 · 참고용
 // 합계는 세전(사장님이 쓰는 인건비), 직원 줄 · 시트는 공제(4대보험 · 3.3%, 직원 상세에서 설정) 뒤 실수령까지
-// ◀ ▶ 로 지난달 · 다음 달(확정 근무표 기준 예상)까지 넘겨 본다
+// ◀ ▶ 로 매장 등록한 달부터 앞으로 12달(고정 근무표 기준 예상)까지 넘겨 본다 (QA 11/15). 등록일을 모르면 지난달은 끝없이
 // 데스크톱(lg): 위 요약 카드 3개(합계 · 공제 합계 · 지급일) + 직원별 표(이름 · 근무 · 주휴 · 세전 · 실수령), 행을 누르면 상세 대화창
+/** 앞으로 볼 수 있는 달 수 (고정 근무표 기준 예상) */
+const MAX_AHEAD = 12
+
+/** 가장 먼저 등록한 매장의 등록 달 − 이번 달 (0 이하). 등록일을 모르면 끝없이 */
+function earliestOffset(stores: { createdAt?: string | null }[], today: Date) {
+  const times = stores.flatMap((s) => (s.createdAt ? [new Date(s.createdAt)] : []))
+  if (times.length < stores.length || times.length === 0) return -Infinity
+  const first = new Date(Math.min(...times.map((t) => t.getTime())))
+  return Math.min(
+    0,
+    (first.getFullYear() - today.getFullYear()) * 12 + first.getMonth() - today.getMonth(),
+  )
+}
+
 export default function OwnerPayrollPage() {
   const { store, stores, today } = useOwnerStore()
   // 처음에는 지금 매장. 'all' 이면 모든 매장
   const [picked, setScope] = useState<string | null>(null)
   const scope = picked ?? store.storeId
   const [openId, setOpenId] = useState<string | null>(null)
-  // 0 = 이번 달 · -1 = 지난달 · 1 = 다음 달 (다음 달까지만)
-  const [offset, setOffset] = useState(0)
-  const base = new Date(today.getFullYear(), today.getMonth() + offset, 1)
-  const month = toDateKey(base).slice(0, 7)
-  const monthLabel = `${base.getFullYear() !== today.getFullYear() ? `${base.getFullYear()}년 ` : ''}${base.getMonth() + 1}월`
+  // 0 = 이번 달 · -1 = 지난달 · 1 = 다음 달 (앞으로 MAX_AHEAD 달까지)
+  const [wantedOffset, setOffset] = useState(0)
   const targets = scope === 'all' ? stores : stores.filter((s) => s.storeId === scope)
   const effective = targets.length ? targets : [store]
+  // 보는 매장 중 가장 먼저 등록한 달까지만 뒤로 (전체면 가장 오래된 매장). 매장을 바꿔 범위 밖이면 그 끝 달로
+  const minOffset = earliestOffset(effective, today)
+  const offset = Math.min(MAX_AHEAD, Math.max(minOffset, wantedOffset))
+  const base = new Date(today.getFullYear(), today.getMonth() + offset, 1)
+  const month = toDateKey(base).slice(0, 7)
+  // 어느 달 급여인지 늘 연도까지 (QA 11/15: 달만 보면 몇 년 것인지 헷갈린다)
+  const monthLabel = `${base.getFullYear()}년 ${base.getMonth() + 1}월`
 
   // 매장마다 급여를 불러온다 (전체면 모든 매장)
   const results = useStorePayrolls(
@@ -80,15 +98,16 @@ export default function OwnerPayrollPage() {
               <button
                 type="button"
                 aria-label="지난달"
+                disabled={offset <= minOffset}
                 onClick={() => setOffset(offset - 1)}
-                className="flex size-8 items-center justify-center rounded-full bg-white/15"
+                className="flex size-8 items-center justify-center rounded-full bg-white/15 disabled:opacity-30"
               >
                 <ChevronLeft className="size-4" />
               </button>
               <button
                 type="button"
                 aria-label="다음 달"
-                disabled={offset >= 1}
+                disabled={offset >= MAX_AHEAD}
                 onClick={() => setOffset(offset + 1)}
                 className="flex size-8 items-center justify-center rounded-full bg-white/15 disabled:opacity-30"
               >
@@ -216,7 +235,7 @@ export default function OwnerPayrollPage() {
         </>
       )}
 
-      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} month={base.getMonth() + 1} />}
+      {open && <PaySheet pay={open} onClose={() => setOpenId(null)} monthLabel={monthLabel} />}
     </div>
   )
 }
@@ -239,13 +258,21 @@ function payNote(store: OwnerStoreView | null) {
   return `주휴수당 포함 · ${size} 사업장 · 매월 ${day} 지급`
 }
 
-function PaySheet({ pay, month, onClose }: { pay: MemberPay; month: number; onClose: () => void }) {
+function PaySheet({
+  pay,
+  monthLabel,
+  onClose,
+}: {
+  pay: MemberPay
+  monthLabel: string
+  onClose: () => void
+}) {
   return (
     <BottomSheet open onClose={onClose} label={`${pay.name} 급여`} closeButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] text-muted-foreground">
-            {pay.name} · {month}월 실수령 · 참고용
+            {pay.name} · {monthLabel} 실수령 · 참고용
           </span>
           <span className="text-[26px] font-extrabold tracking-[-0.03em]">
             {formatWon(pay.netPay)}
