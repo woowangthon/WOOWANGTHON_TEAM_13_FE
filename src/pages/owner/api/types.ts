@@ -27,6 +27,8 @@ export interface OwnerStore {
   closedWeekdays: number[]
   /** 공휴일에 쉬는지 (BE 칸 요청 중) */
   closedOnHolidays: boolean
+  /** 매장 등록 시각 (급여는 등록한 달부터 본다). BE 응답에 칸 요청 중 — 없으면 null */
+  createdAt?: string | null
 }
 
 /** 매장 등록 요청 (POST /stores — BE 는 name · address · 사업자 확인 결과 필수) */
@@ -119,6 +121,8 @@ export interface StoreResponse {
   /** BE 칸 요청 중 — 생기기 전에는 오지 않는다 */
   closedWeekdays?: number[] | null
   closedOnHolidays?: boolean | null
+  /** BE 칸 요청 중 (stores.created_at) */
+  createdAt?: string | null
 }
 
 /** BE 초대코드 응답 (POST /stores/{storeId}/invitations) */
@@ -130,6 +134,8 @@ export interface InvitationResponse {
   hourlyWage: number
   /** 입장하면 들어갈 고정 근무 (BE #38) */
   schedule?: WeekShift[]
+  /** 입장하면 들어갈 급여 공제 (BE #52) */
+  taxType?: TaxType
   createdAt: string
 }
 
@@ -184,7 +190,7 @@ export interface Member {
   shiftLabel: string
   /** 입장 전에 정해 둔 고정 근무 (초대할 때, BE 칸이 생기기 전에는 가짜 서버만) */
   schedule?: WeekShift[]
-  /** 급여 공제 (입장한 직원만, 입장 전은 없음) */
+  /** 급여 공제 (입장 전이면 초대에 정해 둔 것 — 입장하면 그대로, BE #52) */
   taxType?: TaxType
 }
 
@@ -194,6 +200,8 @@ export interface NewMember {
   hourlyWage: number
   /** 입장하면 들어갈 고정 근무 (선택) — canSaveInviteSchedule() 일 때만 보낸다 */
   schedule?: WeekShift[]
+  /** 입장하면 들어갈 급여 공제 (BE #52, 안 고르면 공제 없음) */
+  taxType?: TaxType
 }
 
 /** 지금 근무 중인 사람 (홈 카드) — 직원 · 사장님 모두, 근무 달력에서 지금 시간이 근무 시간 안인 사람 */
@@ -233,6 +241,10 @@ export interface OwnerNotification {
   isRead?: boolean
   /** 온 시각 ("3분 전"). 대타 요청은 BE 에 시각이 없어서 비어 있다 */
   createdAt?: string
+  /** 인수인계를 남긴 근무일 YYYY-MM-DD (BE target.workDate, #54 — 없으면 null) */
+  workDate?: string | null
+  /** 같은 매장 · 같은 날 인수인계를 한 줄로 묶었을 때 묶인 알림 ID들 (notifications/groupHandovers) */
+  groupedIds?: string[]
 }
 
 /**

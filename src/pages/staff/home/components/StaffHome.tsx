@@ -113,6 +113,12 @@ function HomeBody({
     setWeekOffset(0)
     setSelectedKey(toDateKey(todayOfStore))
   }
+  // 출근 전 배너 [인수인계 보기]: 체크 안 된 항목이 있는 날 · 그 주로 (QA 11/15)
+  const showHandoverOf = (key: string) => {
+    const days = Math.round((fromDateKey(key).getTime() - week[0].date.getTime()) / 86_400_000)
+    setWeekOffset(Math.floor(days / 7))
+    setSelectedKey(key)
+  }
   // 스크롤해서 처음 보일 때 살짝 떠오르기 (첫 화면에 보이는 것은 그대로 — shared/useReveal)
   const todayRef = useReveal<HTMLElement>()
 
@@ -122,7 +128,7 @@ function HomeBody({
     <div className="flex flex-col gap-8">
       {/* 출근 전 · 받은 대타 배너 (둘 다 없으면 이 칸도 없음) */}
       <div className="flex flex-col gap-2 empty:hidden">
-        <ShiftBanner storeId={store.id} today={todayOfStore} />
+        <ShiftBanner storeId={store.id} today={todayOfStore} onShowHandover={showHandoverOf} />
         <ReceivedSubstituteBanner storeId={store.id} />
       </div>
 
@@ -284,7 +290,8 @@ function useStaffName(storeId: string) {
   return (author: UserRef) => workers?.find((w) => w.userId === author.userId)?.name ?? author.name
 }
 
-// 하루 AI 요약 카드 1개 + 그날 모든 항목 한 목록 (노트 순서 · 항목 순서). 항목 오른쪽에 작성자 · 시간. 오늘만 체크할 수 있다
+// 하루 AI 요약 카드 1개 + 그날 모든 항목 한 목록 (노트 순서 · 항목 순서). 항목 오른쪽에 작성자 · 시간.
+// 오늘 · 지난 날 모두 체크할 수 있다 — 출근 전 배너가 최근 7일 체크 안 된 항목을 보여 줘서 (QA 11/15)
 function HandoverSection({
   store,
   today,
@@ -302,6 +309,7 @@ function HandoverSection({
   weekNav: { thisWeek: boolean; onMove: (step: number) => void; onThisWeek: () => void }
 }) {
   const live = isSameDay(selectedDate, today)
+  const canCheck = selectedDate <= today
   const date = toDateKey(selectedDate)
   const navigate = useNavigate()
   const notesQuery = useHandoverNotes(store.id, date)
@@ -357,14 +365,14 @@ function HandoverSection({
           <AiSummaryCard
             from={`${authors}명이 남김`}
             summary={summary}
-            done={live ? items.filter((item) => item.checked).length : items.length}
+            done={items.filter((item) => item.checked).length}
             total={items.length}
           />
           {/* 알바 홈: 카드 한 장 안의 할 일 목록 모양 (사장님 홈은 기본 card 그대로) */}
           <HandoverList
             variant="list"
             items={items}
-            live={live}
+            live={canCheck}
             meta={(item) => {
               const note = noteOf.get(item.itemId)
               return note && `${authorName(note.author)} · ${formatTime(note.createdAt)}`

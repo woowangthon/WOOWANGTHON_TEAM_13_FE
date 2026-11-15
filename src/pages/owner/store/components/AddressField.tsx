@@ -93,7 +93,7 @@ export function AddressField({
           placeholder="상세 주소 (선택) 예) 2층"
           aria-label="상세 주소"
           maxLength={60}
-          className="h-11 min-w-0 rounded-xl border-none bg-background px-3 text-[15px] placeholder:text-faint"
+          className="h-11 min-w-0 rounded-xl border-none bg-background px-3 text-base placeholder:text-faint"
         />
       )}
       {open && (

@@ -24,6 +24,7 @@ export const seedStores: Omit<OwnerStore, 'staffCount'>[] = [
     bizNo: '105-12-34567',
     closedWeekdays: [],
     closedOnHolidays: false,
+    createdAt: '2026-09-01T09:00:00+09:00',
   },
   {
     storeId: 'roasters',
@@ -38,6 +39,7 @@ export const seedStores: Omit<OwnerStore, 'staffCount'>[] = [
     // 시연: 로스터스는 월요일 · 공휴일 휴무
     closedWeekdays: [0],
     closedOnHolidays: true,
+    createdAt: '2026-10-15T09:00:00+09:00',
   },
 ]
 

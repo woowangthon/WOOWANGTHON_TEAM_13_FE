@@ -1,10 +1,12 @@
-import { Clock, Pencil } from 'lucide-react'
+import { CalendarClock, Clock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { toastApiError } from '@/lib/api/errors'
 import { useSaveShiftTemplates, useShiftTemplates } from '@/pages/owner/api/fixedSchedule'
 import type { ShiftTemplate } from '@/pages/owner/api/types'
 import { ShiftTemplateStep, type ShiftRow } from '@/pages/owner/store/components/ShiftTemplateStep'
+import { fromTomorrowNotice } from '@/pages/owner/schedule/fromTomorrow'
 import { shiftTemplatesError } from '@/pages/owner/store/shifts'
+import { useOwnerStore } from '@/pages/owner/useOwnerStore'
 import { LoadError } from '@/shared/LoadError'
 import { BottomSheet } from '@/ui/BottomSheet'
 import { Button } from '@/ui/Button'
@@ -87,6 +89,7 @@ function EditSheet({
     })),
   )
   const save = useSaveShiftTemplates(storeId)
+  const { today } = useOwnerStore()
   const error = shiftTemplatesError(rows)
   const removed = templates.filter((t) => !rows.some((r) => r.templateId === t.templateId))
 
@@ -95,7 +98,7 @@ function EditSheet({
       { before: templates, rows: rows.map((r) => ({ ...r, name: r.name.trim() })) },
       {
         onSuccess: () => {
-          toast('저장했어요')
+          toast('저장했어요. 내일부터 근무 달력에 반영돼요')
           onClose()
         },
         onError: (err) => toastApiError(err, '저장하지 못했어요. 다시 시도해 주세요', submit),
@@ -112,6 +115,10 @@ function EditSheet({
             {removed.map((t) => t.name).join(' · ')} 타임을 빼면 그 타임 고정 근무도 같이 빠져요
           </span>
         )}
+        <span className="flex items-start gap-1.5 px-1 text-[13px] text-muted-foreground">
+          <CalendarClock className="mt-px size-4 shrink-0" />
+          {fromTomorrowNotice(today)}
+        </span>
         <Button className="h-[54px]" disabled={!!error || save.isPending} onClick={submit}>
           저장
         </Button>

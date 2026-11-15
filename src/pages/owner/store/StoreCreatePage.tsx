@@ -21,6 +21,7 @@ import { StoreCreateDone } from '@/pages/owner/store/components/StoreCreateDone'
 import { StoreStepFrame } from '@/pages/owner/store/components/StoreStepFrame'
 import { cellKey, DEFAULT_SHIFT_TEMPLATES, shiftTemplatesError } from '@/pages/owner/store/shifts'
 import { useOwnerStore } from '@/pages/owner/useOwnerStore'
+import { useCloseTo } from '@/lib/useCloseTo'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toastStore'
 import { cn } from '@/ui/utils'
@@ -48,8 +49,10 @@ type OwnerShift = { templateName: string; weekday: number }
 
 export default function StoreCreatePage() {
   const navigate = useNavigate()
-  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로
+  // 마이페이지 [매장 추가]로 왔으면 ① 에서 뒤로 가면 마이페이지로.
+  // 앱 안에서 왔으면 기록을 하나 되돌린다 — 새로 쌓으면 마이페이지 [뒤로]가 다시 매장 등록으로 와서 빙빙 돈다 (QA 11/15)
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/role'
+  const leave = useCloseTo(from)
   const create = useCreateStore()
   const saveShifts = useSaveOwnerShifts()
   const savePhoto = useSaveStorePhoto()
@@ -206,7 +209,7 @@ export default function StoreCreatePage() {
         {...frame}
         step={1}
         title="매장 정보"
-        onBack={() => navigate(from)}
+        onBack={leave}
         status={missing > 0 ? `필수 항목 ${missing}개 남음` : undefined}
         actions={
           <Button
@@ -220,15 +223,16 @@ export default function StoreCreatePage() {
         }
       >
         <div className="flex flex-col gap-2.5 lg:gap-3.5">
-          {/* 데스크톱: 매장 이름 · 사업자등록번호 한 줄 두 칸 */}
-          <div className="grid gap-2.5 lg:grid-cols-2 lg:gap-3.5">
+          {/* 데스크톱: 매장 이름 · 사업자등록번호 한 줄 두 칸. 휴대폰도 한 칸 너비를 정해 둔다 —
+              안 정하면 입력칸 기본 너비(글자 20개분)만큼 칸이 넓어져 큰 글꼴 폰에서 화면 밖으로 나간다 (QA 11/15) */}
+          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-3.5">
             <label className="flex flex-col gap-1.5 rounded-[20px] bg-card px-[18px] py-3.5 border border-line/60 lg:px-[22px] lg:py-4">
               <span className="text-xs font-bold text-muted-foreground">매장 이름</span>
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="달빛 카페"
-                className="min-w-0 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint lg:text-[19px]"
+                className="w-full min-w-0 border-none bg-transparent p-0 text-[16px] font-bold placeholder:text-faint lg:text-[19px]"
               />
             </label>
             <BizVerifyForm verified={verificationId !== null} onVerified={setVerificationId} />

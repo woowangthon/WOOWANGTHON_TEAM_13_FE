@@ -11,7 +11,7 @@ import {
 import type { CalendarShift } from '@/lib/api/types'
 import { useSubstituteRequests } from '@/lib/api/substitute'
 import { addDays, fromDateKey, isSameDay, toDateKey } from '@/lib/date'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatHours } from '@/lib/format'
 import { MonthSwitcher } from '@/pages/staff/schedule/components/MonthSwitcher'
 import { SentSubstitutesOfDay } from '@/pages/staff/schedule/components/SubstituteRequests'
 import { SubstituteSheet } from '@/pages/staff/schedule/components/SubstituteSheet'
@@ -316,7 +316,8 @@ export function ScheduleMonth() {
                       </>
                     }
                     sub={[shift.name, shift.role].filter((t) => t.trim()).join(' · ') || '근무'}
-                    right={`${shiftHours(shift)}시간`}
+                    // 4:40~13:00 → 8.3시간 (소수 첫째 자리 반올림, QA 11/15)
+                    right={formatHours(shiftHours(shift))}
                     // 대타를 요청할 수 있는 내 근무만: 줄 오른쪽 아래 작은 [대타 요청] (대기 중이면 그 자리에 "○○님에게 대타 요청 중")
                     action={
                       canRequest &&
